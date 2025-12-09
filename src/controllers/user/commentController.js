@@ -8,46 +8,34 @@ export const comment = async (req, res) => {
     const user = req.user._id;
     const post = req.body.post;
 
-    if (!isValidObjectId(user)) {
-        return res.status(400).json({ 
-            message: 'ID inválido' 
-        });
-    }
-    if (!isValidObjectId(article)) {
-        return res.status(400).json({ 
-            message: 'ID inválido' 
-        });
-    }
-
-    const articleValid = await Article.findById(article);
-    if(!articleValid) return res.status(400).json({ message: 'Article not found' });
-
-    const comment = new Comment({
-        post,
-        user,
-        article
-    });
-
     try {
-        await comment.save();
-        const commentPopulate = await Comment.findById(comment._id)
-            .select('creationDate post')
-            .populate({
-                path: 'user',
-                select: '-_id -password -role -email -creationDate -__v'
-            })
-            .populate({
-                path: 'article',
-                select: '-_id title'
-            })
-            .lean();
+        if (!isValidObjectId(user)) {
+            return res.status(400).json({ 
+                message: 'ID inválido' 
+            });
+        }
+        if (!isValidObjectId(article)) {
+            return res.status(400).json({ 
+                message: 'ID inválido' 
+            });
+        }
 
-        res.status(201).json({ 
+        const articleValid = await Article.findById(article).lean();
+        if(!articleValid) return res.status(400).json({ message: 'Article not found' });
+
+        const comment = new Comment({
+            post,
+            user,
+            article
+        });
+
+        await Promise.all([
+            Article.updateOne({_id: article}, { $inc: { commentCount: 1 } }),
+            comment.save()
+        ])
+        
+        res.status(204).json({ 
             message: "Comment added", 
-            comment: commentPopulate.post,
-            user: commentPopulate.user, 
-            article: commentPopulate.article,
-            create: relativeTime(commentPopulate.creationDate) 
         });
     } catch (error) {
         res.status(500).json({ message: 'Internal server error' });
@@ -66,7 +54,7 @@ export const editComment = async (req, res) => {
                 message: 'ID inválido' 
             });
         }
-        const editComment = await Comment.findByIdAndUpdate(
+        const editComment = await Comment.updateOne(
             { _id: commentId },
             { $set: updateField },
             { runValidators: true, new: true }
@@ -99,6 +87,7 @@ export const editComment = async (req, res) => {
 
 export const removeComment = async (req, res) => {
     const commentId = req.params.commentId;
+    const articleId = req.params.articleId;
 
     try {
         if (!isValidObjectId(commentId)) {
@@ -106,9 +95,16 @@ export const removeComment = async (req, res) => {
                 message: 'ID inválido' 
             });
         }
-        
-        const comment = await Comment.findByIdAndDelete( commentId );
+
+        const [articleValid, comment] = await Promise.all([
+            Article.findById(articleId).lean(),
+            Comment.findOneAndDelete({ _id: commentId} )
+        ])
+
+        if(!articleValid) return res.status(400).json({ message: 'Article not found' });
         if(!comment) return res.status(400).json({ message: 'Comment not found' });
+
+        await Article.updateOne({_id: articleId}, { $inc: { commentCount: -1 } })
         res.status(204).json({ message: 'Comment removed' });
     } catch (error) {
         console.error('Error removing comment', error);

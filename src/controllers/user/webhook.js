@@ -17,12 +17,11 @@ export const webhook = async (req, res) => {
         const userId = session.metadata.userId;
         const plan = session.metadata.plan;
 
-        await User.findByIdAndUpdate(userId, {
+        const update = await User.findByIdAndUpdate(userId, { // O findByIdAndUpdate é justificável nesse caso pois será necessário atualizar o cookie userAuth
             'subscription.plan': plan,
             'subscription.expiresAt': new Date(Date.now() + 120_000)
-        })
+        }, { new: true }) // Retorna o documento atualizado, como se fosse um find()
 
-        const update = await User.findById(userId)
         let token = jwt.sign( { _id : update._id, subscription: update.subscription, email: update.email }, process.env.SECRET )
         res.cookie('userAuth', token, { secure: true, httpOnly: true, expires: new Date(Date.now() + 2 * 3600000) })
 

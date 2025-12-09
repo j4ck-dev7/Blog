@@ -5,7 +5,7 @@ import User from '../../models/User.js';
 
 export const signUp = async (req, res) => {
     const email = req.body.email;
-    const selectedUser = await User.findOne({ email });
+    const selectedUser = await User.findOne({ email }).lean();
     if(selectedUser) return res.status(409).send('Existing email');
 
     const user = new User({

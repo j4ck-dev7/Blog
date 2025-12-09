@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import express from 'express';
+import compression from 'compression'
 import cookieParser from 'cookie-parser';
 
 import adminRoute from './src/routes/admin/adminRoute.js';
@@ -14,6 +15,7 @@ app.use('/api/webhooks', webhookRouter);
 
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(compression())
 app.use(express.json());
 
 app.use('/api/admin', adminRoute);

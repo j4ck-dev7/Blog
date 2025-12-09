@@ -5,7 +5,7 @@ import User from '../../models/User.js'
 
 export const signIn = async (req, res) => {
     const email = req.body.email;
-    const selectedUser = await User.findOne({ email })
+    const selectedUser = await User.findOne({ email }).lean()
     if(!selectedUser) return res.status(400).send("Incorrect email or password");
 
     const passwordMatch = await bcrypt.compare(req.body.password, selectedUser.password);

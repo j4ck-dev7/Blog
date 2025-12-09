@@ -29,7 +29,7 @@ router.post('/subscribe', auth, subscribe)
 
 router.put('/article/comment/:commentId', auth, editComment);
 
-router.delete('/article/like/:articleId', auth, removeLike);
-router.delete('/article/comment/:commentId', auth, removeComment);
+router.delete('/article/:articleId/like/:likeId', auth, removeLike);
+router.delete('/article/:articleId/comment/:commentId', auth, removeComment);
 
 export default router;

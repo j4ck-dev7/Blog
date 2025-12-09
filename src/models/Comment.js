@@ -8,4 +8,7 @@ const commentSchema = new mongoose.Schema({
   isEdited: { type: Boolean, default: false, select: false }
 });
 
+commentSchema.index({ article: 1, creationDate: -1 });
+commentSchema.index({ article: 1 });
+
 export default mongoose.model('Comment', commentSchema);

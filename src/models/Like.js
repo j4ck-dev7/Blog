@@ -6,4 +6,7 @@ const likeSchema = new mongoose.Schema({
     creationDate: { type: Date, default: Date.now }
 });
 
+likeSchema.index({ article: 1 });
+likeSchema.index({ article: 1, user: 1 }, { unique: true });
+
 export default mongoose.model('Like', likeSchema);

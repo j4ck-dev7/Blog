@@ -7,32 +7,38 @@ export const like = async (req, res) => {
     const user = req.user._id;
     const article = req.params.articleId;
 
-    if (!isValidObjectId(user)) {
-        return res.status(400).json({ 
-            message: 'ID inválido' 
-        });
-    }
-
-    if (!isValidObjectId(article)) {
-        return res.status(400).json({ 
-            message: 'ID inválido' 
-        });
-    }
-
-    const articleValid = await Article.findById(article);
-    if(!articleValid) return res.status(400).json({ message: 'Article not found' });
-
-    const liked = await Like.findOne({ user, article });
-    if(liked) return res.status(409).json({ message: 'You already liked this article' });
-
-    const like = new Like({
-        user,
-        article
-    });
-
     try {
-        await like.save();
-        res.status(201).json({ message: "Liked article" });
+        if (!isValidObjectId(user)) {
+            return res.status(400).json({ 
+                message: 'ID inválido' 
+            });
+        }
+
+        if (!isValidObjectId(article)) {
+            return res.status(400).json({ 
+                message: 'ID inválido' 
+            });
+        }
+
+        const [articleValid, liked] = await Promise.all([
+            Article.findById(article).lean(), // O lean funciona apenas em consultas | leituras, ele converte a instância de do mongoose em objeto JS puro
+            Like.findOne({ user, article }).lean() 
+        ])
+
+        if(!articleValid) return res.status(400).json({ message: 'Article not found' });
+        if(liked) return res.status(409).json({ message: 'You already liked this article' });
+        
+        const like = new Like({
+            user,
+            article
+        }); // Novos documentos são sincronos, não é necessário o await, por isso o uso do promisse.all() é desnecessário
+
+        await Promise.all([
+            Article.updateOne( {_id: article}, { $inc: { likeCount: 1 } }),
+            like.save(),
+        ])
+
+        res.status(204).json({ message: "Liked article" });
     } catch (error) {
         res.status(500).json({ message: 'Internal server error' });
         console.error('Error while liking an article', error);
@@ -40,29 +46,24 @@ export const like = async (req, res) => {
 }
 
 export const removeLike = async (req, res) => {
-    const user = req.user._id;
-    const article = req.params.articleId;
+    const articleId = req.params.articleId;
+    const likeId = req.params.likeId;
 
-    console.log(user, article)
-
-    if (!isValidObjectId(user)) {
+    if (!isValidObjectId(articleId)) {
         return res.status(400).json({ 
             message: 'ID inválido' 
         });
     }
-
-    if (!isValidObjectId(article)) {
-        return res.status(400).json({ 
-            message: 'ID inválido' 
-        });
-    }
-
-    const articleValid = await Article.findById(article);
-    if(!articleValid) return res.status(400).json({ message: 'Article not found' });
-    
     try {
-        const like = await Like.findOneAndDelete({ user, article });
-        if(!like) return res.status(400).json({ message: 'Like not found' });
+        const [articleVerify, deleteLike] = await Promise.all([
+            Article.findById(articleId).lean(),
+            Like.findByIdAndDelete(likeId)
+        ])
+        
+        if(!articleVerify) return res.status(400).json({ message: 'Article not found' });
+        if(!deleteLike) return res.status(400).json({ message: 'Like not found' });
+
+        await Article.updateOne({_id: articleId}, { $inc: { likeCount: -1 } }),
         res.status(204).json({ message: 'Like removed' });
     } catch (error) {
         console.error('Error removing like', error);
