@@ -27,7 +27,7 @@ const contentSchema = new mongoose.Schema({
 }, { _id: false });
 
 const articleSchema = new mongoose.Schema({
-    title: { type: String, required: true, trim: true, index: true },
+    title: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true, trim: true },
     creationDate: { type: Date, default: Date.now },
     author: { type: String, required: true },
@@ -49,7 +49,7 @@ const articleSchema = new mongoose.Schema({
     commentCount: { type: Number, default: 0 }
 })
 
-articleSchema.index({ creationDate: -1 });
+articleSchema.index({ title: 1, creationDate: -1 });
 articleSchema.index({ tag: 1, creationDate: -1 });
 
 export default mongoose.model('Article', articleSchema);

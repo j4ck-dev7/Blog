@@ -20,7 +20,7 @@ export const addArticle = async (req, res) => {
         });    
         await article.save();
 
-        await client.del(`articles:page:1:limit:5`);
+        await client.del(`articles:page:1:limit:5`); // Ao adicionar mais um artigo, é necessário deletar a primeira página do cache para que o novo artigo seja retornado em uma nova consulta na primeira página
 
         res.status(201).json({ message: 'Article created successfully', article });
     } catch (error) {

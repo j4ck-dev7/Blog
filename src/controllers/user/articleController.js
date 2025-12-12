@@ -13,23 +13,23 @@ const CACHE_TTL = 30;
 export const allArticles = async (req, res) => {
     try {
       const pageNum = Math.max(1, parseInt(req.query.page));
-      const limitNum = Math.min(5, Math.max(1, parseInt(req.query.limit)));
+      const limitNum = Math.min(20, Math.max(1, parseInt(req.query.limit)));
       const skip = (pageNum -1) * limitNum;
 
-      const cacheKey = `articles:page:${pageNum}:limit:${limitNum}`
-      const cached = await client.get(cacheKey);
+      const cacheKey = `articles:page:${pageNum}:limit:${limitNum}` // Chave única para identificação no redis
+      const cached = await client.get(cacheKey); // Busca o cache com a chave sendo 
       if(cached){
-        return res.status(200).json(JSON.parse(cached));
+        return res.status(200).json(JSON.parse(cached)); // Se o cache existir ele retorna para o cliente, o tempo de resposta pode ser menor que 100ms
       }
 
       const [total, articlesData] = await Promise.all([
-        Article.countDocuments(),
+        Article.countDocuments(), 
         Article.find()
           .sort({ creationDate: -1 })
-          .skip(skip)
+          .skip(skip) // Skip é problemática, ao chegar em uma determinada página ex: 100, o tempo de resposta da consulta até o banco de dados e o seu retorno pode chegar á 3000ms
           .limit(limitNum)
-          .select('-_id -__v -content')
-          .lean()
+          .select('-_id -__v -content') // Seleciona | oculta campos do documento
+          .lean() // Necessário em consultas, converte os documentos em objetos JavaScript
       ]);
 
       if(!articlesData.length) return res.status(400).json({ message: 'Articles not found' })
@@ -60,7 +60,7 @@ export const allArticles = async (req, res) => {
         pagination
       };
 
-      await client.setEx(cacheKey, CACHE_TTL, JSON.stringify(data))
+      await client.setEx(cacheKey, CACHE_TTL, JSON.stringify(data)) // Quando não há cache ou foi expirado, é salvo no redis. Para salvar é necessário a chave, tempo de expiração e os dados convertidos para string
 
       res.status(200).json({ 
         message: 'Articles obtained', 
