@@ -1,12 +1,12 @@
-# blog-API
+# blog
 
-[![Node.js](https://img.shields.io/badge/Node.js-v20.x-green)](https://nodejs.org/)
-[![Express](https://img.shields.io/badge/Express-4.19-blue)](https://expressjs.com/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-7.x-brightgreen)](https://www.mongodb.com/)
-[![Redis](https://img.shields.io/badge/Redis-7.x-red)](https://redis.io/)
+[![Node.js](https://img.shields.io/badge/Node.js-v22.x-green)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Express-5.1-blue)](https://expressjs.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-8.x-brightgreen)](https://www.mongodb.com/)
+[![Redis](https://img.shields.io/badge/Redis-5.x-red)](https://redis.io/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Uma API RESTful para um blog, com autenticação JWT, cache com Redis (cache-aside), sistema de artigos, assinatuas com Stripe, comentários, curtidas, pesquisa por tags e paginação.  
+Um projeto backend de um blog, com autenticação JWT, cache com Redis (cache-aside), sistema de artigos, assinatuas com Stripe, comentários, curtidas, pesquisa por tags e paginação.  
 Desenvolvida com **Node.js + Express + Mongoose + MongoDB** e testada com **Insomnia/Postman**.
 
 ## 🚀 Funcionalidades
