@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma" // Ao modificar | criar algum modelo é necessário usar o comando no terminal 
+} // npx prisma generate para que as alterações sejam recebidas para execução de um CRUD 
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Comment {
+  id String @id @default(cuid())
+  post String 
+  user User @relation(fields: [userName], references: [name]) 
+  userName String
+  userId String
+  articleId String
+  creationDate DateTime @default(now())
+}
+ 
+model Like {
+  id String @id @default(cuid())
+  articleId String
+  userId String
+  dateCreated DateTime @default(now())
+}
+
+model User {
+  id String @id @default(cuid())
+  name String @unique @db.VarChar(50)
+  email String @unique @db.VarChar(50)
+  password String @db.VarChar(100)
+  comment Comment[]
+  role Role @default(user)
+  createdAt DateTime @default(now())
+  subscriptionPlan SubscriptionPlan @default(FREE)
+  subscriptionExpiresAt DateTime?
+
+  @@index([name]) // index de consultas
+  @@index([email]) // index de consultas
+}
+
+enum Role{
+  admin
+  user
+}
+
+enum SubscriptionPlan{
+  FREE
+  BASIC
+  INTERMEDIATE
+  PREMIUM
+}

@@ -6,7 +6,7 @@ export const auth = (req, res, next) => {
 
     try {
         const userVerified = jwt.verify(cookie, process.env.SECRET);
-        req.user = userVerified;
+        req.user = userVerified; 
         next()
     } catch (error) {
         res.status(500).json({ message: 'Internal server error' });

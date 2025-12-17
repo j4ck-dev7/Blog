@@ -1,8 +1,6 @@
 import Article from '../../models/Article.js';
-import Comment from '../../models/Comment.js';
-import Like from '../../models/Like.js';
 import client from '../../config/redis.js';
-import User from '../../models/User.js';
+import { prisma } from '../../lib/prisma.js';
 
 import { formatDateTime } from '../../utills/formatarDataHora.js';
 import { relativeTime } from '../../utills/tempoRelativo.js';
@@ -75,56 +73,20 @@ export const allArticles = async (req, res) => {
 export const loadArticle = async (req, res) => {
     const { slug } = req.params;
     const planWeight = {
-      free: 0,
-      basic: 1,
-      intermediate: 2,
-      premium: 3
+      FREE: 0,
+      BASIC: 1,
+      INTERMEDIATE: 2,
+      PREMIUM: 3
     }
 
     try {
       const data = await Article.findOne({ slug })
         .select('-__v -conteudo._id -slug -viewsCount -commentCount')
         .lean()
-      
-      const userComments = await Comment.find({ article: data._id})
-        .select('-_id -article -__v +isEdited ')
-        .sort({ createdAt: -1 })
-        .populate({
-          path: 'user',
-          select: '-_id -__v -password -role -email -subscription -role'
-        })
-        .limit(20)
-        .lean();
 
       if (!data) {
         return res.status(404).json({ message: 'Article not found' });
       }
-
-      const now = new Date();
-
-      const planUser = planWeight[req.user.subscription.plan];
-      const planExpires = new Date(req.user.subscription.expiresAt);
-      const planArticle = planWeight[data.planRole];
-
-      if(planUser < planArticle) return res.status(403).json({
-        message: 'Access denied: Upgrade your subscription to access this article'
-      });
-
-      if(null && now > planExpires) {
-        await User.findByIdAndUpdate(req.user._id, {
-          'subscription.plan': 'free',
-          'subscription.expiresAt': null,
-        });
-
-        return res.status(403).json({ message: 'Access denied: Renew your subscription' });
-      };
-
-      const articleId = data._id;
-      if (!isValidObjectId(articleId)) {
-        return res.status(400).json({ 
-          message: 'ID inválido' 
-        });
-      };
 
       const articleLoad = {
         title: data.title,
@@ -135,20 +97,48 @@ export const loadArticle = async (req, res) => {
         createIn: formatDateTime(data.creationDate)
       };
 
-      const comment = userComments.map(c => ({
-        content: c.post,
-        user: c.user,
-        createdIn: relativeTime(c.creationDate),
-        edited: c.isEdited
-      }));
+      const planArticle = planWeight[data.planRole];
+      if(planArticle === 0 || data.planRole === 'FREE'){
+        await Article.updateOne({slug}, { $inc: { viewsCount: 1 } })
+
+        return res.status(200).json({
+          message: 'Article obtained',
+          articleLoad
+        })
+      }
+
+      const now = new Date();
+      const planUser = planWeight[req.user.subscriptionPlan]
+
+      if(req.user.subscriptionExpire){
+        const planExpires = new Date(req.user.subscriptionExpire)
+
+        if(now > planExpires){
+          await prisma.user.update({
+            where: { email: req.user.email },
+            data: {
+              subscriptionExpiresAt: null,
+              subscriptionPlan: 'FREE'
+            }
+          });
+
+          return res.status(403).json({
+            message: 'Access denied: Your subscription has expired. Please renew to access premium content'
+          })
+        }
+      }
+      
+      if(planUser < planArticle) {
+        return res.status(403).json({
+          message: 'Access denied: Upgrade your subscription to access this article'
+        });
+      }
 
       await Article.updateOne({slug}, { $inc: { viewsCount: 1 } })
-
       res.status(200).json({
         article: {
           articleLoad,
-        },           
-        comments: comment
+        }
       });
 
     }catch (error) {

@@ -25,7 +25,7 @@ router.post('/signIn', loginValidate, signIn);
 router.post('/signUp', signUpValidator, signUp);
 router.post('/article/:articleId/like', auth, like);
 router.post('/article/:articleId/comment', auth, comment);
-router.post('/subscribe', auth, subscribe)
+router.post('/subscribe', auth, subscribe);
 
 router.put('/article/comment/:commentId', auth, editComment);
 

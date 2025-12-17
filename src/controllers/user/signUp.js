@@ -1,22 +1,32 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-import User from '../../models/User.js';
+import { prisma } from '../../lib/prisma.js'; 
 
 export const signUp = async (req, res) => {
     const email = req.body.email;
-    const selectedUser = await User.findOne({ email }).lean();
-    if(selectedUser) return res.status(409).send('Existing email');
-
-    const user = new User({
-        name: req.body.name,
-        email,
-        password: bcrypt.hashSync(req.body.password)
-    });
 
     try {
-        const savedUser = await user.save();
-        let token = jwt.sign( { _id : savedUser._id, subscription: savedUser.subscription, email }, process.env.SECRET );
+        const selectedUser = await prisma.user.findUnique({
+            where: {
+                email
+            }
+        })
+        if(selectedUser) return res.status(409).send('Existing email');
+
+        const user = await prisma.user.create({
+            data: {
+                email,
+                name: req.body.name,
+                password: bcrypt.hashSync(req.body.password)
+            } 
+        })
+        let token = jwt.sign( { 
+            _id : user._id, 
+            subscriptionExpires: user.subscriptionExpiresAt, 
+            subscriptionPlan: user.subscriptionPlan, 
+            email 
+        }, process.env.SECRET );
         res.cookie('userAuth', token, { secure: true, httpOnly: true, expires: new Date(Date.now() + 2 * 3600000) });
         res.status(201).json({ message: "User successfully registered" });
     } catch (error) {

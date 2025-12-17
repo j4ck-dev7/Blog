@@ -41,8 +41,8 @@ const articleSchema = new mongoose.Schema({
     planRole: {
         index: true,
         type: String,
-        enum: [ 'free', 'basic', 'intermediate', 'premium' ],
-        default: 'free'
+        enum: [ 'FREE', 'BASIC', 'INTERMEDIATE', 'PREMIUM' ],
+        default: 'FREE'
     },
     viewsCount: { type: Number, default: 0 },
     likeCount: { type: Number, default: 0 },
