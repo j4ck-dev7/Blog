@@ -46,10 +46,10 @@ export const editComment = async (req, res) => {
 
     try {
         const editComment = await prisma.comment.update({
-            where: {
+            where: { // Onde | qual documento especifico tenha esse campo especifico
                 id: `${commentId}`
             },
-            data: {
+            data: { // Os dados que serão modificados
                 post
             }
         })
