@@ -20,8 +20,10 @@ export const allArticles = async (req, res) => {
         return res.status(200).json(JSON.parse(cached)); // Se o cache existir ele retorna para o cliente, o tempo de resposta pode ser menor que 100ms
       }
 
-      const [total, articlesData] = await Promise.all([
-        Article.countDocuments(), 
+      // Como o Promise.all() executa em paralelo cada operação, é necessário tomar cuidado pois cada operação é independente, ou seja se uma falhar as proximas vão ser executadas, exemplo em uma inserção de dados em um documento separado
+      // que depois de inserido o dado um campo de um outro documento terá que ser incrementado, se a inserção falhar, a incrementação ainda será executada sendo um bug. Seu uso é apenas para leitura ou sem efeitos colaterais
+      const [total, articlesData] = await Promise.all([ 
+        Article.estimatedDocumentCount(), 
         Article.find()
           .sort({ creationDate: -1 })
           .skip(skip) // Skip é problemática, ao chegar em uma determinada página ex: 100, o tempo de resposta da consulta até o banco de dados e o seu retorno pode chegar á 3000ms
@@ -80,30 +82,32 @@ export const loadArticle = async (req, res) => {
     }
 
     try {
-      const data = await Article.findOne({ slug })
+      const article = await Article.findOne({ slug })
         .select('-__v -conteudo._id -slug -viewsCount -commentCount')
         .lean()
 
-      if (!data) {
+      if (!article) {
         return res.status(404).json({ message: 'Article not found' });
       }
 
       const articleLoad = {
-        title: data.title,
-        author: data.author,
-        content: data.content,
-        likes: data.likeCount,
-        tags: data.tags,
-        createIn: formatDateTime(data.creationDate)
+        title: article.title,
+        author: article.author,
+        content: article.content,
+        likes: article.likeCount,
+        tags: article.tags,
+        createIn: formatDateTime(article.creationDate)
       };
 
-      const planArticle = planWeight[data.planRole];
-      if(planArticle === 0 || data.planRole === 'FREE'){
+      const planArticle = planWeight[article.planRole];
+      if(planArticle === 0 || article.planRole === 'FREE'){
         await Article.updateOne({slug}, { $inc: { viewsCount: 1 } })
 
         return res.status(200).json({
           message: 'Article obtained',
-          articleLoad
+          article: { 
+            articleLoad 
+          }
         })
       }
 

@@ -14,11 +14,12 @@ export const like = async (req, res) => {
         }
 
         const [articleValid, liked] = await Promise.all([
-            Article.findById(articleId).lean(), // O lean funciona apenas em consultas | leituras, ele converte a instância de do mongoose em objeto JS puro
+            Article.findById(articleId).select('_id').lean(), // O lean funciona apenas em consultas | leituras, ele converte a instância de do mongoose em objeto JS puro
             prisma.like.findFirst({ 
                 where: {
                     userId, articleId
-                }
+                },
+                select: { id: true }
             })
         ])
 
@@ -52,7 +53,7 @@ export const removeLike = async (req, res) => {
     }
     try {
         const [articleVerify, deleteLike] = await Promise.all([
-            Article.findById(articleId).lean(),
+            Article.findById(articleId).select('_id').lean(),
             prisma.like.findFirst({
                 where: {
                     id: likeId,
@@ -83,18 +84,12 @@ export const allLikes = async (req, res) => {
     const userId = req.user._id;
 
     try {
-        if (!isValidObjectId(userId)) {
-            return res.status(400).json({ 
-                message: 'ID inválido' 
-            });
-        }
-
         const likes = await prisma.like.findMany({
             where: {
                 userId
             },
             select: {
-                articleId: true, dateCreated: true, id: true 
+                articleId: true, id: true 
             }
         })
         

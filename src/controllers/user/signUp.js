@@ -10,6 +10,9 @@ export const signUp = async (req, res) => {
         const selectedUser = await prisma.user.findUnique({
             where: {
                 email
+            },
+            select: {
+                email: true
             }
         })
         if(selectedUser) return res.status(409).send('Existing email');

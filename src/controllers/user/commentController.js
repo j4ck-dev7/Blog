@@ -19,24 +19,22 @@ export const comment = async (req, res) => {
         const articleValid = await Article.findById(articleId).select('_id').lean(); // select para retornar apenas o _id e lean() para converter em objeto JS
         if(!articleValid) return res.status(400).json({ message: 'Article not found' });
 
-        await Promise.all([
-            Article.updateOne({_id: articleId}, { $inc: { commentCount: 1 } }),
-            prisma.comment.create({ // Diferente do mongoose que para salvar (await Model.save) uma nova ciração de documento o prisma cria e salva ao mesmo tempo
+        await prisma.comment.create({ // Diferente do mongoose que para salvar (await Model.save) uma nova criação de documento o prisma cria e salva ao mesmo tempo
             data: {
                 post,
                 userId,
                 userName,
                 articleId
-            },
+            }
         })
-        ])
-        
+
+        await Article.updateOne({_id: articleId}, { $inc: { commentCount: 1 } })
         res.status(204).json({ 
             message: "Comment added",
         });
     } catch (error) {
         res.status(500).json({ message: 'Internal server error' });
-        console.error('Error while liking an article', error);
+        console.error('Error when commenting on the article', error);
     }
 }
 
@@ -45,6 +43,18 @@ export const editComment = async (req, res) => {
     const commentId = req.params.commentId;
 
     try {
+        const verifyComment = await prisma.comment.findFirst({
+            where: {
+                id: commentId
+            },
+            select: {
+                post: true
+            }
+        })
+        if(!verifyComment) return res.status(400).json({
+            message: 'Comment not found'
+        })
+
         const editComment = await prisma.comment.update({
             where: { // Onde | qual documento especifico tenha esse campo especifico
                 id: `${commentId}`
@@ -53,7 +63,6 @@ export const editComment = async (req, res) => {
                 post
             }
         })
-        if(!editComment) return res.status(404).json({ message: 'Comment not found' });
 
         res.status(200).json({ 
             message: 'Comentário editado!',
@@ -80,12 +89,13 @@ export const removeComment = async (req, res) => {
                 where: {
                     id: commentId,
                     articleId: articleId
-                }
+                },
+                select: { id: true }
             })
         ])
 
-        if(!articleValid) return res.status(400).json({ message: 'Article not found' });
-        if(!commentVerify) return res.status(400).json({ message: 'Comment not found' });
+        if(!articleValid) return res.status(404).json({ message: 'Article not found' });
+        if(!commentVerify) return res.status(404).json({ message: 'Comment not found' });
 
         await Promise.all([
             prisma.comment.delete({

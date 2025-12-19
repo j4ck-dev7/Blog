@@ -8,6 +8,14 @@ export const signIn = async (req, res) => {
     const selectedUser = await prisma.user.findUnique({
         where: {
             email
+        },
+        select: { // Trazer do documento apenas campos necessários 
+            name: true,
+            email: true,
+            password: true,
+            id: true,
+            subscriptionExpiresAt: true,
+            subscriptionPlan: true
         }
     })
     if(!selectedUser) return res.status(400).send("Incorrect email or password");
