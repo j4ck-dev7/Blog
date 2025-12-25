@@ -16,10 +16,10 @@
  */
 
 import * as runtime from "@prisma/client/runtime/client"
-import type * as Prisma from "../models.ts"
-import { type PrismaClient } from "./class.ts"
+import type * as Prisma from "../models.js"
+import { type PrismaClient } from "./class.js"
 
-export type * from '../models.ts'
+export type * from '../models.js'
 
 export type DMMF = typeof runtime.DMMF
 
@@ -80,12 +80,12 @@ export type PrismaVersion = {
 }
 
 /**
- * Prisma Client JS version: 7.1.0
- * Query Engine version: ab635e6b9d606fa5c8fb8b1a7f909c3c3c1c98ba
+ * Prisma Client JS version: 7.2.0
+ * Query Engine version: 0c8ef2ce45c83248ab3df073180d5eda9e8be7a3
  */
 export const prismaVersion: PrismaVersion = {
-  client: "7.1.0",
-  engine: "ab635e6b9d606fa5c8fb8b1a7f909c3c3c1c98ba"
+  client: "7.2.0",
+  engine: "0c8ef2ce45c83248ab3df073180d5eda9e8be7a3"
 }
 
 /**
@@ -672,7 +672,7 @@ export const CommentScalarFieldEnum = {
   post: 'post',
   userName: 'userName',
   userId: 'userId',
-  articleId: 'articleId',
+  articleSlug: 'articleSlug',
   creationDate: 'creationDate'
 } as const
 
@@ -681,7 +681,7 @@ export type CommentScalarFieldEnum = (typeof CommentScalarFieldEnum)[keyof typeo
 
 export const LikeScalarFieldEnum = {
   id: 'id',
-  articleId: 'articleId',
+  articleSlug: 'articleSlug',
   userId: 'userId',
   dateCreated: 'dateCreated'
 } as const

@@ -6,9 +6,9 @@ export const subscribe = async (req, res) => {
     try {
         let amount;
         switch(plan) {
-            case 'basic': amount = 500; break;
-            case 'intermediate': amount = 700; break;
-            case 'premium': amount = 1000; break;
+            case 'BASIC': amount = 500; break;
+            case 'INTERMEDIATE': amount = 700; break;
+            case 'PREMIUM': amount = 1000; break;
             default: return res.status(400).json({ message: 'Invalid plan' })
         };
         

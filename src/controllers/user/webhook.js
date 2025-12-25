@@ -1,4 +1,4 @@
-import User from "../../models/User.js";
+import { prisma } from '../../lib/prisma.js';
 import jwt from 'jsonwebtoken';
 import stripe from "../../config/stripe.js";
 
@@ -17,12 +17,15 @@ export const webhook = async (req, res) => {
         const userId = session.metadata.userId;
         const plan = session.metadata.plan;
 
-        const update = await User.findByIdAndUpdate(userId, { // O findByIdAndUpdate é justificável nesse caso pois será necessário atualizar o cookie userAuth
-            'subscription.plan': plan,
-            'subscription.expiresAt': new Date(Date.now() + 120_000)
-        }, { new: true }) // Retorna o documento atualizado, como se fosse um find()
+        const update = await prisma.user.update({
+            where: { id: userId },
+            data: {
+                subscriptionPlan: plan,
+                subscriptionExpiresAt: new Date(Date.now() + 120_000)
+            }
+        });
 
-        let token = jwt.sign( { _id : update._id, subscription: update.subscription, email: update.email }, process.env.SECRET )
+        let token = jwt.sign( { _id : update.id, subscription: update.subscriptionPlan, expiresAt: update.subscriptionExpiresAt, email: update.email }, process.env.SECRET )
         res.cookie('userAuth', token, { secure: true, httpOnly: true, expires: new Date(Date.now() + 2 * 3600000) })
 
         res.status(200).json({ received: true }) // Importante, diz ao stripe que o webhook foi recebido

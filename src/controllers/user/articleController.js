@@ -74,21 +74,11 @@ export const allArticles = async (req, res) => {
 
 export const loadArticle = async (req, res) => {
     const { slug } = req.params;
-    const planWeight = {
-      FREE: 0,
-      BASIC: 1,
-      INTERMEDIATE: 2,
-      PREMIUM: 3
-    }
 
     try {
       const article = await Article.findOne({ slug })
         .select('-__v -conteudo._id -slug -viewsCount -commentCount')
         .lean()
-
-      if (!article) {
-        return res.status(404).json({ message: 'Article not found' });
-      }
 
       const articleLoad = {
         title: article.title,
@@ -98,45 +88,6 @@ export const loadArticle = async (req, res) => {
         tags: article.tags,
         createIn: formatDateTime(article.creationDate)
       };
-
-      const planArticle = planWeight[article.planRole];
-      if(planArticle === 0 || article.planRole === 'FREE'){
-        await Article.updateOne({slug}, { $inc: { viewsCount: 1 } })
-
-        return res.status(200).json({
-          message: 'Article obtained',
-          article: { 
-            articleLoad 
-          }
-        })
-      }
-
-      const now = new Date();
-      const planUser = planWeight[req.user.subscriptionPlan]
-
-      if(req.user.subscriptionExpire){
-        const planExpires = new Date(req.user.subscriptionExpire)
-
-        if(now > planExpires){
-          await prisma.user.update({
-            where: { email: req.user.email },
-            data: {
-              subscriptionExpiresAt: null,
-              subscriptionPlan: 'FREE'
-            }
-          });
-
-          return res.status(403).json({
-            message: 'Access denied: Your subscription has expired. Please renew to access premium content'
-          })
-        }
-      }
-      
-      if(planUser < planArticle) {
-        return res.status(403).json({
-          message: 'Access denied: Upgrade your subscription to access this article'
-        });
-      }
 
       await Article.updateOne({slug}, { $inc: { viewsCount: 1 } })
       res.status(200).json({

@@ -5,7 +5,8 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "start": "node --loader ts-node/esm server.js"
   },
   "repository": {
     "type": "git",
@@ -18,8 +19,8 @@
   },
   "homepage": "https://github.com/j4ck-dev7/Blog-API#readme",
   "dependencies": {
-    "@prisma/adapter-pg": "^7.1.0",
-    "@prisma/client": "^7.1.0",
+    "@prisma/adapter-pg": "^7.2.0",
+    "@prisma/client": "^7.2.0",
     "bcryptjs": "^3.0.2",
     "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
@@ -36,6 +37,8 @@
     "supertest": "^7.1.4"
   },
   "devDependencies": {
-    "prisma": "^7.1.0"
+    "prisma": "^7.2.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   }
 }

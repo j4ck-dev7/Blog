@@ -13,13 +13,13 @@ model Comment {
   user User @relation(fields: [userName], references: [name]) 
   userName String
   userId String
-  articleId String
+  articleSlug String
   creationDate DateTime @default(now())
 }
  
 model Like {
   id String @id @default(cuid())
-  articleId String
+  articleSlug String
   userId String
   dateCreated DateTime @default(now())
 }

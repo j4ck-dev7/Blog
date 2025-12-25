@@ -17,8 +17,8 @@
 
 import * as runtime from "@prisma/client/runtime/index-browser"
 
-export type * from '../models.ts'
-export type * from './prismaNamespace.ts'
+export type * from '../models.js'
+export type * from './prismaNamespace.js'
 
 export const Decimal = runtime.Decimal
 
@@ -77,7 +77,7 @@ export const CommentScalarFieldEnum = {
   post: 'post',
   userName: 'userName',
   userId: 'userId',
-  articleId: 'articleId',
+  articleSlug: 'articleSlug',
   creationDate: 'creationDate'
 } as const
 
@@ -86,7 +86,7 @@ export type CommentScalarFieldEnum = (typeof CommentScalarFieldEnum)[keyof typeo
 
 export const LikeScalarFieldEnum = {
   id: 'id',
-  articleId: 'articleId',
+  articleSlug: 'articleSlug',
   userId: 'userId',
   dateCreated: 'dateCreated'
 } as const
