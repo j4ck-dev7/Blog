@@ -1,23 +1,16 @@
 import Article from '../../models/Article.js';
-import { prisma } from '../../lib/prisma.js'
-import { isValidObjectId } from '../../utills/isValidObjectId.js';
+import { prisma } from '../../lib/prisma.js';
 
 export const like = async (req, res) => {
     const userId = req.user._id;
-    const articleId = req.params.articleId;
+    const articleSlug = req.params.slug;
 
     try {
-        if (!isValidObjectId(articleId)) {
-            return res.status(400).json({ 
-                message: 'ID inválido' 
-            });
-        }
-
         const [articleValid, liked] = await Promise.all([
-            Article.findById(articleId).select('_id').lean(), // O lean funciona apenas em consultas | leituras, ele converte a instância de do mongoose em objeto JS puro
+            Article.findOne({ slug: articleSlug }).select('_id').lean(), // O lean funciona apenas em consultas | leituras, ele converte a instância de do mongoose em objeto JS puro
             prisma.like.findFirst({ 
                 where: {
-                    userId, articleId
+                    userId, articleSlug
                 },
                 select: { id: true }
             })
@@ -29,10 +22,10 @@ export const like = async (req, res) => {
         await Promise.all([
             prisma.like.create({
                 data: {
-                    userId, articleId
+                    userId, articleSlug
                 }
             }),
-            Article.updateOne( {_id: articleId}, { $inc: { likeCount: 1 } }),
+            Article.updateOne({ slug: articleSlug }, { $inc: { likeCount: 1 } }),
         ])
 
         res.status(204).json({ message: "Liked article" });
@@ -43,21 +36,19 @@ export const like = async (req, res) => {
 }
 
 export const removeLike = async (req, res) => {
-    const articleId = req.params.articleId;
+    const articleSlug = req.params.slug;
     const likeId = req.params.likeId;
 
-    if (!isValidObjectId(articleId)) {
-        return res.status(400).json({ 
-            message: 'ID inválido' 
-        });
-    }
     try {
         const [articleVerify, deleteLike] = await Promise.all([
-            Article.findById(articleId).select('_id').lean(),
+            Article.findOne({ slug: articleSlug }).select('slug').lean(),
             prisma.like.findFirst({
                 where: {
                     id: likeId,
-                    articleId: articleId
+                    articleSlug: articleSlug
+                },
+                select: {
+                    id: true
                 }
             })
         ])
@@ -71,7 +62,7 @@ export const removeLike = async (req, res) => {
                     id: likeId
                 }
             }),
-            Article.updateOne({_id: articleId}, { $inc: { likeCount: -1 } })
+            Article.updateOne({ slug: articleSlug }, { $inc: { likeCount: -1 } })
         ])
         res.status(204).json({ message: 'Like removed' });
     } catch (error) {
@@ -89,7 +80,7 @@ export const allLikes = async (req, res) => {
                 userId
             },
             select: {
-                articleId: true, id: true 
+                articleSlug: true, id: true
             }
         })
         

@@ -4,19 +4,13 @@ import { isValidObjectId } from '../../utills/isValidObjectId.js';
 import Article from '../../models/Article.js';
 
 export const comment = async (req, res) => {
-    const articleId = req.params.articleId;
+    const articleSlug = req.params.slug;
     const userId = req.user._id;
     const userName = req.user.name
     const post = req.body.post;
 
     try {
-        if (!isValidObjectId(articleId)) {
-            return res.status(400).json({ 
-                message: 'ID inválido' 
-            });
-        }
-
-        const articleValid = await Article.findById(articleId).select('_id').lean(); // select para retornar apenas o _id e lean() para converter em objeto JS
+        const articleValid = await Article.findOne({ slug: articleSlug }).select('slug').lean(); // select para retornar apenas o _id e lean() para converter em objeto JS
         if(!articleValid) return res.status(400).json({ message: 'Article not found' });
 
         await prisma.comment.create({ // Diferente do mongoose que para salvar (await Model.save) uma nova criação de documento o prisma cria e salva ao mesmo tempo
@@ -24,11 +18,11 @@ export const comment = async (req, res) => {
                 post,
                 userId,
                 userName,
-                articleId
+                articleSlug
             }
         })
 
-        await Article.updateOne({_id: articleId}, { $inc: { commentCount: 1 } })
+        await Article.updateOne({slug: articleSlug}, { $inc: { commentCount: 1 } })
         res.status(204).json({ 
             message: "Comment added",
         });
@@ -80,15 +74,15 @@ export const editComment = async (req, res) => {
 
 export const removeComment = async (req, res) => {
     const commentId = req.params.commentId;
-    const articleId = req.params.articleId;
+    const articleSlug = req.params.slug;
 
     try {
         const [articleValid, commentVerify] = await Promise.all([
-            Article.findById(articleId).select('_id').lean(),
+            Article.findOne({ slug: articleSlug }).select('slug').lean(),
             prisma.comment.findFirst({
                 where: {
                     id: commentId,
-                    articleId: articleId
+                    articleSlug
                 },
                 select: { id: true }
             })
@@ -101,7 +95,7 @@ export const removeComment = async (req, res) => {
             prisma.comment.delete({
                 where: { id: commentId }
             }),
-            Article.updateOne({_id: articleId}, { $inc: { commentCount: -1 } })
+            Article.updateOne({ slug: articleSlug }, { $inc: { commentCount: -1 } })
         ])
         res.status(204).json({ message: 'Comment removed' });
     } catch (error) {

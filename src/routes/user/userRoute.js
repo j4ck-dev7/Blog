@@ -26,7 +26,7 @@ router.post('/article/:slug/like', auth, planValidation, like);
 router.post('/article/:slug/comment', auth, postValidate, planValidation, comment);
 router.post('/subscribe', auth, subscribe);
 
-router.put('/article/comment/:commentId', auth, postValidate, planValidation, editComment);
+router.put('/article/:slug/comment/:commentId', auth, postValidate, planValidation, editComment);
 
 router.delete('/article/:slug/like/:likeId', auth, planValidation, removeLike);
 router.delete('/article/:slug/comment/:commentId', auth, planValidation, removeComment);
