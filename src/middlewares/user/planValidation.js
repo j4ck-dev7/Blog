@@ -13,7 +13,6 @@ export const planValidation = async (req, res, next) => {
 
     try {
       const now = new Date();
-      const planUser = planWeight[req.user.subscriptionPlan]
 
       const article = await Article.findOne({ slug })
         .select('planRole')
@@ -46,6 +45,7 @@ export const planValidation = async (req, res, next) => {
           }
       }
       
+      const planUser = planWeight[req.user.subscriptionPlan]
       if(planUser < planArticle) {
         return res.status(403).json({
           message: 'Access denied: Upgrade your subscription'

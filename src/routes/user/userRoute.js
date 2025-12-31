@@ -12,23 +12,24 @@ import { loginValidate } from '../../middlewares/universal/loginValidate.js';
 import { postValidate } from '../../middlewares/user/postValidation.js';   
 import { auth } from '../../middlewares/user/authorization.js';
 import { planValidation } from '../../middlewares/user/planValidation.js';
+import { credentialsAuth } from '../../middlewares/user/credentialsAuth.js';
 
 const router = express.Router();
 
 router.get('/likes', auth, allLikes);
 router.get('/articles', auth, allArticles);
 router.get('/articles/tag', auth, findArticleByTag);
-router.get('/article/:slug', auth, planValidation, loadArticle);
+router.get('/article/:slug', auth, credentialsAuth, planValidation, loadArticle);
 
 router.post('/signIn', loginValidate, signIn);
 router.post('/signUp', signUpValidator, signUp);
-router.post('/article/:slug/like', auth, planValidation, like);
-router.post('/article/:slug/comment', auth, postValidate, planValidation, comment);
+router.post('/article/:slug/like', auth, credentialsAuth, planValidation, like);
+router.post('/article/:slug/comment', auth, credentialsAuth, planValidation, postValidate, comment);
 router.post('/subscribe', auth, subscribe);
 
-router.put('/article/:slug/comment/:commentId', auth, postValidate, planValidation, editComment);
+router.put('/article/:slug/comment/:commentId', auth, credentialsAuth, planValidation, postValidate, editComment);
 
-router.delete('/article/:slug/like/:likeId', auth, planValidation, removeLike);
-router.delete('/article/:slug/comment/:commentId', auth, planValidation, removeComment);
+router.delete('/article/:slug/like/:likeId', auth, credentialsAuth, planValidation, removeLike);
+router.delete('/article/:slug/comment/:commentId', auth, credentialsAuth, planValidation, removeComment);
 
 export default router;

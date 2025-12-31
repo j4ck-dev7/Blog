@@ -73,6 +73,7 @@ export const removeLike = async (req, res) => {
 
 export const allLikes = async (req, res) => {
     const userId = req.user._id;
+    if(userId === 'freeAccess') return res.status(401).json({ message: 'User not authenticated, please login or register' });
 
     try {
         const likes = await prisma.like.findMany({
