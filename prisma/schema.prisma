@@ -8,31 +8,35 @@ datasource db {
 }
 
 model Comment {
-  id String @id @default(cuid())
+  id String @id @default(cuid()) @db.VarChar(30) // Para dados públicos, como IDs expostos em URLs, usar cuid() é uma boa prática para garantir unicidade e segurança. Além disso as referencias também tem quer ser cuid()
   post String 
-  user User @relation(fields: [userName], references: [name]) 
+  user User @relation(fields: [userName], references: [name]) // Normalmente se usa o id para referenciar, mas nesse caso usamos o name para exemplificar outra forma de relacionamento (desnormalização), Isso evita joins desnecessários em consultas frequentes.
   userName String
   userId String
   articleSlug String
   creationDate DateTime @default(now())
+
+  @@index([articleSlug]) // index de consultas
 }
  
 model Like {
-  id String @id @default(cuid())
+  id String @id @default(cuid()) @db.VarChar(30) // Ao usar cuid(), é necessário definir o tamanho do campo no banco de dados com @db.VarChar(30), para evitar truncamentos. Isso nas versões 2.x ou superior do Prisma.
   articleSlug String
   userId String
   dateCreated DateTime @default(now())
+
+  @@index([articleSlug]) // index de consultas
 }
 
 model User {
-  id String @id @default(cuid())
+  id String @id @default(cuid()) @db.VarChar(30) // Definir o tamanho do campo para cuids gerados também assegura compatibilidade e otimização no postgres.
   name String @unique @db.VarChar(50)
   email String @unique @db.VarChar(50)
   password String @db.VarChar(100)
   comment Comment[]
   role Role @default(user)
   createdAt DateTime @default(now())
-  subscriptionPlan SubscriptionPlan @default(FREE)
+  subscriptionPlan SubscriptionPlan @default(free)
   subscriptionExpiresAt DateTime?
 
   @@index([name]) // index de consultas
@@ -45,8 +49,8 @@ enum Role{
 }
 
 enum SubscriptionPlan{
-  FREE
-  BASIC
-  INTERMEDIATE
-  PREMIUM
+  free
+  basic 
+  intermediate
+  premium
 }

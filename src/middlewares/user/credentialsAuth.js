@@ -53,7 +53,7 @@ export const credentialsAuth = async (req, res, next) => {
             name: req.user.name
         };
 
-        const isEqual = JSON.stringify(userObjDb) === JSON.stringify(userObjToken);        
+        const isEqual = JSON.stringify(userObjDb) === JSON.stringify(userObjToken); // Compara os dois objetos para garantir que o token não foi adulterado        
         if (!isEqual) {
             return res.status(401).json({ message: "Unauthorized. Invalid credentials." });
         };

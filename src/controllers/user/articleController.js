@@ -10,9 +10,9 @@ const CACHE_TTL = 30;
 
 export const allArticles = async (req, res) => {
     try {
-      const pageNum = Math.max(1, parseInt(req.query.page));
+      const pageNum = Math.max(1, parseInt(req.query.page)); // Paginação com skip e limit, necessário outra alternativa de paginação para grandes volumes de dados
       const limitNum = Math.min(20, Math.max(1, parseInt(req.query.limit)));
-      const skip = (pageNum -1) * limitNum;
+      const skip = (pageNum -1) * limitNum; // Skip é ineficiente para grandes volumes de dados
 
       const cacheKey = `articles:page:${pageNum}:limit:${limitNum}` // Chave única para identificação no redis
       const cached = await client.get(cacheKey); // Busca o cache com a chave sendo 
