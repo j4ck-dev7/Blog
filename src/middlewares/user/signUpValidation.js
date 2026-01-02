@@ -18,7 +18,7 @@ export const signUpValidator = [
         .isLength({ min : 8 }).withMessage('The password must contain at least 8 characters.'),
 
     (req, res, next) => {
-        const error = validationResult(req);
+        const error = validationResult(req).formatWith(({ msg }) => msg);
         if(!error.isEmpty()) return res.status(400).json({ error: error.array() });
 
         next();

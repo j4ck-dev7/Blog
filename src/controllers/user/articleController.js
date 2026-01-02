@@ -77,7 +77,7 @@ export const loadArticle = async (req, res) => {
 
     try {
       const article = await Article.findOne({ slug })
-        .select('-__v -conteudo._id -slug -viewsCount -commentCount')
+        .select('-__v -content._id -slug -viewsCount -commentCount')
         .lean()
 
       const articleLoad = {
@@ -89,7 +89,7 @@ export const loadArticle = async (req, res) => {
         createIn: formatDateTime(article.creationDate)
       };
 
-      await Article.updateOne({slug}, { $inc: { viewsCount: 1 } })
+      await Article.updateOne({slug}, { $inc: { viewsCount: 1 } }) // Quando o artigo é carregado, incrementa 1 no contador de visualizações
       res.status(200).json({
         article: {
           articleLoad,
@@ -106,7 +106,7 @@ export const findArticleByTag = async (req, res) => {
       const tags = req.query.tag;
 
       const pageNum = Math.max(1, parseInt(req.query.page));
-      const limitNum = Math.min(5, Math.max(1, parseInt(req.query.limit)));
+      const limitNum = Math.min(20, Math.max(1, parseInt(req.query.limit)));
       const skip = (pageNum -1) * limitNum;
 
       const cacheKey = `articles:tag:${tags}:page:${pageNum}:limit:${limitNum}`
@@ -166,3 +166,44 @@ export const findArticleByTag = async (req, res) => {
       res.status(500).json({ message: 'Internal server error' });
     };
 };
+
+export const searchArticles = async (req, res) => {
+  try {
+    const search = req.query.search; // Termo de busca, para APIs REST geralmente é passado via query params, sendo a melhor opção.
+    const pageNum = Math.max(1, parseInt(req.query.page));
+    const limitNum = Math.min(20, Math.max(1, parseInt(req.query.limit)));
+    const skip = (pageNum -1) * limitNum;
+
+    const articlesFind = await Article.find({
+      $text: { $search: search } // Busca textual conforme o índice criado no modelo do artigo
+    }, {
+      score: { $meta: "textScore" } // O score serve para ordenar os resultados conforme a relevância da busca
+    })
+      .sort({ score: { $meta: "textScore" } }).sort({ creationDate: -1 })
+      .skip(skip) // Skip é problemática, ao chegar em uma determinada página ex: 100, o tempo de resposta da consulta até o banco de dados e o seu retorno pode chegar á 3000ms
+      .limit(limitNum)
+      .select('-_id -__v -content') // Seleciona | oculta campos do documento
+      .lean() // Necessário em consultas, converte os documentos em objetos JavaScript
+
+    if(!articlesFind.length) return res.status(400).json({ message: 'Articles not found' })
+
+    const articles = articlesFind.map(a => ({
+      title: a.title,
+      banner: a.banner,
+      tags: a.tags,
+      plan: a.planRole,
+      createdIn: formatDateTime(a.creationDate),
+      likeCount: a.likeCount || 0,
+      commentCount: a.commentCount || 0,
+      viewsCount: a.viewsCount || 0
+    }));
+
+    res.status(200).json({
+      message: 'Search results', 
+      articles      
+    })
+  } catch (error) {
+    res.status(500).json({ message: 'Internal server error' });
+    console.error('Error searching articles', error);
+  }  
+}

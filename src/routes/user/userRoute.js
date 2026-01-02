@@ -4,7 +4,7 @@ import { signIn } from '../../controllers/user/signIn.js';
 import { signUp } from '../../controllers/user/signUp.js';
 import { like, removeLike, allLikes } from '../../controllers/user/likeController.js';
 import { comment, removeComment, editComment } from '../../controllers/user/commentController.js';
-import { allArticles, loadArticle, findArticleByTag } from '../../controllers/user/articleController.js';
+import { allArticles, loadArticle, findArticleByTag, searchArticles } from '../../controllers/user/articleController.js';
 import { subscribe } from '../../controllers/user/subscription.js';
 
 import { signUpValidator } from '../../middlewares/user/signUpValidation.js';
@@ -13,6 +13,7 @@ import { postValidate } from '../../middlewares/user/postValidation.js';
 import { auth } from '../../middlewares/user/authorization.js';
 import { planValidation } from '../../middlewares/user/planValidation.js';
 import { credentialsAuth } from '../../middlewares/user/credentialsAuth.js';
+import { searchValidation } from '../../middlewares/user/searchValidation.js';
 
 const router = express.Router();
 
@@ -20,6 +21,7 @@ router.get('/likes', auth, allLikes);
 router.get('/articles', auth, allArticles);
 router.get('/articles/tag', auth, findArticleByTag);
 router.get('/article/:slug', auth, credentialsAuth, planValidation, loadArticle);
+router.get('/articles/search', auth, searchValidation, searchArticles);
 
 router.post('/signIn', loginValidate, signIn);
 router.post('/signUp', signUpValidator, signUp);
