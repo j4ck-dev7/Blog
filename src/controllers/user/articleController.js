@@ -4,7 +4,6 @@ import { prisma } from '../../lib/prisma.js';
 
 import { formatDateTime } from '../../utills/formatarDataHora.js';
 import { relativeTime } from '../../utills/tempoRelativo.js';
-import { isValidObjectId } from '../../utills/isValidObjectId.js';
 
 const CACHE_TTL = 30;
 
@@ -89,10 +88,30 @@ export const loadArticle = async (req, res) => {
         createIn: formatDateTime(article.creationDate)
       };
 
+      const comment = await prisma.comment.findMany({
+        where: {
+          articleSlug: slug
+        },
+        select: {
+          userName: true,
+          post: true,
+          creationDate: true
+        }
+      });
+
+      const commentsFormatted = comment.map(c => ({
+        userName: c.userName,
+        post: c.post,
+        created: relativeTime(c.creationDate)
+      }))
+
       await Article.updateOne({slug}, { $inc: { viewsCount: 1 } }) // Quando o artigo é carregado, incrementa 1 no contador de visualizações
       res.status(200).json({
         article: {
           articleLoad,
+        },
+        comments: {
+          commentsFormatted
         }
       });
 

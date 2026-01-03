@@ -1,6 +1,4 @@
 import { prisma } from '../../lib/prisma.js' // Aqui importa o 'modelo', feito no schema.prisma
-import { relativeTime } from '../../utills/tempoRelativo.js'
-import { isValidObjectId } from '../../utills/isValidObjectId.js';
 import Article from '../../models/Article.js';
 
 export const comment = async (req, res) => {
