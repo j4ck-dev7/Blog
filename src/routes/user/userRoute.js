@@ -1,9 +1,8 @@
 import express from 'express';
 
-import { signIn } from '../../controllers/user/signIn.js';
-import { signUp } from '../../controllers/user/signUp.js';
-import { like, removeLike, allLikes } from '../../controllers/user/likeController.js';
-import { comment, removeComment, editComment } from '../../controllers/user/commentController.js';
+import { signIn, signUp } from '../../controllers/user/userController.js';
+import { like, deleteLike, allLikes } from '../../controllers/user/likeController.js';
+import { comment, removeComment, EditComment } from '../../controllers/user/commentController.js';
 import { allArticles, loadArticle, findArticleByTag, searchArticles } from '../../controllers/user/articleController.js';
 import { subscribe } from '../../controllers/user/subscription.js';
 
@@ -29,9 +28,9 @@ router.post('/article/:slug/like', auth, credentialsAuth, planValidation, like);
 router.post('/article/:slug/comment', auth, credentialsAuth, planValidation, postValidate, comment);
 router.post('/subscribe', auth, subscribe);
 
-router.put('/article/:slug/comment/:commentId', auth, credentialsAuth, planValidation, postValidate, editComment);
+router.put('/article/:slug/comment/:commentId', auth, credentialsAuth, planValidation, postValidate, EditComment);
 
-router.delete('/article/:slug/like/:likeId', auth, credentialsAuth, planValidation, removeLike);
+router.delete('/article/:slug/like/:likeId', auth, credentialsAuth, planValidation, deleteLike);
 router.delete('/article/:slug/comment/:commentId', auth, credentialsAuth, planValidation, removeComment);
 
 export default router;

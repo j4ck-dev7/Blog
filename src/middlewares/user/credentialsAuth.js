@@ -1,5 +1,5 @@
-import { prisma } from "../../lib/prisma.js";
-import Article from "../../models/Article.js";
+import { getUserByIdVerifyCredentials } from "../../repositories/userRepository.js";
+import { findArticleBySlugWithPlanRole } from "../../repositories/articleRepository.js";
 
 export const credentialsAuth = async (req, res, next) => {
     try {
@@ -10,9 +10,7 @@ export const credentialsAuth = async (req, res, next) => {
             PREMIUM: 3
         };
         const { slug } = req.params;
-        const article = await Article.findOne({ slug })
-            .select('planRole')
-            .lean();
+        const article = await findArticleBySlugWithPlanRole(slug);
         
         if (!article) {
             return res.status(404).json({ message: 'Article not found' });
@@ -27,17 +25,7 @@ export const credentialsAuth = async (req, res, next) => {
             return res.status(401).json({ message: 'Unauthorized. To access this content, please subscribe.' });
         };
 
-        const user = await prisma.user.findFirst({
-            where: {
-                id: req.user._id
-            },
-            select: {
-                email: true,
-                subscriptionPlan: true,
-                subscriptionExpiresAt: true,
-                name: true
-            }
-        });
+        const user = await getUserByIdVerifyCredentials(req.user._id);
 
         const userObjDb = {
             email: user.email,

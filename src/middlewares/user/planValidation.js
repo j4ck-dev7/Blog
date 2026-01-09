@@ -1,5 +1,5 @@
-import { prisma } from '../../lib/prisma.js';
-import Article from '../../models/Article.js';
+import { downgradeUserSubscription } from '../../repositories/userRepository.js';
+import { findArticleBySlugWithPlanRole } from '../../repositories/articleRepository.js';
 
 const planWeight = {
     FREE: 0,
@@ -14,9 +14,7 @@ export const planValidation = async (req, res, next) => {
     try {
       const now = new Date();
 
-      const article = await Article.findOne({ slug })
-        .select('planRole')
-        .lean();
+      const article = await findArticleBySlugWithPlanRole(slug);
 
       if (!article) {
         return res.status(404).json({ message: 'Article not found' });
@@ -31,13 +29,7 @@ export const planValidation = async (req, res, next) => {
           const planExpires = new Date(req.user.subscriptionExpire)
 
           if(now > planExpires){
-            await prisma.user.update({
-              where: { email: req.user.email },
-              data: {
-                subscriptionExpiresAt: null,
-                subscriptionPlan: 'FREE'
-              }
-            });
+            await downgradeUserSubscription(req.user.email);
 
             return res.status(403).json({
               message: 'Access denied: Please renew your subscription'
