@@ -17,12 +17,12 @@ export const like = async (req, res) => {
     }
 }
 
-export const deleteLike = async (req, res) => {
+export const DeleteLike = async (req, res) => {
     const articleSlug = req.params.slug;
-    const likeId = req.params.likeId;
+    const userId = req.user._id;
 
     try {
-        await removeLike(likeId, articleSlug);
+        await removeLike(userId, articleSlug);
         res.status(204).json({ message: 'Like removed' });
     } catch (error) {
         if(error.message === 'Like does not exist'){
@@ -36,13 +36,16 @@ export const deleteLike = async (req, res) => {
 
 export const allLikes = async (req, res) => {
     const userId = req.user._id;
-    if(userId === 'freeAccess') return res.status(401).json({ message: 'User not authenticated, please login or register' });
 
     try {
         const likes = await allLikesUser(userId);
         res.status(200).json({ message: 'Likes obteined', likes});
     } catch (error) {
-        res.status(500).json({ error: 'Internal server error' });
+        if(error.message === 'User not authenticated, please login or register'){
+            return res.status(401).json({ message: 'User not authenticated, please login or register' });
+        };
+
+        res.status(500).json({ message: 'Internal server error' });
         console.error('Server error:', error);
     }
 }

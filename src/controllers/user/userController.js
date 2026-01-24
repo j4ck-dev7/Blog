@@ -21,7 +21,7 @@ export const signIn = async (req, res) => {
         res.status(200).json({ message: "User logged in successfully" });
     } catch (error) {
         if (error.message === 'Incorrect email or password') {
-            return res.status(400).send("Incorrect email or password");
+            return res.status(400).json({ message: "Incorrect email or password" });
         }
 
         console.error('User failed to log in', error);

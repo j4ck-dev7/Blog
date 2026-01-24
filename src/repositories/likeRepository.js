@@ -6,7 +6,8 @@ export const getLikes = async (userId) => {
             userId: userId
         },
         select: {
-            articleSlug: true
+            articleSlug: true,
+            id: true
         }
     });
 }

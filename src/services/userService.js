@@ -4,7 +4,7 @@ import { findUserByEmail, verifyUserExistsByEmail, createUser, updateUserSubscri
 export const registerUser = async (name, email, password) => {
     const existingUser = await verifyUserExistsByEmail(email);
     if (existingUser) {
-        throw new Error('User already exists');
+        throw new Error('Email already exists');
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
