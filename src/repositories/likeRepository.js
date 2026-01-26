@@ -22,9 +22,9 @@ export const createLike = async (userId, articleSlug) => {
 }
 
 export const deleteLike = async (id) => {
-    return await prisma.like.delete({
-        where: {
-            id: id
+    return await prisma.like.delete({ // Caso tenha um modelo que faz referencia ao modelo que contenha o documento para excluir
+        where: { // É retornado um erro ao tentar excluir, então é necessário apagar o documento e os outros documentos que
+            id: id // tenha a relação, ou deixar a relação opcional
         }
     });
 }
