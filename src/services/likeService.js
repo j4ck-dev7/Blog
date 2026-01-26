@@ -15,7 +15,7 @@ export const addLike = async (userId, articleSlug) => {
         throw new Error('You already liked this article');
     };
 
-    return Promise.all([
+    return await Promise.all([
         createLike(userId, articleSlug),
         incrementArticleLikeCount(articleSlug)
     ])
@@ -29,7 +29,7 @@ export const removeLike = async (userId, articleSlug) => {
 
     const id = verify.id
 
-    return Promise.all([
+    return await Promise.all([
         deleteLike(id),
         decrementArticleLikeCount(articleSlug)
     ])

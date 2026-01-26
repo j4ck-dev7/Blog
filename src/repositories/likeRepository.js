@@ -22,7 +22,7 @@ export const createLike = async (userId, articleSlug) => {
 }
 
 export const deleteLike = async (id) => {
-    return await prisma.like.deleteMany({
+    return await prisma.like.delete({
         where: {
             id: id
         }

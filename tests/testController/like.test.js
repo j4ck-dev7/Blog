@@ -38,6 +38,7 @@ describe('Like Controller Test', () => {
 
         await allLikes(req, res);
 
+        expect(allLikesUser).toHaveBeenCalledWith('1')
         expect(res.status).toHaveBeenLastCalledWith(200);
         expect(res.json).toHaveBeenCalledWith({ 
             message: 'Likes obteined', 
@@ -54,7 +55,7 @@ describe('Like Controller Test', () => {
     });
 
     test('Return error when user is not register', async () => {
-        allLikesUser.mockRejectedValue(new Error('User not authenticated, please login or register' ));
+        allLikesUser.mockRejectedValue(new Error('User not authenticated, please login or register'));
 
         const req = {
             user: {
@@ -83,7 +84,7 @@ describe('Like Controller Test', () => {
             },
 
             params: {
-                articleSlug: 'article-test'
+                slug: 'article-test'
             }
         };
 
@@ -94,6 +95,7 @@ describe('Like Controller Test', () => {
 
         await like(req, res);
 
+        expect(addLike).toHaveBeenCalledWith('1', 'article-test');
         expect(res.status).toHaveBeenCalledWith(400);
         expect(res.json).toHaveBeenCalledWith({ message: 'You already liked this article' });
     });
@@ -107,7 +109,7 @@ describe('Like Controller Test', () => {
             },
 
             params: {
-                articleSlug: 'article-test3'
+                slug: 'article-test3'
             }
         };
 
@@ -118,6 +120,7 @@ describe('Like Controller Test', () => {
 
         await like(req, res);
 
+        expect(addLike).toHaveBeenCalledWith('1', 'article-test3')
         expect(res.status).toHaveBeenCalledWith(204);
         expect(res.json).toHaveBeenCalledWith({ message: 'Liked article' });
     });
@@ -131,7 +134,7 @@ describe('Like Controller Test', () => {
             },
 
             params: {
-                articleSlug: 'article-test3'
+                slug: 'article-test3'
             }
         };
 
@@ -142,6 +145,7 @@ describe('Like Controller Test', () => {
 
         await DeleteLike(req, res);
 
+        expect(removeLike).toHaveBeenCalledWith('1', 'article-test3')
         expect(res.status).toHaveBeenCalledWith(404);
         expect(res.json).toHaveBeenCalledWith({ message: 'Like does not exist' });
     });

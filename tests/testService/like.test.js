@@ -49,10 +49,7 @@ describe('Like Service Test', () => {
     });
 
     test('return error liked the article exist', async () => {
-        verifyUserLikeArticle.mockResolvedValue({
-            userId: '1',
-            articleSlug: 'article-test'
-        });
+        verifyUserLikeArticle.mockResolvedValue(true);
         
         await expect(
             addLike('1', 'article-test')
@@ -60,8 +57,8 @@ describe('Like Service Test', () => {
     });
 
     test('return like', async () => {
-        verifyUserLikeArticle.mockResolvedValue(null);
-        incrementArticleLikeCount.mockResolvedValue({ slug: 'article-test2' });
+        verifyUserLikeArticle.mockResolvedValue(undefined);
+        incrementArticleLikeCount.mockResolvedValue(true);
         createLike.mockResolvedValue({
             id: '1',
             userId: '2',
@@ -88,7 +85,7 @@ describe('Like Service Test', () => {
     });
 
     test('return error when like not exist', async () => {
-        verifyUserLikeArticle.mockResolvedValue(null);
+        verifyUserLikeArticle.mockResolvedValue(undefined);
         
         await expect(
             removeLike('3', 'article-test')
@@ -97,19 +94,12 @@ describe('Like Service Test', () => {
 
     test('Return delete like', async () => {
         verifyUserLikeArticle.mockResolvedValue(true);
-        decrementArticleLikeCount.mockResolvedValue({ slug: 'article-test' })
-        deleteLike.mockResolvedValue({
-            id: '2'
-        })
+        decrementArticleLikeCount.mockResolvedValue(true)
+        deleteLike.mockResolvedValue(true)
 
-        const result = await removeLike('2');  
-        expect(result).toEqual([
-            {
-                id: '2'
-            },
-            {
-                slug: 'article-test'
-            }
-        ]);
+        const result = await removeLike('2', 'article-test');  
+        expect(result).toEqual({ id: '2' });
+        expect(verifyUserLikeArticle).toHaveBeenCalledWith('2', 'article-test');
+        expect(deleteLike).toHaveBeenCalledWith('3');
     });
 })
