@@ -58,7 +58,9 @@ describe('Like Service Test', () => {
 
     test('return like', async () => {
         verifyUserLikeArticle.mockResolvedValue(undefined);
-        incrementArticleLikeCount.mockResolvedValue(true);
+        incrementArticleLikeCount.mockResolvedValue({
+            modifiedCount: 1 
+        });
         createLike.mockResolvedValue({
             id: '1',
             userId: '2',
@@ -79,7 +81,7 @@ describe('Like Service Test', () => {
                 dateCreated: Date.now
             },
             {
-                slug: 'article-test2'
+                modifiedCount: 1
             }
         ]);
     });
@@ -94,12 +96,26 @@ describe('Like Service Test', () => {
 
     test('Return delete like', async () => {
         verifyUserLikeArticle.mockResolvedValue(true);
-        decrementArticleLikeCount.mockResolvedValue(true)
-        deleteLike.mockResolvedValue(true)
+        decrementArticleLikeCount.mockResolvedValue({
+            modifiedCount: 1 
+        })
+        deleteLike.mockResolvedValue({
+            id: '3',
+            articleSlug: 'article-test',
+            userId: '2',
+            dateCreated: Date.now
+        })
 
         const result = await removeLike('2', 'article-test');  
-        expect(result).toEqual({ id: '2' });
         expect(verifyUserLikeArticle).toHaveBeenCalledWith('2', 'article-test');
-        expect(deleteLike).toHaveBeenCalledWith('3');
+        expect(result).toEqual([
+            { 
+                id: '3',
+                articleSlug: 'article-test',
+                userId: '2',
+                dateCreated: Date.now
+            },
+            { modifiedCount: 1 }
+        ]);
     });
 })
