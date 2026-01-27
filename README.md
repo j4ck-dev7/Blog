@@ -7,7 +7,7 @@
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Um projeto backend de um blog, com autenticação JWT, cache com Redis (cache-aside), sistema de artigos, assinatuas com Stripe, comentários, curtidas, pesquisa por tags e paginação.  
-Desenvolvida com **Node.js + Express + Mongoose + MongoDB** e testada com **Insomnia/Postman**.
+Desenvolvida com **Node.js + Express + Mongoose + MongoDB + Prisma + PostgreSQL** e testada com **Insomnia/Postman** e **Testes unitários com Jest**.
 
 ## 🚀 Funcionalidades
 
@@ -18,18 +18,19 @@ Desenvolvida com **Node.js + Express + Mongoose + MongoDB** e testada com **Inso
 - `DELETE /admin/delArticle` → Excluir artigo  
 
 ### Usuário
-- `POST   /user/signUp` → Registro  
-- `POST   /user/signIn` → Login (retorna cookie HttpOnly com JWT)  
-- `GET    /user/articles?page=1&limit=5` → Listar artigos com paginação  
-- `GET    /user/articles/tag?tag=node&page=1&limit=5` → Busca por tag  
-- `GET    /user/article/:slug` → Detalhe do artigo  
-- `POST   /user/article/:articleId/comment` → Comentar  
-- `PUT    /user/comment/:commentId` → Editar comentário  
-- `DELETE /user/comment/:commentId` → Deletar comentário  
-- `POST   /user/article/:articleId/like` → Curtir artigo  
-- `DELETE /user/article/like/:articleId` → Remover curtida  
-- `GET    /user/likes` → Listar todos os artigos curtidos
-- `POST    /subscribe` → Assina um plano basic, intermediate ou premium
+- `POST   api/user/signUp` → Registro  
+- `POST   api/user/signIn` → Login (retorna cookie HttpOnly com JWT)  
+- `GET    api/user/articles?page=1&limit=5` → Listar artigos com paginação
+- `GET    api/user/articles/tag?tag=tag&page=1&limit=5` → Busca de artigos por tag 
+- `GET    api/user/articles/search?search=busca&page=1&limit=5` → Busca de artigos por texto 
+- `GET    api/user/article/:slug` → Página do artigo  
+- `POST   api/user/article/:slug/comment` → Comentar  
+- `PUT    api/user/article/:slug/editComment/:commentId` → Editar comentário  
+- `DELETE api/user/article/:slug/delComment/:commentId` → Deletar comentário  
+- `POST   api/user/article/:slug/like` → Curtir artigo  
+- `DELETE api/user/article/:slug/delLike/:likeId` → Remover curtida  
+- `GET    api/user/likes` → Listar todos os artigos curtidos
+- `POST   api/subscribe` → Assina um plano basic, intermediate ou premium
 
 ### Recursos técnicos
 - Autenticação via **JWT + cookie HttpOnly**  
@@ -39,6 +40,7 @@ Desenvolvida com **Node.js + Express + Mongoose + MongoDB** e testada com **Inso
 - Paginação   
 - Invalidação automática de cache após alterações
 - Planos de assinaturas usando stripe
+- Testes unitários
 
 ## 📦 Tecnologias
 
@@ -47,14 +49,17 @@ Desenvolvida com **Node.js + Express + Mongoose + MongoDB** e testada com **Inso
 | Node.js            | 22.21.1 | Runtime                      |
 | Express            | 5.1.0   | Framework web                |
 | Mongoose           | 8.16.4  | ODM MongoDB                  |
-| MongoDB            | 6.18.0  | Banco de dados               |
+| MongoDB            | 6.18.0  | Banco de dados NoSQL         |
+| Prisma             | 5.9.0   | ORM PostgreSQL               |
+| PostgreSQL         | 16.11   | Banco de dados SQL           |
 | Redis              | 5.9.0   | Cache (cache-aside)          |
-| jsonwebtoken       | 9.0.2   | JWT                          |
-| cookie-parser      | 1.4.7   | Leitura de cookies           |
-| express-validator  | 7.2.1   | Validação de entrada         |
-| bcryptjs           | 3.0.4   | Hash de senhas               |
-| slugify            | 1.6.6   | Geração de slugs             |
-| stripe             | 20.0.0  | Gateway de pagamentos        |
+| Jsonwebtoken       | 9.0.2   | JWT                          |
+| Cookie-parser      | 1.4.7   | Leitura de cookies           |
+| Express-validator  | 7.2.1   | Validação de entrada         |
+| Bcryptjs           | 3.0.4   | Hash de senhas               |
+| Slugify            | 1.6.6   | Geração de slugs             |
+| Stripe             | 20.0.0  | Gateway de pagamentos        |
+| Jest               | 30.2.0  | Testes unitários             |
 
 ## ⚙️ Instalação
 
@@ -265,6 +270,33 @@ Resposta:
 ```
 Ao clicar na url retornada, uma página da stripe será carregada, use 4242 4242 4242 4242 no número do cartão enquanto os outros campos pode pôr qualquer coisa.
 Quando o pagamento for efetuado basta logar novamente na api para que o plano funcione.
+
+## 📋 Testes Unitários
+Os testes unitários foram aplicados nas seguintes camadas e módulos:
+| Módulo                 | Service | Controller | Tipos de Teste                 |
+|------------------------|---------|------------|--------------------------------|  
+| **Usuário (Login)**    | ✅      |            | Sucesso, Erro, Autenticação    |
+| **Usuário (Register)** | ✅      |            | Sucesso, Erro, Validação       |
+| **Artigos**            |         |            | Sucesso, Erro, Validação       |
+| **Comentários**        |         |            | Sucesso, Erro, Validação       |
+| **Likes**              |         |            | Sucesso, Erro, Validação       |
+
+## 🏗️ Estrutura de Testes
+
+### Camada de Service
+A camada de Service contém a lógica de negócio da aplicação. Os testes irão validar:
+
+- **Casos de Sucesso**: Operações executadas corretamente
+- **Casos de Erro**: Tratamento de exceções e erros esperados
+- **Validações**: Regras de negócio e constraints
+
+### Camada de Controller
+A camada de Controller gerencia as requisições HTTP. Os testes irão validar:
+
+- **Respostas Bem-Sucedidas**: Status 200, 201, etc.
+- **Erros HTTP**: Status 400, 401, 403, 404, 500, etc.
+- **Autenticação e Autorização**: Validação de tokens e permissões
+- **Validação de Entrada**: Dados malformados ou inválidos
 
 ## 🤝 Contribuindo
 - Fork
