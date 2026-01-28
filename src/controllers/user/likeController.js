@@ -6,7 +6,7 @@ export const like = async (req, res) => {
 
     try {
         await addLike(userId, articleSlug);
-        res.status(204).json({ message: "Liked article" });
+        res.status(201).json({ message: "Liked article" });
     } catch (error) {
         if(error.message === 'You already liked this article'){
             return  res.status(400).json({ message: 'You already liked this article' });

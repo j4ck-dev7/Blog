@@ -9,7 +9,7 @@ export const comment = async (req, res) => {
         
         await createComment(post, userId, userName, articleSlug);
 
-        res.status(204).json({ 
+        res.status(201).json({ 
             message: "Comment added"
         });
     } catch (error) {
@@ -25,7 +25,7 @@ export const EditComment = async (req, res) => {
     try {
         await updateComment(commentId, post);
 
-        res.status(200).json({ 
+        res.status(204).json({ 
             message: 'Comment edited!',
             comment: post
         });

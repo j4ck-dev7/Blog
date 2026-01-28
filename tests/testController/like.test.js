@@ -100,7 +100,7 @@ describe('Like Controller Test', () => {
         expect(res.json).toHaveBeenCalledWith({ message: 'You already liked this article' });
     });
 
-    test('Return status code 204 when like article', async () => {
+    test('Return status code 201 when like article', async () => {
         addLike.mockResolvedValue(true)
 
         const req = {
@@ -121,7 +121,7 @@ describe('Like Controller Test', () => {
         await like(req, res);
 
         expect(addLike).toHaveBeenCalledWith('1', 'article-test3')
-        expect(res.status).toHaveBeenCalledWith(204);
+        expect(res.status).toHaveBeenCalledWith(201);
         expect(res.json).toHaveBeenCalledWith({ message: 'Liked article' });
     });
 
