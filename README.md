@@ -275,10 +275,10 @@ Quando o pagamento for efetuado basta logar novamente na api para que o plano fu
 Os testes unitários foram aplicados nas seguintes camadas e módulos:
 | Módulo                 | Service | Controller | Tipos de Teste                 |
 |------------------------|---------|------------|--------------------------------|  
-| **Usuário (Login)**    | ✅      |            | Sucesso, Erro, Autenticação    |
-| **Usuário (Register)** | ✅      |            | Sucesso, Erro, Validação       |
+| **Usuário (Login)**    | ✅      | ✅         | Sucesso, Erro, Autenticação    |
+| **Usuário (Register)** | ✅      | ✅         | Sucesso, Erro, Validação       |
 | **Artigos**            |         |            | Sucesso, Erro, Validação       |
-| **Comentários**        |         |            | Sucesso, Erro, Validação       |
+| **Comentários**        | ✅      | ✅         | Sucesso, Erro, Validação       |
 | **Likes**              |         |            | Sucesso, Erro, Validação       |
 
 ## 🏗️ Estrutura de Testes
