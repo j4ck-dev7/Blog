@@ -126,12 +126,9 @@ describe('Comment Controller Test', () => {
         });
 
         const req = {
-            body: {
-                post: 'comment'
-            },
-
             params: {
-                commentId: '1'
+                commentId: '1',
+                slug: 'article-test'
             }
         };
 
