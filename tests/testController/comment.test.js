@@ -72,11 +72,7 @@ describe('Comment Controller Test', () => {
     test('Return comment edited with status code 204', async () => {
         updateComment.mockResolvedValue({
             id: '1',
-            post: 'commentEdit',
-            userName: 'teste',
-            userId: '1',
-            articleSlug: 'article-test',
-            creationDate: 1234567890
+            post: 'commentEdit'
         });
 
         const req = {
@@ -96,14 +92,7 @@ describe('Comment Controller Test', () => {
 
         await EditComment(req, res);
 
-        expect(updateComment).toHaveBeenCalledWith({
-            id: '1',
-            post: 'commentEdit',
-            userName: 'teste',
-            userId: '1',
-            articleSlug: 'article-test',
-            creationDate: 1234567890
-        });
+        expect(updateComment).toHaveBeenCalledWith('1', 'commentEdit');
         expect(res.status).toHaveBeenCalledWith(204);
         expect(res.json).toHaveBeenCalledWith({ message: 'Comment edited' })
     });
@@ -133,11 +122,7 @@ describe('Comment Controller Test', () => {
     test('Return comment removed with status code 204', async () => {
         deleteComment.mockResolvedValue({
             id: '1',
-            post: 'comment',
-            userName: 'teste',
-            userId: '1',
-            articleSlug: 'article-test',
-            creationDate: 1234567890
+            articleSlug: 'article-test'
         });
 
         const req = {
@@ -157,14 +142,7 @@ describe('Comment Controller Test', () => {
 
         await removeComment(req, res);
 
-        expect(deleteComment).toHaveBeenCalledWith({
-            id: '1',
-            post: 'comment',
-            userName: 'teste',
-            userId: '1',
-            articleSlug: 'article-test',
-            creationDate: 1234567890
-        });
+        expect(deleteComment).toHaveBeenCalledWith('1', 'article-test');
         expect(res.status).toHaveBeenCalledWith(204);
         expect(res.json).toHaveBeenCalledWith({ message: 'Comment removed' })
     });

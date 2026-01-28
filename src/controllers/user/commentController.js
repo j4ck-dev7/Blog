@@ -26,8 +26,7 @@ export const EditComment = async (req, res) => {
         await updateComment(commentId, post);
 
         res.status(204).json({ 
-            message: 'Comment edited!',
-            comment: post
+            message: 'Comment edited'
         });
     } catch (error) {
         if(error.message === 'Comment not found'){
