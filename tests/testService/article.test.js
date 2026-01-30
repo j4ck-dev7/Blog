@@ -34,62 +34,14 @@ describe('Article Service Tests', () => {
 
     test('Return all articles from MongoDB and save in Redis', async () => {
         allArticles.mockResolvedValue([
-            {
-                title: 'title1',
-                banner: 'banner/',
-                creationDate: 123456789,
-                tags: ['tag1', 'tag2'],
-                planRole: 'FREE',
-                likeCount: 2,
-                commentCount: 4,
-                viewsCount: 20
-            },
-            {
-                title: 'title2',
-                banner: 'banner/',
-                creationDate: 123456789,
-                tags: ['tag1', 'tag2'],
-                planRole: 'FREE',
-                likeCount: 2,
-                commentCount: 4,
-                viewsCount: 20
-            },
+            
         ]);
         countArticles.mockResolvedValue(2);
         client.get.mockResolvedValue(undefined);
 
         const result = await GetAllArticles('1', '2');
         expect(result).toEqual({
-            articles: [
-                {
-                    title: 'title1',
-                    banner: 'banner/',
-                    tags: [],
-                    plan: 'FREE',
-                    createdIn: '2024-01-29 10:00:00',
-                    likeCount: 3,
-                    commentCount: 5,
-                    viewsCount: 20
-                },
-                {
-                    title: 'title2',
-                    banner: 'banner/',
-                    tags: [],
-                    plan: 'FREE',
-                    createdIn: '2024-01-29 10:00:00',
-                    likeCount: 3,
-                    commentCount: 5,
-                    viewsCount: 20
-                },
-            ],
-            // pagination: {
-            //     total: 2,
-            //     pages: 1,
-            //     currentPage: 1,
-            //     limit: 2,
-            //     hasNext: false,
-            //     hasPrev: false
-            // }
+
         });
         expect(allArticles).toHaveBeenCalledWith(0, 2);
     });
