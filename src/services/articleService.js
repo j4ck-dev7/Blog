@@ -1,10 +1,6 @@
-import { allArticles, findArticleBySlug, findArticlesByTag, countArticlesByTag, searchArticles, searchArticlesCount, incrementArticleViews } from "../repositories/articleRepository.js";
+import { allArticles, findArticleBySlug, findArticlesByTag, countArticlesByTag, searchArticles, searchArticlesCount, incrementArticleViews, countArticles } from "../repositories/articleRepository.js";
 import { getCommentsBySlug } from "../repositories/commentRepository.js";
 import client from "../config/redis.js";
-import { countArticles } from "../repositories/articleRepository.js";
-import { formatArticles } from "../utills/formatArticles.js";
-import { formatDateTime } from '../utills/formatarDataHora.js';
-import { relativeTime } from "../utills/tempoRelativo.js";
 
 export const GetAllArticles = async (page, limit) => {
     const skip = (page - 1) * limit;
@@ -28,8 +24,6 @@ export const GetAllArticles = async (page, limit) => {
     if(!articlesData.length){
         throw new Error('Articles not found');
     }
-
-    const articles = formatArticles(articlesData);
 
     const totalPages = Math.ceil(total / limitNum);
     const pagination = {
@@ -61,24 +55,9 @@ export const LoadArticleBySlug = async (slug) => {
         throw new Error('Article not found');
     }
 
-    const articleLoad = {
-        title: article.title,
-        author: article.author,
-        content: article.content,
-        likes: article.likeCount,
-        tags: article.tags,
-        createIn: formatDateTime(article.creationDate)
-    };
-
-    const commentsFormatted = comment.map(c => ({
-        userName: c.userName,
-        post: c.post,
-        creationDate: relativeTime(c.creationDate)
-    }));
-
     const data = {
         articleLoad,
-        comments: commentsFormatted || 0
+        comment
     }
 
     await incrementArticleViews(slug);
@@ -99,8 +78,6 @@ export const FindArticlesByTag = async (tag, page, limit) => {
     if(!articlesData.length){
         throw new Error('Articles not found');
     }
-
-    const articles = formatArticles(articlesData);
 
     const totalPages = Math.ceil(total / limitNum);
     const pagination = {
@@ -134,7 +111,6 @@ export const SearchForArticles = async (query, page, limit) => {
         throw new Error('Articles not found');
     }
     
-    const articles = formatArticles(articlesData);  
     const totalPages = Math.ceil(total / limitNum);
     const pagination = {
         total,
