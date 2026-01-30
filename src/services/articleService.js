@@ -16,12 +16,12 @@ export const GetAllArticles = async (page, limit) => {
         return data; // Se o cache existir ele retorna para o cliente, o tempo de resposta pode ser menor que 100ms
     }
 
-    const [total, articlesData] = await Promise.all([
+    const [total, articles] = await Promise.all([
         countArticles(),
         allArticles(skip, limitNum)
     ]);
 
-    if(!articlesData.length){
+    if(!articles.length){
         throw new Error('Articles not found');
     }
 
@@ -56,7 +56,7 @@ export const LoadArticleBySlug = async (slug) => {
     }
 
     const data = {
-        articleLoad,
+        article,
         comment
     }
 
@@ -70,12 +70,12 @@ export const FindArticlesByTag = async (tag, page, limit) => {
     const pageNum = Math.max(1, parseInt(page));
     const limitNum = Math.min(20, Math.max(1, parseInt(limit)));
 
-    const [total, articlesData] = await Promise.all([
+    const [total, articles] = await Promise.all([
         countArticlesByTag(tag),
         findArticlesByTag(tag, skip, limitNum)
     ]);
 
-    if(!articlesData.length){
+    if(!articles.length){
         throw new Error('Articles not found');
     }
 
@@ -102,12 +102,12 @@ export const SearchForArticles = async (query, page, limit) => {
     const pageNum = Math.max(1, parseInt(page));
     const limitNum = Math.min(20, Math.max(1, parseInt(limit)));
 
-    const [total, articlesData] = await Promise.all([
+    const [total, articles] = await Promise.all([
         searchArticlesCount(query),
         searchArticles(query, skip, limitNum)
     ]);
 
-    if(!articlesData.length){
+    if(!articles.length){
         throw new Error('Articles not found');
     }
     
