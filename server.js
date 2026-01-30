@@ -16,7 +16,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.json());
 
-app.use('/api/admin', adminRoute);
+// app.use('/api/admin', adminRoute);
 app.use('/api/user', userRoute);
 
 const PORT = process.env.PORT;
