@@ -34,15 +34,78 @@ describe('Article Service Tests', () => {
 
     test('Return all articles from MongoDB and save in Redis', async () => {
         allArticles.mockResolvedValue([
-            
+            {
+                title: 'crtyvg fghjd',
+                slug: 'crtyvg-fghjd',
+                author: 'admin',
+                banner: 'assets/banner/img.png',
+                tags: ['tag1', 'tag2'],
+                planRole: 'free',
+                viewsCount: 1,
+                likeCount: 0,
+                commentCount: 0,
+                creationDate: new Date('2025-12-15T20:00:27.565Z')
+            },
+            {
+                title: 'crtyvg fghj',
+                slug: 'crtyvg-fghj',
+                author: 'admin',
+                banner: 'assets/banner/img.png',
+                tags: ['tag1', 'tag2'],
+                planRole: 'free',
+                viewsCount: 9,
+                likeCount: 0,
+                commentCount: 0,
+                creationDate: new Date('2025-12-15T20:00:27.565Z')
+            }
         ]);
         countArticles.mockResolvedValue(2);
         client.get.mockResolvedValue(undefined);
 
         const result = await GetAllArticles('1', '2');
-        expect(result).toEqual({
-
-        });
+        expect(result).toEqual(
+            {
+                articles: [
+                    {
+                        title: 'crtyvg fghjd',
+                        slug: 'crtyvg-fghjd',
+                        author: 'admin',
+                        banner: 'assets/banner/img.png',
+                        tags: ['tag1', 'tag2'],
+                        planRole: 'free',
+                        viewsCount: 1,
+                        likeCount: 0,
+                        commentCount: 0,
+                        creationDate: new Date('2025-12-15T20:00:27.565Z')
+                    },
+                    {
+                        title: 'crtyvg fghj',
+                        slug: 'crtyvg-fghj',
+                        author: 'admin',
+                        banner: 'assets/banner/img.png',
+                        tags: ['tag1', 'tag2'],
+                        planRole: 'free',
+                        viewsCount: 9,
+                        likeCount: 0,
+                        commentCount: 0,
+                        creationDate: new Date('2025-12-15T20:00:27.565Z')
+                    }
+                ],
+                pagination: {
+                    total: 2,
+                    pages: 1,
+                    currentPage: 1,
+                    limit: 2,
+                    hasNext: false,
+                    hasPrev: false
+                }
+            }
+        );
         expect(allArticles).toHaveBeenCalledWith(0, 2);
+        expect(client.setEx).toHaveBeenCalledWith(
+            'articles:page:1:limit:2',
+            300,
+            "{\"articles\":[{\"title\":\"crtyvg fghjd\",\"slug\":\"crtyvg-fghjd\",\"author\":\"admin\",\"banner\":\"assets/banner/img.png\",\"tags\":[\"tag1\",\"tag2\"],\"planRole\":\"free\",\"viewsCount\":1,\"likeCount\":0,\"commentCount\":0,\"creationDate\":\"2025-12-15T20:00:27.565Z\"},{\"title\":\"crtyvg fghj\",\"slug\":\"crtyvg-fghj\",\"author\":\"admin\",\"banner\":\"assets/banner/img.png\",\"tags\":[\"tag1\",\"tag2\"],\"planRole\":\"free\",\"viewsCount\":9,\"likeCount\":0,\"commentCount\":0,\"creationDate\":\"2025-12-15T20:00:27.565Z\"}],\"pagination\":{\"total\":2,\"pages\":1,\"currentPage\":1,\"limit\":2,\"hasNext\":false,\"hasPrev\":false}}"
+        );
     });
 });

@@ -42,7 +42,6 @@ export const GetAllArticles = async (page, limit) => {
 
     await client.setEx(cacheKey, CACHE_TTL, JSON.stringify(data))
 
-    console.log(data);
     return data;
 }
 
