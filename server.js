@@ -2,7 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cookieParser from 'cookie-parser';
 
-import adminRoute from './src/routes/admin/adminRoute.js';
+// import adminRoute from './src/routes/admin/adminRoute.js';
 import userRoute from './src/routes/user/userRoute.js';
 import webhookRouter from './src/routes/user/webhookRouter.js';
 
