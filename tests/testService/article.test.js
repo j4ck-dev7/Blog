@@ -319,5 +319,14 @@ describe('Article Service Tests - findArticlesBytag', () => {
         });
         expect(findArticlesByTag).toHaveBeenCalledWith('tag3', 0, 2);
         expect(countArticlesByTag).toHaveBeenCalledWith('tag3');
-    })
+    });
+
+    test('Return error when articles not found by tag', async () => {
+        findArticlesByTag.mockResolvedValue([]);
+        countArticlesByTag.mockResolvedValue(0);
+
+        await expect(FindArticlesByTag('tag', '1', '2')).rejects.toThrow('Articles not found');
+        expect(findArticlesByTag).toHaveBeenCalledWith('tag', 0, 2);
+        expect(countArticlesByTag).toHaveBeenCalledWith('tag')
+    });
 })
