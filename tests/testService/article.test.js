@@ -232,5 +232,15 @@ describe('Article Service Tests - loadArticleBySlug', () => {
         expect(findArticleBySlug).toHaveBeenCalledWith('crtyvg-fghjd');
         expect(getCommentsBySlug).toHaveBeenCalledWith('crtyvg-fghjd');
         expect(incrementArticleViews).toHaveBeenCalledWith('crtyvg-fghjd');
+    });
+
+    test('Return error when article not found by slug', async () => {
+        findArticleBySlug.mockResolvedValue(undefined);
+        getCommentsBySlug.mockResolvedValue([]);
+
+        await expect(LoadArticleBySlug('article-slug')).rejects.toThrow('Article not found');
+        expect(findArticleBySlug).toHaveBeenCalledWith('article-slug');
+        expect(getCommentsBySlug).toHaveBeenCalledWith('article-slug');
+        expect(incrementArticleViews).toHaveBeenCalledTimes(0);
     })
 })
