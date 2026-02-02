@@ -23,11 +23,11 @@ jest.unstable_mockModule('../../src/config/redis.js', () => ({
 }));
 
 const { default: client } = await import('../../src/config/redis.js');
-const { allArticles, countArticles } = await import('../../src/repositories/articleRepository.js');
+const { allArticles, countArticles, incrementArticleViews, findArticleBySlug } = await import('../../src/repositories/articleRepository.js');
 const { getCommentsBySlug } = await import('../../src/repositories/commentRepository.js')
-const { GetAllArticles } = await import('../../src/services/articleService.js');
+const { GetAllArticles, LoadArticleBySlug } = await import('../../src/services/articleService.js');
 
-describe('Article Service Tests', () => {
+describe('Article Service Tests - GetAllArticles', () => {
     beforeEach(() => {
         jest.clearAllMocks()
     });
@@ -167,3 +167,70 @@ describe('Article Service Tests', () => {
         expect(countArticles).toHaveBeenCalledWith();
     });
 });
+
+describe('Article Service Tests - loadArticleBySlug', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    test('Return article and comments by slug', async () => {
+        findArticleBySlug.mockResolvedValue(
+            {
+                title: 'crtyvg fghjd',
+                author: 'admin',
+                banner: 'assets/banner/img.png',
+                content: 'Content',
+                tags: ['tag1', 'tag2'],
+                planRole: 'free',
+                likeCount: 0,
+                creationDate: '2025-12-15T20:00:27.565Z'
+            }
+        );
+        getCommentsBySlug.mockResolvedValue([
+            {
+                userName: 'test',
+                post: 'test',
+                creationDate: '2025-12-15T20:00:27.565Z'
+            },
+            {
+                userName: 'test1',
+                post: 'test1',
+                creationDate: '2025-12-15T20:00:27.565Z'
+            }
+        ]);
+        incrementArticleViews.mockResolvedValue({
+            modifiedCount: 1 
+        });
+
+        const result = await LoadArticleBySlug('crtyvg-fghjd');
+        expect(result).toEqual(
+            {
+                article: {
+                    title: 'crtyvg fghjd',
+                    author: 'admin',
+                    banner: 'assets/banner/img.png',
+                    content: 'Content',
+                    tags: ['tag1', 'tag2'],
+                    planRole: 'free',
+                    likeCount: 0,
+                    creationDate: '2025-12-15T20:00:27.565Z'
+                },
+                comment: [
+                    {
+                        userName: 'test',
+                        post: 'test',
+                        creationDate: '2025-12-15T20:00:27.565Z'
+                    },
+                    {
+                        userName: 'test1',
+                        post: 'test1',
+                        creationDate: '2025-12-15T20:00:27.565Z'
+                    }
+                ]
+            }
+        );
+        expect(findArticleBySlug).toHaveBeenCalledWith('crtyvg-fghjd');
+        expect(getCommentsBySlug).toHaveBeenCalledWith('crtyvg-fghjd');
+        expect(incrementArticleViews).toHaveBeenCalledWith('crtyvg-fghjd');
+    })
+})
