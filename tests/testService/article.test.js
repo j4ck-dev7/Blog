@@ -44,7 +44,7 @@ describe('Article Service Tests', () => {
                 viewsCount: 1,
                 likeCount: 0,
                 commentCount: 0,
-                creationDate: new Date('2025-12-15T20:00:27.565Z')
+                creationDate: '2025-12-15T20:00:27.565Z'
             },
             {
                 title: 'crtyvg fghj',
@@ -56,7 +56,7 @@ describe('Article Service Tests', () => {
                 viewsCount: 9,
                 likeCount: 0,
                 commentCount: 0,
-                creationDate: new Date('2025-12-15T20:00:27.565Z')
+                creationDate: '2025-12-15T20:00:27.565Z'
             }
         ]);
         countArticles.mockResolvedValue(2);
@@ -76,7 +76,7 @@ describe('Article Service Tests', () => {
                         viewsCount: 1,
                         likeCount: 0,
                         commentCount: 0,
-                        creationDate: new Date('2025-12-15T20:00:27.565Z')
+                        creationDate: '2025-12-15T20:00:27.565Z'
                     },
                     {
                         title: 'crtyvg fghj',
@@ -88,7 +88,7 @@ describe('Article Service Tests', () => {
                         viewsCount: 9,
                         likeCount: 0,
                         commentCount: 0,
-                        creationDate: new Date('2025-12-15T20:00:27.565Z')
+                        creationDate: '2025-12-15T20:00:27.565Z'
                     }
                 ],
                 pagination: {
@@ -107,5 +107,53 @@ describe('Article Service Tests', () => {
             300,
             "{\"articles\":[{\"title\":\"crtyvg fghjd\",\"slug\":\"crtyvg-fghjd\",\"author\":\"admin\",\"banner\":\"assets/banner/img.png\",\"tags\":[\"tag1\",\"tag2\"],\"planRole\":\"free\",\"viewsCount\":1,\"likeCount\":0,\"commentCount\":0,\"creationDate\":\"2025-12-15T20:00:27.565Z\"},{\"title\":\"crtyvg fghj\",\"slug\":\"crtyvg-fghj\",\"author\":\"admin\",\"banner\":\"assets/banner/img.png\",\"tags\":[\"tag1\",\"tag2\"],\"planRole\":\"free\",\"viewsCount\":9,\"likeCount\":0,\"commentCount\":0,\"creationDate\":\"2025-12-15T20:00:27.565Z\"}],\"pagination\":{\"total\":2,\"pages\":1,\"currentPage\":1,\"limit\":2,\"hasNext\":false,\"hasPrev\":false}}"
         );
+    });
+
+    test('Return all articles from Redis', async () => {
+        allArticles.mockResolvedValue(true);
+        client.get.mockResolvedValue("{\"articles\":[{\"title\":\"crtyvg fghjd\",\"slug\":\"crtyvg-fghjd\",\"author\":\"admin\",\"banner\":\"assets/banner/img.png\",\"tags\":[\"tag1\",\"tag2\"],\"planRole\":\"free\",\"viewsCount\":1,\"likeCount\":0,\"commentCount\":0,\"creationDate\":\"2025-12-15T20:00:27.565Z\"},{\"title\":\"crtyvg fghj\",\"slug\":\"crtyvg-fghj\",\"author\":\"admin\",\"banner\":\"assets/banner/img.png\",\"tags\":[\"tag1\",\"tag2\"],\"planRole\":\"free\",\"viewsCount\":9,\"likeCount\":0,\"commentCount\":0,\"creationDate\":\"2025-12-15T20:00:27.565Z\"}],\"pagination\":{\"total\":2,\"pages\":1,\"currentPage\":1,\"limit\":2,\"hasNext\":false,\"hasPrev\":false}}");
+
+        const result = await GetAllArticles('1', '2');
+        expect(result).toEqual(
+            {
+                articles: [
+                    {
+                        title: 'crtyvg fghjd',
+                        slug: 'crtyvg-fghjd',
+                        author: 'admin',
+                        banner: 'assets/banner/img.png',
+                        tags: ['tag1', 'tag2'],
+                        planRole: 'free',
+                        viewsCount: 1,
+                        likeCount: 0,
+                        commentCount: 0,
+                        creationDate: '2025-12-15T20:00:27.565Z'
+                    },
+                    {
+                        title: 'crtyvg fghj',
+                        slug: 'crtyvg-fghj',
+                        author: 'admin',
+                        banner: 'assets/banner/img.png',
+                        tags: ['tag1', 'tag2'],
+                        planRole: 'free',
+                        viewsCount: 9,
+                        likeCount: 0,
+                        commentCount: 0,
+                        creationDate: '2025-12-15T20:00:27.565Z'
+                    }
+                ],
+                pagination: {
+                    total: 2,
+                    pages: 1,
+                    currentPage: 1,
+                    limit: 2,
+                    hasNext: false,
+                    hasPrev: false
+                }
+            }
+        );
+
+        expect(allArticles).not.toHaveBeenCalledWith(0, 2);
+        expect(client.get).toHaveBeenCalledWith('articles:page:1:limit:2');
     });
 });
