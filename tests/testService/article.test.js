@@ -156,4 +156,14 @@ describe('Article Service Tests', () => {
         expect(allArticles).not.toHaveBeenCalledWith(0, 2);
         expect(client.get).toHaveBeenCalledWith('articles:page:1:limit:2');
     });
+
+    test('Return error when articles not found', async () => {
+        allArticles.mockResolvedValue([]);
+        countArticles.mockResolvedValue(0);
+        client.get.mockResolvedValue(undefined);
+
+        await expect(GetAllArticles('1', '2')).rejects.toThrow('Articles not found');
+        expect(allArticles).toHaveBeenCalledWith(0, 2);
+        expect(countArticles).toHaveBeenCalledWith();
+    });
 });
