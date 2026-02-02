@@ -23,9 +23,9 @@ jest.unstable_mockModule('../../src/config/redis.js', () => ({
 }));
 
 const { default: client } = await import('../../src/config/redis.js');
-const { allArticles, countArticles, incrementArticleViews, findArticleBySlug, findArticlesByTag, countArticlesByTag } = await import('../../src/repositories/articleRepository.js');
+const { allArticles, countArticles, incrementArticleViews, findArticleBySlug, findArticlesByTag, countArticlesByTag, searchArticles, searchArticlesCount } = await import('../../src/repositories/articleRepository.js');
 const { getCommentsBySlug } = await import('../../src/repositories/commentRepository.js')
-const { GetAllArticles, LoadArticleBySlug, FindArticlesByTag } = await import('../../src/services/articleService.js');
+const { GetAllArticles, LoadArticleBySlug, FindArticlesByTag, SearchForArticles } = await import('../../src/services/articleService.js');
 
 describe('Article Service Tests - GetAllArticles', () => {
     beforeEach(() => {
@@ -329,4 +329,81 @@ describe('Article Service Tests - findArticlesBytag', () => {
         expect(findArticlesByTag).toHaveBeenCalledWith('tag', 0, 2);
         expect(countArticlesByTag).toHaveBeenCalledWith('tag')
     });
+});
+
+describe('Article Service Tests - SearchForArticles', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    test('Return articles by serach query from MongoDB', async () => {
+        searchArticles.mockResolvedValue([
+            {
+                title: 'crtyvg fghjd',
+                slug: 'crtyvg-fghjd',
+                author: 'admin',
+                banner: 'assets/banner/img.png',
+                tags: ['tag1', 'tag2'],
+                planRole: 'free',
+                viewsCount: 1,
+                likeCount: 0,
+                commentCount: 0,
+                creationDate: '2025-12-15T20:00:27.565Z'
+            },
+            {
+                title: 'crtyvg fghj',
+                slug: 'crtyvg-fghj',
+                author: 'admin',
+                banner: 'assets/banner/img.png',
+                tags: ['tag1', 'tag3'],
+                planRole: 'free',
+                viewsCount: 9,
+                likeCount: 0,
+                commentCount: 0,
+                creationDate: '2025-12-15T20:00:27.565Z'
+            }
+        ]);
+        searchArticlesCount.mockResolvedValue(2);
+
+        const result = await SearchForArticles('crt', '1', '2');
+        expect(result).toEqual({
+            articles: [
+                {
+                    title: 'crtyvg fghjd',
+                    slug: 'crtyvg-fghjd',
+                    author: 'admin',
+                    banner: 'assets/banner/img.png',
+                    tags: ['tag1', 'tag2'],
+                    planRole: 'free',
+                    viewsCount: 1,
+                    likeCount: 0,
+                    commentCount: 0,
+                    creationDate: '2025-12-15T20:00:27.565Z'
+                },
+                {
+                    title: 'crtyvg fghj',
+                    slug: 'crtyvg-fghj',
+                    author: 'admin',
+                    banner: 'assets/banner/img.png',
+                    tags: ['tag1', 'tag3'],
+                    planRole: 'free',
+                    viewsCount: 9,
+                    likeCount: 0,
+                    commentCount: 0,
+                    creationDate: '2025-12-15T20:00:27.565Z'
+                }
+            ],
+
+            pagination: {
+                total: 2,
+                pages: 1,
+                currentPage: 1,
+                limit: 2,
+                hasNext: false,
+                hasPrev: false
+            }
+        });
+        expect(searchArticles).toHaveBeenCalledWith('crt', 0, 2);
+        expect(searchArticlesCount).toHaveBeenCalledWith('crt')
+    })
 })
