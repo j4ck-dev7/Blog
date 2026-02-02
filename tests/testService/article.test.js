@@ -405,5 +405,14 @@ describe('Article Service Tests - SearchForArticles', () => {
         });
         expect(searchArticles).toHaveBeenCalledWith('crt', 0, 2);
         expect(searchArticlesCount).toHaveBeenCalledWith('crt')
+    });
+
+    test('Return error when articles not found by serach query', async () => {
+        searchArticles.mockResolvedValue([]);
+        searchArticlesCount.mockResolvedValue(0);
+
+        await expect(SearchForArticles('crt', '1', '2')).rejects.toThrow('Articles not found');
+        expect(searchArticles).toHaveBeenCalledWith('crt', 0, 2);
+        expect(searchArticlesCount).toHaveBeenCalledWith('crt');
     })
 })
