@@ -135,4 +135,56 @@ describe('Article Controller Test - allArticles', () => {
             message: 'Articles not found'
         }));
     });
+});
+
+describe('Article Controller Test - loadArticle', () => {
+    test('Return article with status code 200', async () => {
+        LoadArticleBySlug.mockResolvedValue(
+            {
+                title: 'crtyvg fghjd',
+                slug: 'crtyvg-fghjd',
+                author: 'admin',
+                banner: 'assets/banner/img.png',
+                tags: ['tag1', 'tag2'],
+                planRole: 'free',
+                viewsCount: 1,
+                likeCount: 0,
+                commentCount: 0,
+                creationDate: '2025-12-15T20:00:27.565Z'
+            }    
+        )
+
+        const req = {
+            params: {
+                slug: 'crtyvg-fghjd'
+            }
+        };
+
+        const res = {
+            status: jest.fn().mockReturnThis(),
+            json: jest.fn()
+        };
+
+        await loadArticle(req, res);
+
+        expect(LoadArticleBySlug).toHaveBeenCalledWith('crtyvg-fghjd');
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.json).toHaveBeenCalledWith(
+            {
+                message: 'Article loaded',
+                article: {
+                    title: 'crtyvg fghjd',
+                    slug: 'crtyvg-fghjd',
+                    author: 'admin',
+                    banner: 'assets/banner/img.png',
+                    tags: ['tag1', 'tag2'],
+                    planRole: 'free',
+                    viewsCount: 1,
+                    likeCount: 0,
+                    commentCount: 0,
+                    creationDate: '2025-12-15T20:00:27.565Z'
+                }
+            }
+        )
+    })
 })
