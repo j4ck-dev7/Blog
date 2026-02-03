@@ -277,9 +277,9 @@ Os testes unitários foram aplicados nas seguintes camadas e módulos:
 |------------------------|---------|------------|--------------------------------|  
 | **Usuário (Login)**    | ✅      | ✅         | Sucesso, Erro, Autenticação    |
 | **Usuário (Register)** | ✅      | ✅         | Sucesso, Erro, Validação       |
-| **Artigos**            |         |            | Sucesso, Erro, Validação       |
+| **Artigos**            | ✅      | ✅         | Sucesso, Erro, Validação       |
 | **Comentários**        | ✅      | ✅         | Sucesso, Erro, Validação       |
-| **Likes**              |         |            | Sucesso, Erro, Validação       |
+| **Likes**              | ✅      | ✅         | Sucesso, Erro, Validação       |
 
 ## 🏗️ Estrutura de Testes
 
