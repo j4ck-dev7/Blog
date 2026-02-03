@@ -186,5 +186,28 @@ describe('Article Controller Test - loadArticle', () => {
                 }
             }
         )
+    });
+
+    test('Return status code 404 when article not found', async () => {
+        LoadArticleBySlug.mockRejectedValue(new Error('Article not found'));
+
+        const req = {
+            params: {
+                slug: 'non-existent-article'
+            }
+        };
+
+        const res = {
+            status: jest.fn().mockReturnThis(),
+            json: jest.fn()
+        };
+
+        await loadArticle(req, res);
+
+        expect(LoadArticleBySlug).toHaveBeenCalledWith('non-existent-article');
+        expect(res.status).toHaveBeenCalledWith(404);
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+            message: 'Article not found'
+        }));
     })
 })
