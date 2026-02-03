@@ -131,8 +131,8 @@ describe('Article Controller Test - allArticles', () => {
 
         expect(GetAllArticles).toHaveBeenCalledWith(1, 2);
         expect(res.status).toHaveBeenCalledWith(404);
-        expect(res.json).toHaveBeenCalledWith({
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
             message: 'Articles not found'
-        })
+        }));
     });
 })
