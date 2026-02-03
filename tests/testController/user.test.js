@@ -21,7 +21,7 @@ describe('User Controller signUp', () => {
         jest.clearAllMocks()
     });
 
-    test('Deve retornar status 400 quando o email já existe ao registrar', async () => {
+    test('Deve retornar status 401 quando o email já existe ao registrar', async () => {
         registerUser.mockRejectedValue(new Error('User already exists')); // Diz ao mock o que será retornado
         const req = {
             body: {
@@ -39,7 +39,7 @@ describe('User Controller signUp', () => {
         await signUp(req, res);
 
         expect(registerUser).toHaveBeenCalledWith('Teste', 'teste@gmail.com', '12345678')
-        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.status).toHaveBeenCalledWith(401);
         expect(res.json).toHaveBeenCalledWith({ message: 'User already exists' });
     });
 
@@ -109,7 +109,7 @@ describe('User Controller signIn', () => {
         await signIn(req, res);
 
         expect(loginUser).toHaveBeenCalledWith('inexistente@gmail.com', '12345678')
-        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.status).toHaveBeenCalledWith(401);
         expect(res.json).toHaveBeenCalledWith({ message: 'Incorrect email or password' });
     });
 
@@ -130,7 +130,7 @@ describe('User Controller signIn', () => {
         await signIn(req, res);
 
         expect(loginUser).toHaveBeenCalledWith('ana@gmail.com', '123456789')
-        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.status).toHaveBeenCalledWith(401);
         expect(res.json).toHaveBeenCalledWith({ message: 'Incorrect email or password' });
     });
 

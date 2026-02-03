@@ -21,7 +21,7 @@ export const signIn = async (req, res) => {
         res.status(200).json({ message: "User logged in successfully" });
     } catch (error) {
         if (error.message === 'Incorrect email or password') {
-            return res.status(400).json({ message: "Incorrect email or password" });
+            return res.status(401).json({ message: "Incorrect email or password" });
         }
 
         console.error('User failed to log in', error);
@@ -49,7 +49,7 @@ export const signUp = async (req, res) => {
         res.status(201).json({ message: 'User registered successfully' });  
     } catch (error) {
         if (error.message === 'User already exists') {
-            return  res.status(400).json({ message: 'User already exists' });
+            return  res.status(401).json({ message: 'User already exists' });
         }
         
         console.error('User failed to register', error);
