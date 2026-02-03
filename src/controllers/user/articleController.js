@@ -13,12 +13,11 @@ export const allArticles = async (req, res) => {
         pagination: data.pagination
       });
     } catch (error) {
-      console.error(error);
-
       if(error.message === 'Articles not found'){
         return res.status(404).json({ message: 'Articles not found' });
       }
 
+      console.error(error);
       res.status(500).json({ message: 'Internal server error' });
     }
 }
@@ -35,12 +34,11 @@ export const loadArticle = async (req, res) => {
       });
 
     }catch (error) {
-      console.error('Error loading article', error);
-
       if(error.message === 'Article not found'){
         return res.status(404).json({ message: 'Article not found' });
       }
 
+      console.error('Error loading article', error);
       return res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -59,13 +57,12 @@ export const findArticleByTag = async (req, res) => {
         pagination: data.pagination
       });
     } catch (error) {
-      console.error(error);
-
       if(error.message === 'Articles not found'){
         return res.status(404).json({ message: 'Articles not found' });
       }
 
-      res.status(500).json({ message: 'Internal server error' });
+      console.error(error);
+      return res.status(500).json({ message: 'Internal server error' });
     };
 };
 
@@ -83,12 +80,11 @@ export const searchArticles = async (req, res) => {
       pagination: data.pagination
     })
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
-
     if(error.message === 'Articles not found'){
       return res.status(404).json({ message: 'Articles not found' });
     }
 
     console.error('Error searching articles', error);
+    return res.status(500).json({ message: 'Internal server error' });
   }  
 }

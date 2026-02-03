@@ -110,5 +110,29 @@ describe('Article Controller Test - allArticles', () => {
                 }
             }
         ))
-    })
+    });
+
+    test('Return error when articles not found with status code 404', async () => {
+        GetAllArticles.mockRejectedValue(new Error('Articles not found'));
+
+        const req = {
+            query: {
+                page: 1,
+                limit: 2
+            }
+        };
+
+        const res = {
+            status: jest.fn().mockReturnThis(),
+            json: jest.fn()
+        };
+
+        await allArticles(req, res);
+
+        expect(GetAllArticles).toHaveBeenCalledWith(1, 2);
+        expect(res.status).toHaveBeenCalledWith(404);
+        expect(res.json).toHaveBeenCalledWith({
+            message: 'Articles not found'
+        })
+    });
 })
