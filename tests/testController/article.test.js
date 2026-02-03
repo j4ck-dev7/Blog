@@ -317,4 +317,29 @@ describe('Article Controller Test - findArticleByTag', () => {
             }
         ))
     });
+
+    test('Return error when articles by tag not found with status code 404', async () => {
+        FindArticlesByTag.mockRejectedValue(new Error('Articles not found'));
+
+        const req = {
+            query: {
+                page: 1,
+                limit: 2,
+                tag: 'tag0'
+            }
+        };
+
+        const res = {
+            status: jest.fn().mockReturnThis(),
+            json: jest.fn()
+        };
+
+        await findArticleByTag(req, res);
+
+        expect(FindArticlesByTag).toHaveBeenCalledWith('tag0', 1, 2);
+        expect(res.status).toHaveBeenCalledWith(404);
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+            message: 'Articles not found'
+        }));
+    })
 })
