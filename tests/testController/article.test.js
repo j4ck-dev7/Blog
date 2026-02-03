@@ -341,5 +341,109 @@ describe('Article Controller Test - findArticleByTag', () => {
         expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
             message: 'Articles not found'
         }));
-    })
+    });
+});
+
+describe('Article Controller Test - searchArticles', () => {
+    beforeEach(() => {
+        jest.clearAllMocks()
+    });
+
+    test('Return articles from search with status code 200', async () => {
+        SearchForArticles.mockResolvedValue(
+            {
+                articles: [
+                    {
+                        title: 'crtyvg fghjd',
+                        slug: 'crtyvg-fghjd',
+                        author: 'admin',
+                        banner: 'assets/banner/img.png',
+                        tags: ['tag1', 'tag2'],
+                        planRole: 'free',
+                        viewsCount: 1,
+                        likeCount: 0,
+                        commentCount: 0,
+                        creationDate: '2025-12-15T20:00:27.565Z'
+                    },
+                    {
+                        title: 'crtyvg fghj',
+                        slug: 'crtyvg-fghj',
+                        author: 'admin',
+                        banner: 'assets/banner/img.png',
+                        tags: ['tag1', 'tag3'],
+                        planRole: 'free',
+                        viewsCount: 9,
+                        likeCount: 0,
+                        commentCount: 0,
+                        creationDate: '2025-12-15T20:00:27.565Z'
+                    }
+                ],
+                pagination: {
+                    total: 2,
+                    pages: 1,
+                    currentPage: 1,
+                    limit: 2,
+                    hasNext: false,
+                    hasPrev: false
+                }
+            }
+        )
+
+        const req = {
+            query: {
+                page: 1,
+                limit: 2,
+                search: 'crt'
+            }
+        };
+
+        const res = {
+            status: jest.fn().mockReturnThis(),
+            json: jest.fn()
+        };
+
+        await searchArticles(req, res);
+
+        expect(SearchForArticles).toHaveBeenCalledWith('crt', 1, 2);
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining(
+            {
+                message: 'Search results',
+                articles: [
+                    {
+                        title: 'crtyvg fghjd',
+                        slug: 'crtyvg-fghjd',
+                        author: 'admin',
+                        banner: 'assets/banner/img.png',
+                        tags: ['tag1', 'tag2'],
+                        planRole: 'free',
+                        viewsCount: 1,
+                        likeCount: 0,
+                        commentCount: 0,
+                        creationDate: '2025-12-15T20:00:27.565Z'
+                    },
+                    {
+                        title: 'crtyvg fghj',
+                        slug: 'crtyvg-fghj',
+                        author: 'admin',
+                        banner: 'assets/banner/img.png',
+                        tags: ['tag1', 'tag3'],
+                        planRole: 'free',
+                        viewsCount: 9,
+                        likeCount: 0,
+                        commentCount: 0,
+                        creationDate: '2025-12-15T20:00:27.565Z'
+                    }
+                ],
+                pagination: {
+                    total: 2,
+                    pages: 1,
+                    currentPage: 1,
+                    limit: 2,
+                    hasNext: false,
+                    hasPrev: false
+                }
+            }
+        ))
+    });
 })
