@@ -38,17 +38,24 @@ model User {
   createdAt DateTime @default(now())
   subscriptionPlan SubscriptionPlan @default(free)
   subscriptionExpiresAt DateTime?
+  sub String @db.VarChar(50)
+  authenticationType AuthenticationType @default(local)
 
   @@index([name]) // index de consultas
   @@index([email]) // index de consultas
 }
 
-enum Role{
+enum AuthenticationType {
+  google
+  local
+}
+
+enum Role {
   admin
   user
 }
 
-enum SubscriptionPlan{
+enum SubscriptionPlan {
   free
   basic 
   intermediate
