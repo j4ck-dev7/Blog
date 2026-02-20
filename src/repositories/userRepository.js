@@ -37,6 +37,17 @@ export const createUser = async (name, email, password) => {
     })
 }
 
+export const createUserWithOauth = async (name, email, sub) => {
+    return await prisma.user.create({
+        data: {
+            name,
+            email, 
+            sub,
+            authenticationType: 'google'
+        }
+    })
+}
+
 export const updateUserSubscription = async (userId, plan) => {
     return await prisma.user.update({
         where: {
