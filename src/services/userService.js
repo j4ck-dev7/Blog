@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { findUserByEmail, verifyUserExistsByEmail, createUser, updateUserSubscription } from "../repositories/userRepository.js";
+import { findUserByEmail, verifyUserExistsByEmail, createUser, updateUserSubscription, findUserBySub, verifyUserExistsBySub, createUserWithOauth } from "../repositories/userRepository.js";
 
 export const registerUser = async (name, email, password) => {
     const existingUser = await verifyUserExistsByEmail(email);
@@ -9,6 +9,16 @@ export const registerUser = async (name, email, password) => {
 
     const passwordHash = await bcrypt.hash(password, 10);
     const newUser = await createUser(name, email, passwordHash);
+    return newUser;
+}
+
+export const registerUserByOauth = async (name, email, sub) => {
+    const verifyIfUserExists = await verifyUserExistsBySub(sub);
+    if(verifyIfUserExists) {
+        throw new Error('User already exists');
+    }
+
+    const newUser = await createUserWithOauth(name, email, sub);
     return newUser;
 }
 
@@ -26,6 +36,17 @@ export const loginUser = async (email, password) => {
     }
 
     return user;
+}
+
+export const loginUserByOauth = async (sub) => {
+    const userVerify = await verifyUserExistsBySub(sub);
+    if (!userVerify) {
+        throw new Error('Conta não encontrada');
+    };
+
+    const user = await findUserBySub(sub);
+
+    return user
 }
 
 export const subscribeUser = async (userId, plan) => {
