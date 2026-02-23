@@ -16,6 +16,22 @@ export const findUserByEmail = async (email) => {
     })
 };
 
+export const findUserBySub = async (sub) => {
+    return await prisma.user.findUnique({
+        where: {
+            sub
+        },
+        select: {
+            name: true,
+            email: true,
+            password: true,
+            id: true,
+            subscriptionExpiresAt: true,
+            subscriptionPlan: true
+        }
+    })
+}
+
 export const verifyUserExistsByEmail = async (email) => {
     return await prisma.user.findUnique({
         where: {
@@ -27,12 +43,24 @@ export const verifyUserExistsByEmail = async (email) => {
     })
 }
 
+export const verifyUserExistsBySub = async (sub) => {
+    return await prisma.user.findUnique({
+        where: {
+            sub
+        },
+        select: {
+            sub: true
+        }
+    })
+}
+
 export const createUser = async (name, email, password) => {
     return await prisma.user.create({
         data: {
             email,
             name,
-            password
+            password,
+            authenticationType: 'local'
         } 
     })
 }

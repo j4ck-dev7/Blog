@@ -9,6 +9,14 @@
 * 🟢 You can import this file directly.
 */
 
+export const AuthenticationType = {
+  google: 'google',
+  local: 'local'
+} as const
+
+export type AuthenticationType = (typeof AuthenticationType)[keyof typeof AuthenticationType]
+
+
 export const Role = {
   admin: 'admin',
   user: 'user'
@@ -18,10 +26,10 @@ export type Role = (typeof Role)[keyof typeof Role]
 
 
 export const SubscriptionPlan = {
-  FREE: 'FREE',
-  BASIC: 'BASIC',
-  INTERMEDIATE: 'INTERMEDIATE',
-  PREMIUM: 'PREMIUM'
+  free: 'free',
+  basic: 'basic',
+  intermediate: 'intermediate',
+  premium: 'premium'
 } as const
 
 export type SubscriptionPlan = (typeof SubscriptionPlan)[keyof typeof SubscriptionPlan]

@@ -16,10 +16,10 @@
  */
 
 import * as runtime from "@prisma/client/runtime/client"
-import type * as Prisma from "../models.js"
-import { type PrismaClient } from "./class.js"
+import type * as Prisma from "../models.ts"
+import { type PrismaClient } from "./class.ts"
 
-export type * from '../models.js'
+export type * from '../models.ts'
 
 export type DMMF = typeof runtime.DMMF
 
@@ -697,7 +697,9 @@ export const UserScalarFieldEnum = {
   role: 'role',
   createdAt: 'createdAt',
   subscriptionPlan: 'subscriptionPlan',
-  subscriptionExpiresAt: 'subscriptionExpiresAt'
+  subscriptionExpiresAt: 'subscriptionExpiresAt',
+  sub: 'sub',
+  authenticationType: 'authenticationType'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -786,6 +788,20 @@ export type EnumSubscriptionPlanFieldRefInput<$PrismaModel> = FieldRefInputType<
  * Reference to a field of type 'SubscriptionPlan[]'
  */
 export type ListEnumSubscriptionPlanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SubscriptionPlan[]'>
+    
+
+
+/**
+ * Reference to a field of type 'AuthenticationType'
+ */
+export type EnumAuthenticationTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AuthenticationType'>
+    
+
+
+/**
+ * Reference to a field of type 'AuthenticationType[]'
+ */
+export type ListEnumAuthenticationTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AuthenticationType[]'>
     
 
 

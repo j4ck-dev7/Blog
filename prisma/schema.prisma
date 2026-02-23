@@ -43,6 +43,7 @@ model User {
 
   @@index([name]) // index de consultas
   @@index([email]) // index de consultas
+  @@index([sub])
 }
 
 enum AuthenticationType {
