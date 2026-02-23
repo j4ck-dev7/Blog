@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { signIn, signUp } from '../../controllers/user/userController.js';
+import { signIn, signUp, signUpWithOauth, signInWithOauth } from '../../controllers/user/userController.js';
 import { like, DeleteLike, allLikes } from '../../controllers/user/likeController.js';
 import { comment, removeComment, EditComment } from '../../controllers/user/commentController.js';
 import { allArticles, loadArticle, findArticleByTag, searchArticles } from '../../controllers/user/articleController.js';
@@ -21,6 +21,8 @@ router.get('/articles', auth, allArticles);
 router.get('/articles/tag', auth, findArticleByTag);
 router.get('/article/:slug', auth, credentialsAuth, planValidation, loadArticle);
 router.get('/articles/search', auth, searchValidation, searchArticles);
+router.get('/Oauth/signIn', signInWithOauth);
+router.get('/Oauth/signUp', signUpWithOauth);
 
 router.post('/signIn', loginValidate, signIn);
 router.post('/signUp', signUpValidator, signUp);
