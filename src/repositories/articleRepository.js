@@ -24,7 +24,7 @@ export const searchArticles = async (query, skip, limit) => {
     }, {
         score: { $meta: "textScore" }
     })
-        .sort({ creationDate: -1 })
+        .sort({ score: { $meta: "textScore" } })
         .skip(skip)
         .limit(limit)
         .select('-_id -__v -content')
