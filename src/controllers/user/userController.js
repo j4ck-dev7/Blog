@@ -1,5 +1,25 @@
 import jwt from 'jsonwebtoken'
-import { loginUser, loginUserByOauth, registerUser, registerUserByOauth } from '../../services/userService.js';
+import { loginUser, loginUserByOauth, registerUser, registerUserByOauth, getUrlForOauthSignIn, getUrlForOauthSignUp } from '../../services/userService.js';
+
+export const getSignInGoogleUrl = async (req, res) => {
+    try {
+        const url = await getUrlForOauthSignIn();
+        res.status(200).json({ url });
+    } catch (error) {
+        console.error('Error getting Google sign in URL:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+}
+
+export const getSignUpGoogleUrl = async (req, res) => {
+    try {
+        const url = await getUrlForOauthSignUp();
+        res.status(200).json({ url });
+    } catch (error) {
+        console.error('Error getting Google sign up URL:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+}
 
 export const signIn = async (req, res) => {
     try {
@@ -31,8 +51,8 @@ export const signIn = async (req, res) => {
 
 export const signInWithOauth = async (req, res) => {
     try {
-        const { sub } = req.query;
-        const user = await loginUserByOauth(sub);
+        const { code } = req.query;
+        const user = await loginUserByOauth(code);
 
         const token = jwt.sign(
             {
@@ -87,8 +107,8 @@ export const signUp = async (req, res) => {
 
 export const signUpWithOauth = async (req, res) => {
     try {
-        const { name, email, sub } = req.query;
-        const user = await registerUserByOauth(name, email, sub);
+        const { code } = req.query;
+        const user = await registerUserByOauth(code);
 
         const token = jwt.sign(
             {

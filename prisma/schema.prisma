@@ -1,7 +1,7 @@
 generator client {
   provider = "prisma-client"
-  output   = "../generated/prisma" // Ao modificar | criar algum modelo é necessário usar o comando no terminal 
-} // npx prisma generate para que as alterações sejam recebidas para execução de um CRUD 
+  output   = "../generated/prisma" // Ao modificar | criar algum modelo é necessário usar o comando no terminal npx prisma migrate dev
+} // depois execute no terminal npx prisma generate para que as alterações sejam recebidas para execução de um CRUD 
 
 datasource db {
   provider = "postgresql"
@@ -32,13 +32,13 @@ model User {
   id String @id @default(cuid()) @db.VarChar(30) // Definir o tamanho do campo para cuids gerados também assegura compatibilidade e otimização no postgres.
   name String @unique @db.VarChar(50)
   email String @unique @db.VarChar(50)
-  password String @db.VarChar(100)
+  password String? @db.VarChar(100)
   comment Comment[]
   role Role @default(user)
   createdAt DateTime @default(now())
   subscriptionPlan SubscriptionPlan @default(free)
   subscriptionExpiresAt DateTime?
-  sub String @db.VarChar(50)
+  sub String? @db.VarChar(50) @unique
   authenticationType AuthenticationType @default(local)
 
   @@index([name]) // index de consultas
