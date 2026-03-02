@@ -21,7 +21,7 @@ export const credentialsAuth = async (req, res, next) => {
             return next();
         };
 
-        if(req.user._id === 'freeAccess'){
+        if(req.user.state === 'freeAccess'){
             return res.status(401).json({ message: 'Unauthorized. To access this content, please subscribe.' });
         };
 

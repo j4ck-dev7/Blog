@@ -5,12 +5,12 @@ export const auth =  (req, res, next) => {
         const cookie = req.cookies.userAuth;
         if(!cookie){ 
             res.cookie('userAuth', 'freeAccess', { secure: true, httpOnly: true, expires: new Date(Date.now() + 2 * 3600000) });
-            req.user = { _id: 'freeAccess' }; // Usuário não autenticado, acesso livre. Exeto em rotas protegidas | conteudos premium
+            req.user = { state: 'freeAccess' }; // Usuário não autenticado, acesso livre. Exeto em rotas protegidas | conteudos premium
             return next();
         };
         
         if(cookie === 'freeAccess'){
-            req.user = { _id: 'freeAccess' };
+            req.user = { state: 'freeAccess' };
             return next();
         }
 
