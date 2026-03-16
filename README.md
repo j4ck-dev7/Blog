@@ -19,7 +19,9 @@ Desenvolvida com **Node.js + Express + Mongoose + MongoDB + Prisma + PostgreSQL*
 
 ### Usuário
 - `POST   api/user/signUp` → Registro  
-- `POST   api/user/signIn` → Login (retorna cookie HttpOnly com JWT)  
+- `GET    api/user/signUp/Oauth2` → Registro com Oauth2
+- `POST   api/user/signIn` → Login (retorna cookie HttpOnly com JWT)
+- `GET    api/user/signIn/Oauth2` → Login com Oauth2 (retorna cookie HttpOnly com JWT)
 - `GET    api/user/articles?page=1&limit=5` → Listar artigos com paginação
 - `GET    api/user/articles/tag?tag=tag&page=1&limit=5` → Busca de artigos por tag 
 - `GET    api/user/articles/search?search=busca&page=1&limit=5` → Busca de artigos por texto 
@@ -41,6 +43,7 @@ Desenvolvida com **Node.js + Express + Mongoose + MongoDB + Prisma + PostgreSQL*
 - Invalidação automática de cache após alterações
 - Planos de assinaturas usando stripe
 - Testes unitários
+- Oauth2 com o Google
 
 ## 📦 Tecnologias
 
@@ -60,6 +63,7 @@ Desenvolvida com **Node.js + Express + Mongoose + MongoDB + Prisma + PostgreSQL*
 | Slugify            | 1.6.6   | Geração de slugs             |
 | Stripe             | 20.0.0  | Gateway de pagamentos        |
 | Jest               | 30.2.0  | Testes unitários             |
+| Google-auth-library| 15.2.0  | Oauth2                       |
 
 ## ⚙️ Instalação
 
