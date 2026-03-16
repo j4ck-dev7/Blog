@@ -63,7 +63,7 @@ Desenvolvida com **Node.js + Express + Mongoose + MongoDB + Prisma + PostgreSQL*
 | Slugify            | 1.6.6   | Geração de slugs             |
 | Stripe             | 20.0.0  | Gateway de pagamentos        |
 | Jest               | 30.2.0  | Testes unitários             |
-| Google-auth-library| 15.2.0  | Oauth2                       |
+| Google-auth-library| 10.5.0  | Oauth2                       |
 
 ## ⚙️ Instalação
 
