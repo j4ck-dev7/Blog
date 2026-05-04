@@ -1,6 +1,8 @@
 import { prisma } from '../lib/prisma.js';
+import { logger } from '../config/logger.js';
 
 export const getCommentsBySlug = async (slug) => {
+    logger.debug('getCommentsBySlug called', { slug });
     return await prisma.comment.findMany({
         where: {
             articleSlug: slug
@@ -14,6 +16,7 @@ export const getCommentsBySlug = async (slug) => {
 };
 
 export const addComment = async (post, userId, userName, articleSlug) => {
+    logger.info('addComment called', { userId, userName, articleSlug });
     return await prisma.comment.create({
         data: {
             post,
@@ -25,6 +28,7 @@ export const addComment = async (post, userId, userName, articleSlug) => {
 };
 
 export const editComment = async (commentId, post) => {
+    logger.info('editComment called', { commentId });
     return await prisma.comment.update({
         where: {
             id: commentId
@@ -36,6 +40,7 @@ export const editComment = async (commentId, post) => {
 };
 
 export const removeComment = async (commentId) => {
+    logger.info('removeComment called', { commentId });
     return await prisma.comment.delete({
         where: {
             id: commentId
@@ -44,6 +49,7 @@ export const removeComment = async (commentId) => {
 };
 
 export const verifyComment = async (commentId) => {
+    logger.debug('verifyComment called', { commentId });
     return await prisma.comment.findFirst({
         where: {
             id: commentId,

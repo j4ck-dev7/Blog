@@ -4,8 +4,15 @@ jest.unstable_mockModule('../../src/repositories/userRepository.js', () => ({
     verifyUserExistsByEmail: jest.fn(),
     findUserByEmail: jest.fn(),
     createUser: jest.fn(),
-    updateUserSubscription: jest.fn()
+    updateUserSubscription: jest.fn(),
+    findUserBySub: jest.fn(),
+    verifyUserExistsBySub: jest.fn(),
+    createUserWithOauth: jest.fn()
 }))
+
+jest.unstable_mockModule('../../src/config/logger.js', () => ({
+    logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() }
+}));
 
 jest.unstable_mockModule('bcryptjs', () => ({
     default: {

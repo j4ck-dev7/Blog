@@ -8,6 +8,7 @@ import webhookRouter from './src/routes/webhookRouter.js';
 
 import { connect } from './src/config/db.js';
 import stripe from './src/config/stripe.js';
+import { logger } from './src/config/logger.js';
 
 const app = express();
 app.use('/api/webhooks', webhookRouter);
@@ -20,8 +21,8 @@ app.use('/', userRoute);
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
-    connect(),
-    console.log(`Server is running on port ${PORT}`)            
+    connect();
+    logger.info(`Server is running on port ${PORT}`);
 });
 
 // Caso use alguma biblioteca que utilize typescript, como prisma, é necessário adicionar script de inicialização:

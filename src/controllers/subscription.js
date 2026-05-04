@@ -1,4 +1,6 @@
 import stripe from "../config/stripe.js";
+import { logger } from '../config/logger.js';
+import { getRequestMeta } from '../config/requestMeta.js';
 
 export const subscribe = async (req, res) => {
     const plan = req.body.subscription;
@@ -32,9 +34,10 @@ export const subscribe = async (req, res) => {
             metadata: { userId, plan } // Define o metatdata para identificar o usuário e o plano na hora do webhook para efetuar a assinatura (Modificar o usuário no banco de dados)
         })
 
+        logger.info('Sessão de inscrição criada', getRequestMeta(req, { userId, plan }));
         res.status(200).json({ url: session.url });
     } catch (error) {
-        console.error(error);
+        logger.error('Erro ao criar sessão de inscrição', { ...getRequestMeta(req), error: error.message, stack: error.stack });
         res.status(500).json({ message: 'Internal server error' });
     }
 }

@@ -2,7 +2,11 @@ import { describe, test, expect, jest, beforeEach } from '@jest/globals';
 
 jest.unstable_mockModule('../../src/services/userService.js', () => ({
     registerUser: jest.fn(),
-    loginUser: jest.fn()    
+    loginUser: jest.fn(),
+    loginUserByOauth: jest.fn(),
+    registerUserByOauth: jest.fn(),
+    getUrlForOauthSignIn: jest.fn(),
+    getUrlForOauthSignUp: jest.fn()
 }));
 
 jest.unstable_mockModule('jsonwebtoken', () => ({
@@ -11,9 +15,21 @@ jest.unstable_mockModule('jsonwebtoken', () => ({
     }
 }));
 
+jest.unstable_mockModule('../../src/config/logger.js', () => ({
+    logger: {
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn()
+    }
+}));
+
+jest.unstable_mockModule('../../src/config/requestMeta.js', () => ({
+    getRequestMeta: jest.fn().mockImplementation((req, extra) => ({ ip: req?.ip || '127.0.0.1', agent: req?.headers?.['user-agent'] || 'test-agent', route: req?.originalUrl || req?.url || '/', method: req?.method || 'GET', userId: extra?.userId || req?.user?._id || null, ...extra }))
+}));
+
 const { default: jwt } = await import('jsonwebtoken')
 const { registerUser, loginUser } = await import('../../src/services/userService.js');
-const { signIn, signUp } = await import('../../src/controllers/user/userController.js')
+const { signIn, signUp } = await import('../../src/controllers/userController.js')
 
 describe('User Controller signUp', () => {
     beforeEach(() => {

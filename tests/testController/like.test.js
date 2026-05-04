@@ -6,8 +6,16 @@ jest.unstable_mockModule('../../src/services/likeService.js', () => ({
     removeLike: jest.fn()
 }));
 
+jest.unstable_mockModule('../../src/config/logger.js', () => ({
+    logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+}));
+
+jest.unstable_mockModule('../../src/config/requestMeta.js', () => ({
+    getRequestMeta: jest.fn().mockImplementation((req, extra) => ({ ip: req?.ip || '127.0.0.1', agent: req?.headers?.['user-agent'] || 'test-agent', route: req?.originalUrl || req?.url || '/', method: req?.method || 'GET', userId: extra?.userId || req?.user?._id || null, ...extra }))
+}));
+
 const { allLikesUser, addLike, removeLike } = await import('../../src/services/likeService.js');
-const { allLikes, like, DeleteLike } = await import('../../src/controllers/user/likeController.js');
+const { allLikes, like, DeleteLike } = await import('../../src/controllers/likeController.js');
 
 describe('Like Controller Test', () => {
     beforeEach(() => {

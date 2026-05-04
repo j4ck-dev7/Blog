@@ -7,8 +7,16 @@ jest.unstable_mockModule('../../src/services/articleService.js', () => ({
     FindArticlesByTag: jest.fn()
 }));
 
+jest.unstable_mockModule('../../src/config/logger.js', () => ({
+    logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+}));
+
+jest.unstable_mockModule('../../src/config/requestMeta.js', () => ({
+    getRequestMeta: jest.fn().mockImplementation((req, extra) => ({ ip: req?.ip || '127.0.0.1', agent: req?.headers?.['user-agent'] || 'test-agent', route: req?.originalUrl || req?.url || '/', method: req?.method || 'GET', userId: extra?.userId || req?.user?._id || null, ...extra }))
+}));
+
 const { GetAllArticles, LoadArticleBySlug, SearchForArticles, FindArticlesByTag } = await import('../../src/services/articleService.js');
-const { allArticles, loadArticle, findArticleByTag, searchArticles } = await import('../../src/controllers/user/articleController.js');
+const { allArticles, loadArticle, findArticleByTag, searchArticles } = await import('../../src/controllers/articleController.js');
 
 describe('Article Controller Test - allArticles', () => {
     beforeEach(() => {

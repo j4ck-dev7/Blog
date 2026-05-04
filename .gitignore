@@ -2,3 +2,4 @@
 !.env.example.env
 /src/generated/prisma
 node_modules/
+logs/

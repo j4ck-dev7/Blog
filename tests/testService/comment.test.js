@@ -13,6 +13,10 @@ jest.unstable_mockModule('../../src/repositories/articleRepository.js', () => ({
     decrementArticleCommentCount: jest.fn()
 }))
 
+jest.unstable_mockModule('../../src/config/logger.js', () => ({
+    logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() }
+}));
+
 const { addComment, editComment, removeComment, verifyComment } = await import('../../src/repositories/commentRepository.js');
 const { incrementArticleCommentCount, decrementArticleCommentCount } = await import('../../src/repositories/articleRepository.js')
 const { createComment, updateComment, deleteComment } = await import('../../src/services/commentService.js');

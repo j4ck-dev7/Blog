@@ -12,6 +12,10 @@ jest.unstable_mockModule('../../src/repositories/articleRepository.js', () => ({
     decrementArticleLikeCount: jest.fn()
 }))
 
+jest.unstable_mockModule('../../src/config/logger.js', () => ({
+    logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() }
+}));
+
 const { getLikes, createLike, deleteLike, verifyUserLikeArticle } = await import('../../src/repositories/likeRepository.js');
 const { decrementArticleLikeCount, incrementArticleLikeCount } = await import('../../src/repositories/articleRepository.js');
 const { allLikesUser, addLike, removeLike } = await import('../../src/services/likeService.js');

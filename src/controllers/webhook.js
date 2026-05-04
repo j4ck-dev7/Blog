@@ -1,6 +1,8 @@
 import { updateUserSubscription } from '../repositories/userRepository.js';
 import jwt from 'jsonwebtoken';
 import stripe from "../config/stripe.js";
+import { logger } from '../config/logger.js';
+import { getRequestMeta } from '../config/requestMeta.js';
 
 export const webhook = async (req, res) => {
     let sig = req.headers['stripe-signature'];
@@ -22,11 +24,12 @@ export const webhook = async (req, res) => {
             let token = jwt.sign( { _id : update.id, subscription: update.subscriptionPlan, expiresAt: update.subscriptionExpiresAt, email: update.email }, process.env.SECRET )
             res.cookie('userAuth', token, { secure: true, httpOnly: true, expires: new Date(Date.now() + 2 * 3600000) })
 
+            logger.info('Webhook recebido - assinatura atualizada', getRequestMeta(req, { userId, plan }));
             return res.status(200).json({ received: true }) // Importante, diz ao stripe que o webhook foi recebido
         }
 
     } catch (error) {
+        logger.error('Erro no webhook', { ...getRequestMeta(req), error: error.message, stack: error.stack });
         res.status(500).json({ message: 'Internal server error' });
-        console.error(error);
     }
 }

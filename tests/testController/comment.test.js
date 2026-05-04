@@ -6,8 +6,16 @@ jest.unstable_mockModule('../../src/services/commentService.js', () => ({
     deleteComment: jest.fn()
 }));
 
+jest.unstable_mockModule('../../src/config/logger.js', () => ({
+    logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+}));
+
+jest.unstable_mockModule('../../src/config/requestMeta.js', () => ({
+    getRequestMeta: jest.fn().mockImplementation((req, extra) => ({ ip: req?.ip || '127.0.0.1', agent: req?.headers?.['user-agent'] || 'test-agent', route: req?.originalUrl || req?.url || '/', method: req?.method || 'GET', userId: extra?.userId || req?.user?._id || null, ...extra }))
+}));
+
 const { createComment, updateComment, deleteComment } = await import('../../src/services/commentService.js');
-const { comment, EditComment, removeComment } = await import('../../src/controllers/user/commentController.js');
+const { comment, EditComment, removeComment } = await import('../../src/controllers/commentController.js');
 
 describe('Comment Controller Test', () => {
     beforeEach(() => {

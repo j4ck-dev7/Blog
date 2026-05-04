@@ -1,6 +1,8 @@
 import { prisma } from '../lib/prisma.js'
+import { logger } from '../config/logger.js';
 
 export const findUserByEmail = async (email) => {
+    logger.debug('findUserByEmail called', { email });
     return await prisma.user.findUnique({
         where: {
             email
@@ -17,6 +19,7 @@ export const findUserByEmail = async (email) => {
 };
 
 export const findUserBySub = async (sub) => {
+    logger.debug('findUserBySub called', { sub });
     return await prisma.user.findUnique({
         where: {
             sub
@@ -33,6 +36,7 @@ export const findUserBySub = async (sub) => {
 }
 
 export const verifyUserExistsByEmail = async (email) => {
+    logger.debug('verifyUserExistsByEmail called', { email });
     return await prisma.user.findUnique({
         where: {
             email
@@ -44,6 +48,7 @@ export const verifyUserExistsByEmail = async (email) => {
 }
 
 export const verifyUserExistsBySub = async (sub) => {
+    logger.debug('verifyUserExistsBySub called', { sub });
     return await prisma.user.findUnique({
         where: {
             sub
@@ -55,6 +60,7 @@ export const verifyUserExistsBySub = async (sub) => {
 }
 
 export const createUser = async (name, email, password) => {
+    logger.info('createUser called', { email, name });
     return await prisma.user.create({
         data: {
             email,
@@ -66,6 +72,7 @@ export const createUser = async (name, email, password) => {
 }
 
 export const createUserWithOauth = async (name, email, sub) => {
+    logger.info('createUserWithOauth called', { email, sub });
     return await prisma.user.create({
         data: {
             name,
@@ -77,6 +84,7 @@ export const createUserWithOauth = async (name, email, sub) => {
 }
 
 export const updateUserSubscription = async (userId, plan) => {
+    logger.info('updateUserSubscription called', { userId, plan });
     return await prisma.user.update({
         where: {
             id: userId
@@ -89,6 +97,7 @@ export const updateUserSubscription = async (userId, plan) => {
 }
 
 export const downgradeUserSubscription = async (email) => {
+    logger.info('downgradeUserSubscription called', { email });
     return await prisma.user.update({
         where: { email: email },
         data: {
@@ -99,6 +108,7 @@ export const downgradeUserSubscription = async (email) => {
 }
 
 export const getUserByIdVerifyCredentials = async (userId) => {
+    logger.debug('getUserByIdVerifyCredentials called', { userId });
     return await prisma.user.findFirst({
         where: {
             id: userId

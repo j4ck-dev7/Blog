@@ -22,6 +22,10 @@ jest.unstable_mockModule('../../src/config/redis.js', () => ({
     }
 }));
 
+jest.unstable_mockModule('../../src/config/logger.js', () => ({
+    logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() }
+}));
+
 const { default: client } = await import('../../src/config/redis.js');
 const { allArticles, countArticles, incrementArticleViews, findArticleBySlug, findArticlesByTag, countArticlesByTag, searchArticles, searchArticlesCount } = await import('../../src/repositories/articleRepository.js');
 const { getCommentsBySlug } = await import('../../src/repositories/commentRepository.js')

@@ -1,5 +1,7 @@
 import { getUserByIdVerifyCredentials } from "../repositories/userRepository.js";
 import { findArticleBySlugWithPlanRole } from "../repositories/articleRepository.js";
+import { logger } from '../config/logger.js';
+import { getRequestMeta } from '../config/requestMeta.js';
 
 export const credentialsAuth = async (req, res, next) => {
     try {
@@ -48,7 +50,7 @@ export const credentialsAuth = async (req, res, next) => {
 
         next();
     } catch (error) {
+        logger.error('Erro durante validação de credenciais', { ...getRequestMeta(req), error: error.message, stack: error.stack });
         res.status(500).json({ message: 'Internal server error' });
-        console.error('Error during credentials authentication', error);
     }
 }

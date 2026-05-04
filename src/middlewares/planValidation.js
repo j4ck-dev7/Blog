@@ -1,5 +1,7 @@
 import { downgradeUserSubscription } from '../repositories/userRepository.js';
 import { findArticleBySlugWithPlanRole } from '../repositories/articleRepository.js';
+import { logger } from '../config/logger.js';
+import { getRequestMeta } from '../config/requestMeta.js';
 
 const planWeight = {
     FREE: 0,
@@ -46,7 +48,7 @@ export const planValidation = async (req, res, next) => {
 
       return next();
     } catch (error) {
-        console.error('Error in planValidation middleware:', error);
-        return res.status(500).json({ message: 'Internal server error' });
+      logger.error('Erro no middleware planValidation', { ...getRequestMeta(req), error: error.message, stack: error.stack });
+      return res.status(500).json({ message: 'Internal server error' });
     }
 }
