@@ -1,5 +1,5 @@
-import { getUserByIdVerifyCredentials } from "../../repositories/userRepository.js";
-import { findArticleBySlugWithPlanRole } from "../../repositories/articleRepository.js";
+import { getUserByIdVerifyCredentials } from "../repositories/userRepository.js";
+import { findArticleBySlugWithPlanRole } from "../repositories/articleRepository.js";
 
 export const credentialsAuth = async (req, res, next) => {
     try {

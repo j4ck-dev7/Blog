@@ -1,4 +1,4 @@
-import { GetAllArticles, LoadArticleBySlug, SearchForArticles, FindArticlesByTag } from "../../services/articleService.js";
+import { GetAllArticles, LoadArticleBySlug, SearchForArticles, FindArticlesByTag } from "../services/articleService.js";
 
 export const allArticles = async (req, res) => {
     try {

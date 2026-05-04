@@ -1,6 +1,6 @@
-import { updateUserSubscription } from '../../repositories/userRepository.js';
+import { updateUserSubscription } from '../repositories/userRepository.js';
 import jwt from 'jsonwebtoken';
-import stripe from "../../config/stripe.js";
+import stripe from "../config/stripe.js";
 
 export const webhook = async (req, res) => {
     let sig = req.headers['stripe-signature'];

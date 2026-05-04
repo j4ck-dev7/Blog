@@ -3,8 +3,8 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 
 // import adminRoute from './src/routes/admin/adminRoute.js';
-import userRoute from './src/routes/user/userRoute.js';
-import webhookRouter from './src/routes/user/webhookRouter.js';
+import userRoute from './src/routes/userRoute.js';
+import webhookRouter from './src/routes/webhookRouter.js';
 
 import { connect } from './src/config/db.js';
 import stripe from './src/config/stripe.js';
@@ -16,8 +16,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.json());
 
-// app.use('/api/admin', adminRoute);
-app.use('/api/user', userRoute);
+app.use('/', userRoute);
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {

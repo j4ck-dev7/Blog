@@ -1,5 +1,5 @@
-import { downgradeUserSubscription } from '../../repositories/userRepository.js';
-import { findArticleBySlugWithPlanRole } from '../../repositories/articleRepository.js';
+import { downgradeUserSubscription } from '../repositories/userRepository.js';
+import { findArticleBySlugWithPlanRole } from '../repositories/articleRepository.js';
 
 const planWeight = {
     FREE: 0,

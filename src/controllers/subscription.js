@@ -1,4 +1,4 @@
-import stripe from "../../config/stripe.js";
+import stripe from "../config/stripe.js";
 
 export const subscribe = async (req, res) => {
     const plan = req.body.subscription;

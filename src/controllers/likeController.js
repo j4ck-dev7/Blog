@@ -1,4 +1,4 @@
-import { allLikesUser, addLike, removeLike } from "../../services/likeService.js";
+import { allLikesUser, addLike, removeLike } from "../services/likeService.js";
 
 export const like = async (req, res) => {
     const userId = req.user._id;

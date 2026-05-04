@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken'
-import { loginUser, loginUserByOauth, registerUser, registerUserByOauth, getUrlForOauthSignIn, getUrlForOauthSignUp } from '../../services/userService.js';
+import { loginUser, loginUserByOauth, registerUser, registerUserByOauth, getUrlForOauthSignIn, getUrlForOauthSignUp } from '../services/userService.js';
 
 export const getSignInGoogleUrl = async (req, res) => {
     try {
