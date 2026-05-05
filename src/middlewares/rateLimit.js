@@ -1,7 +1,7 @@
 import { rateLimit, ipKeyGenerator } from 'express-rate-limit';
 import { logger } from '../config/logger.js';
 import { RedisStore } from 'rate-limit-redis';
-import { client } from '../config/redis.js';
+import client from '../config/redis.js';
 import { getRequestMeta } from '../config/requestMeta.js';
 
 // Em rotas do tipo get, que há apenas leituras no DB, o recomendado é de 300 requisições por minuto, desde que não seja feito alguma consulta
