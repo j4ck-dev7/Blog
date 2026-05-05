@@ -28,8 +28,8 @@ jest.unstable_mockModule('../../src/config/requestMeta.js', () => ({
 }));
 
 const { default: jwt } = await import('jsonwebtoken')
-const { registerUser, loginUser } = await import('../../src/services/userService.js');
-const { signIn, signUp } = await import('../../src/controllers/userController.js')
+const { registerUser, loginUser, loginUserByOauth, registerUserByOauth, getUrlForOauthSignIn, getUrlForOauthSignUp } = await import('../../src/services/userService.js');
+const { signIn, signUp, getSignInGoogleUrl, getSignUpGoogleUrl, signInWithOauth, signUpWithOauth } = await import('../../src/controllers/userController.js')
 
 describe('User Controller signUp', () => {
     beforeEach(() => {
@@ -193,3 +193,89 @@ describe('User Controller signIn', () => {
         expect(res.json).toHaveBeenCalledWith({ message: 'User logged in successfully' });
     });
 })
+
+describe('User Controller OAuth2', () => {
+    beforeEach(() => {
+        jest.clearAllMocks()
+    });
+
+    test('Should return Google sign-in URL with status 200', async () => {
+        getUrlForOauthSignIn.mockResolvedValue('https://accounts.google.com/auth?abc=1');
+
+        const req = {};
+        const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+        await getSignInGoogleUrl(req, res);
+
+        expect(getUrlForOauthSignIn).toHaveBeenCalled();
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.json).toHaveBeenCalledWith({ url: 'https://accounts.google.com/auth?abc=1' });
+    });
+
+    test('Should return Google sign-up URL with status 200', async () => {
+        getUrlForOauthSignUp.mockResolvedValue('https://accounts.google.com/auth?signup=1');
+
+        const req = {};
+        const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+        await getSignUpGoogleUrl(req, res);
+
+        expect(getUrlForOauthSignUp).toHaveBeenCalled();
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.json).toHaveBeenCalledWith({ url: 'https://accounts.google.com/auth?signup=1' });
+    });
+
+    test('Should sign in with OAuth and set cookie', async () => {
+        loginUserByOauth.mockResolvedValue({ id: '10', name: 'Oauth User', email: 'oauth@user.com', subscriptionPlan: 'FREE', subscriptionExpiresAt: null });
+
+        const req = { query: { code: 'auth-code' } };
+        const res = { status: jest.fn().mockReturnThis(), json: jest.fn(), cookie: jest.fn() };
+
+        await signInWithOauth(req, res);
+
+        expect(loginUserByOauth).toHaveBeenCalledWith('auth-code');
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.cookie).toHaveBeenCalledWith('userAuth', 'fake-token', { secure: true, httpOnly: true, expires: expect.any(Date) });
+        expect(res.json).toHaveBeenCalledWith({ message: 'User logged in successfully' });
+    });
+
+    test('Should return 401 when OAuth sign-in account not found', async () => {
+        loginUserByOauth.mockRejectedValue(new Error('Conta não encontrada'));
+
+        const req = { query: { code: 'bad-code' } };
+        const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+        await signInWithOauth(req, res);
+
+        expect(loginUserByOauth).toHaveBeenCalledWith('bad-code');
+        expect(res.status).toHaveBeenCalledWith(401);
+        expect(res.json).toHaveBeenCalledWith({ message: 'Conta não encontrada' });
+    });
+
+    test('Should register with OAuth and set cookie', async () => {
+        registerUserByOauth.mockResolvedValue({ id: '11', name: 'New Oauth', email: 'new@oauth.com', subscriptionPlan: 'FREE', subscriptionExpiresAt: null });
+
+        const req = { query: { code: 'signup-code' } };
+        const res = { status: jest.fn().mockReturnThis(), json: jest.fn(), cookie: jest.fn() };
+
+        await signUpWithOauth(req, res);
+
+        expect(registerUserByOauth).toHaveBeenCalledWith('signup-code');
+        expect(res.status).toHaveBeenCalledWith(201);
+        expect(res.cookie).toHaveBeenCalledWith('userAuth', 'fake-token', { secure: true, httpOnly: true, expires: expect.any(Date) });
+        expect(res.json).toHaveBeenCalledWith({ message: 'User registered successfully' });
+    });
+
+    test('Should return 401 when OAuth sign-up account already exists', async () => {
+        registerUserByOauth.mockRejectedValue(new Error('User already exists'));
+
+        const req = { query: { code: 'exists-code' } };
+        const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+        await signUpWithOauth(req, res);
+
+        expect(registerUserByOauth).toHaveBeenCalledWith('exists-code');
+        expect(res.status).toHaveBeenCalledWith(401);
+        expect(res.json).toHaveBeenCalledWith({ message: 'User already exists' });
+    });
+});

@@ -285,6 +285,23 @@ Os testes unitários foram aplicados nas seguintes camadas e módulos:
 | **Comentários**        | ✅      | ✅         | Sucesso, Erro, Validação       |
 | **Likes**              | ✅      | ✅         | Sucesso, Erro, Validação       |
 
+### Como rodar os testes
+
+Os testes unitários usam Jest com módulos ESM. Execute:
+
+```bash
+# Instale dependências (uma vez)
+npm install
+
+# Rode a suíte de testes
+npm test
+```
+
+Observação: o script `test` do `package.json` já invoca o Node com a flag necessária para suportar módulos ESM no Jest.
+
+Observação sobre OAuth2:
+- Os fluxos OAuth2 utilizados pelo projeto (Google) são mockados nos testes unitários, portanto não é necessário configurar credenciais do Google para executar a suíte de testes.
+
 ## 🏗️ Estrutura de Testes
 
 ### Camada de Service

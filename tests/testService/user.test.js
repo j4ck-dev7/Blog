@@ -10,6 +10,27 @@ jest.unstable_mockModule('../../src/repositories/userRepository.js', () => ({
     createUserWithOauth: jest.fn()
 }))
 
+jest.unstable_mockModule('google-auth-library', () => {
+    const __mock = {
+        generateAuthUrl: jest.fn(),
+        getToken: jest.fn(),
+        verifyIdToken: jest.fn()
+    };
+
+    class OAuth2Client { // Outra forma de mockar usando classes.
+        constructor(clientId, clientSecret, redirectUrl) {
+            this.clientId = clientId;
+            this.clientSecret = clientSecret;
+            this.redirectUrl = redirectUrl;
+        }
+        generateAuthUrl() { return __mock.generateAuthUrl(); }
+        async getToken(code) { return __mock.getToken(code); }
+        async verifyIdToken(opts) { return __mock.verifyIdToken(opts); }
+    }
+
+    return { OAuth2Client, __mock };
+})
+
 jest.unstable_mockModule('../../src/config/logger.js', () => ({
     logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() }
 }));
@@ -22,8 +43,9 @@ jest.unstable_mockModule('bcryptjs', () => ({
 }))
 
 const { default: bcryptjs } = await import('bcryptjs')
-const { verifyUserExistsByEmail, findUserByEmail, createUser } = await import('../../src/repositories/userRepository.js');
-const { registerUser, loginUser } = await import('../../src/services/userService.js');
+const { verifyUserExistsByEmail, findUserByEmail, createUser, verifyUserExistsBySub, findUserBySub, createUserWithOauth } = await import('../../src/repositories/userRepository.js');
+const { registerUser, loginUser, getUrlForOauthSignIn, getUrlForOauthSignUp, registerUserByOauth, loginUserByOauth } = await import('../../src/services/userService.js');
+const { OAuth2Client, __mock } = await import('google-auth-library')
 
 describe('User Service Tests Register', () => {
     beforeEach(() => {
@@ -130,5 +152,74 @@ describe('User Service Tests Login', () => {
         expect(findUserByEmail).toHaveBeenCalledWith('carlos@gmail.com');
         expect(verifyUserExistsByEmail).toHaveBeenCalledWith('carlos@gmail.com')
         expect(bcryptjs.compare).toHaveBeenCalledWith('12345678', '$2a$10$6OX/EUwCxD/OV2RPLi9g.eTiXJgU8zf/6avWU5YkpDGoBt8do8s3y');
+    })
+})
+
+describe('User Service OAuth2 Tests', () => {
+    beforeEach(() => {
+        jest.clearAllMocks()
+    })
+
+    test('getUrlForOauthSignIn should return authorization url', async () => {
+        __mock.generateAuthUrl.mockReturnValue('https://accounts.google.com/auth?signin=1')
+
+        const url = await getUrlForOauthSignIn()
+
+        expect(url).toBe('https://accounts.google.com/auth?signin=1')
+        expect(__mock.generateAuthUrl).toHaveBeenCalled()
+    })
+
+    test('getUrlForOauthSignUp should return authorization url', async () => {
+        __mock.generateAuthUrl.mockReturnValue('https://accounts.google.com/auth?signup=1')
+
+        const url = await getUrlForOauthSignUp()
+
+        expect(url).toBe('https://accounts.google.com/auth?signup=1')
+        expect(__mock.generateAuthUrl).toHaveBeenCalled()
+    })
+
+    test('registerUserByOauth should create new user when sub not exists', async () => {
+        __mock.getToken.mockResolvedValue({ tokens: { id_token: 'id-token' } })
+        __mock.verifyIdToken.mockResolvedValue({ payload: { email: 'o@auth.com', name: 'Oauth', sub: 'sub-123' } })
+        verifyUserExistsBySub.mockResolvedValue(undefined)
+        createUserWithOauth.mockResolvedValue({ id: '20', email: 'o@auth.com', name: 'Oauth', subscriptionPlan: 'FREE' })
+
+        // call service
+        const user = await registerUserByOauth('code-1')
+
+        expect(__mock.getToken).toHaveBeenCalledWith('code-1')
+        expect(__mock.verifyIdToken).toHaveBeenCalled()
+        expect(createUserWithOauth).toHaveBeenCalledWith('Oauth', 'o@auth.com', 'sub-123')
+        expect(user).toEqual({ id: '20', email: 'o@auth.com', name: 'Oauth', subscriptionPlan: 'FREE' })
+    })
+
+    test('registerUserByOauth should throw if user already exists', async () => {
+        __mock.getToken.mockResolvedValue({ tokens: { id_token: 'id-token' } })
+        __mock.verifyIdToken.mockResolvedValue({ payload: { email: 'o@auth.com', name: 'Oauth', sub: 'sub-123' } })
+        verifyUserExistsBySub.mockResolvedValue(true)
+
+        await expect(registerUserByOauth('code-2')).rejects.toThrow('User already exists')
+    })
+
+    test('loginUserByOauth should return user when sub exists', async () => {
+        __mock.getToken.mockResolvedValue({ tokens: { id_token: 'id-token' } })
+        __mock.verifyIdToken.mockResolvedValue({ payload: { sub: 'sub-999' } })
+        verifyUserExistsBySub.mockResolvedValue(true)
+        findUserBySub.mockResolvedValue({ id: '30', email: 'found@auth.com', name: 'Found' })
+
+        const user = await loginUserByOauth('code-3')
+
+        expect(__mock.getToken).toHaveBeenCalledWith('code-3')
+        expect(__mock.verifyIdToken).toHaveBeenCalled()
+        expect(findUserBySub).toHaveBeenCalledWith('sub-999')
+        expect(user).toEqual({ id: '30', email: 'found@auth.com', name: 'Found' })
+    })
+
+    test('loginUserByOauth should throw when account not found', async () => {
+        __mock.getToken.mockResolvedValue({ tokens: { id_token: 'id-token' } })
+        __mock.verifyIdToken.mockResolvedValue({ payload: { sub: 'sub-notfound' } })
+        verifyUserExistsBySub.mockResolvedValue(false)
+
+        await expect(loginUserByOauth('code-4')).rejects.toThrow('Conta não encontrada')
     })
 })
