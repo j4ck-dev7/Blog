@@ -4,8 +4,11 @@ import { RedisStore } from 'rate-limit-redis';
 import client from '../config/redis.js';
 import { getRequestMeta } from '../config/requestMeta.js';
 
-// Em rotas do tipo get, que há apenas leituras no DB, o recomendado é de 300 requisições por minuto, desde que não seja feito alguma consulta
-// banco de dados.
+// Em rotas do tipo get, que há apenas uma leitura no DB, o recomendado é de 300 requisições por minuto, mas se houver mais 
+// consultas ao banco de dados, o recomentado é de 10 por minuto, isso previne ataques de negação de serviço (DDoS).
+// Em rotas do tipo post, put, delete, patch, ou resumidamente, rotas que envolvem deletes, updates e creates devem
+// ter um limite de 5-10 requisições por minuto.
+
 export const articlesLimit = rateLimit({
     windowMs: 60 * 1000, // Tempo de janela em milissegundos
     limit: 5, // Limite de requisições por janela (windowMs) pelo ip
@@ -16,7 +19,7 @@ export const articlesLimit = rateLimit({
         prefix: 'ratelimit:articles:'
     }), // Onde armazenar os dados do rate limit, neste caso usando Redis, o que é recomendado para aplicações em produção, já que o armazenamento em memória (MemoryStore) não é recomendado para produção, pois não é escalável e pode causar problemas de memória.
     keyGenerator: (req) => {
-        if(req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
+        if(req.user && req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
 
         if(req.user && req.user._id) return req.user._id
         return ipKeyGenerator(req.ip)
@@ -38,7 +41,7 @@ export const articlesFindByTagLimit = rateLimit({
         prefix: 'ratelimit:articlesFindByTag:'
     }), // Onde armazenar os dados do rate limit, neste caso usando Redis, o que é recomendado para aplicações em produção, já que o armazenamento em memória (MemoryStore) não é recomendado para produção, pois não é escalável e pode causar problemas de memória.
     keyGenerator: (req) => {
-        if(req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
+        if(req.user && req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
 
         if(req.user && req.user._id) return req.user._id
         return ipKeyGenerator(req.ip)
@@ -60,7 +63,7 @@ export const articleFindBySlugLimit = rateLimit({
         prefix: 'ratelimit:articlesFindBySlug:'
     }), // Onde armazenar os dados do rate limit, neste caso usando Redis, o que é recomendado para aplicações em produção, já que o armazenamento em memória (MemoryStore) não é recomendado para produção, pois não é escalável e pode causar problemas de memória.
     keyGenerator: (req) => {
-        if(req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
+        if(req.user && req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
 
         if(req.user && req.user._id) return req.user._id
         return ipKeyGenerator(req.ip)
@@ -82,7 +85,7 @@ export const articlesFindBySearchLimit = rateLimit({
         prefix: 'ratelimit:articlesFindBySearch:'
     }), // Onde armazenar os dados do rate limit, neste caso usando Redis, o que é recomendado para aplicações em produção, já que o armazenamento em memória (MemoryStore) não é recomendado para produção, pois não é escalável e pode causar problemas de memória.
     keyGenerator: (req) => {
-        if(req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
+        if(req.user && req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
 
         if(req.user && req.user._id) return req.user._id
         return ipKeyGenerator(req.ip)
@@ -104,7 +107,7 @@ export const likesLimit = rateLimit({
         prefix: 'ratelimit:likes:'
     }), // Onde armazenar os dados do rate limit, neste caso usando Redis, o que é recomendado para aplicações em produção, já que o armazenamento em memória (MemoryStore) não é recomendado para produção, pois não é escalável e pode causar problemas de memória.
     keyGenerator: (req) => {
-        if(req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
+        if(req.user && req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
 
         if(req.user && req.user._id) return req.user._id
         return ipKeyGenerator(req.ip)
@@ -126,7 +129,7 @@ export const addCommentLimit = rateLimit({
         prefix: 'ratelimit:addComment:'
     }), // Onde armazenar os dados do rate limit, neste caso usando Redis, o que é recomendado para aplicações em produção, já que o armazenamento em memória (MemoryStore) não é recomendado para produção, pois não é escalável e pode causar problemas de memória.
     keyGenerator: (req) => {
-        if(req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
+        if(req.user && req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
 
         if(req.user && req.user._id) return req.user._id
         return ipKeyGenerator(req.ip)
@@ -148,7 +151,7 @@ export const addLikeLimit = rateLimit({
         prefix: 'ratelimit:addLike:'
     }), // Onde armazenar os dados do rate limit, neste caso usando Redis, o que é recomendado para aplicações em produção, já que o armazenamento em memória (MemoryStore) não é recomendado para produção, pois não é escalável e pode causar problemas de memória.
     keyGenerator: (req) => {
-        if(req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
+        if(req.user && req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
 
         if(req.user && req.user._id) return req.user._id
         return ipKeyGenerator(req.ip)
@@ -170,7 +173,7 @@ export const deleteLikeLimit = rateLimit({
         prefix: 'ratelimit:deleteLike:'
     }), // Onde armazenar os dados do rate limit, neste caso usando Redis, o que é recomendado para aplicações em produção, já que o armazenamento em memória (MemoryStore) não é recomendado para produção, pois não é escalável e pode causar problemas de memória.
     keyGenerator: (req) => {
-        if(req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
+        if(req.user && req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
 
         if(req.user && req.user._id) return req.user._id
         return ipKeyGenerator(req.ip)
@@ -192,7 +195,7 @@ export const deleteCommentLimit = rateLimit({
         prefix: 'ratelimit:deleteComment:'
     }), // Onde armazenar os dados do rate limit, neste caso usando Redis, o que é recomendado para aplicações em produção, já que o armazenamento em memória (MemoryStore) não é recomendado para produção, pois não é escalável e pode causar problemas de memória.
     keyGenerator: (req) => {
-        if(req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
+        if(req.user && req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
 
         if(req.user && req.user._id) return req.user._id
         return ipKeyGenerator(req.ip)
@@ -214,7 +217,7 @@ export const editCommentLimit = rateLimit({
         prefix: 'ratelimit:editComment:'
     }), // Onde armazenar os dados do rate limit, neste caso usando Redis, o que é recomendado para aplicações em produção, já que o armazenamento em memória (MemoryStore) não é recomendado para produção, pois não é escalável e pode causar problemas de memória.
     keyGenerator: (req) => {
-        if(req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
+        if(req.user && req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
 
         if(req.user && req.user._id) return req.user._id
         return ipKeyGenerator(req.ip)
@@ -236,7 +239,7 @@ export const subscribeLimit = rateLimit({
         prefix: 'ratelimit:subscribe:'
     }), // Onde armazenar os dados do rate limit, neste caso usando Redis, o que é recomendado para aplicações em produção, já que o armazenamento em memória (MemoryStore) não é recomendado para produção, pois não é escalável e pode causar problemas de memória.
     keyGenerator: (req) => {
-        if(req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
+        if(req.user && req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
 
         if(req.user && req.user._id) return req.user._id
         return ipKeyGenerator(req.ip)
@@ -258,7 +261,7 @@ export const webhookStripeLimit = rateLimit({
         prefix: 'ratelimit:webhook:stripe:'
     }), // Onde armazenar os dados do rate limit, neste caso usando Redis, o que é recomendado para aplicações em produção, já que o armazenamento em memória (MemoryStore) não é recomendado para produção, pois não é escalável e pode causar problemas de memória.
     keyGenerator: (req) => {
-        if(req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
+        if(req.user && req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
 
         if(req.user && req.user._id) return req.user._id
         return ipKeyGenerator(req.ip)
@@ -282,7 +285,7 @@ export const autenticacaoLimit = rateLimit({
         prefix: 'ratelimit:authentication:'
     }), // Onde armazenar os dados do rate limit, neste caso usando Redis, o que é recomendado para aplicações em produção, já que o armazenamento em memória (MemoryStore) não é recomendado para produção, pois não é escalável e pode causar problemas de memória.
     keyGenerator: (req) => {
-        if(req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
+        if(req.user && req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
 
         if(req.user && req.user._id) return req.user._id
         return ipKeyGenerator(req.ip)
@@ -305,7 +308,7 @@ export const Oauth2UrlLimit = rateLimit({
         prefix: 'ratelimit:oauth2Url:'
     }), // Onde armazenar os dados do rate limit, neste caso usando Redis, o que é recomendado para aplicações em produção, já que o armazenamento em memória (MemoryStore) não é recomendado para produção, pois não é escalável e pode causar problemas de memória.
     keyGenerator: (req) => {
-        if(req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
+        if(req.user && req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
 
         if(req.user && req.user._id) return req.user._id
         return ipKeyGenerator(req.ip)
@@ -329,7 +332,7 @@ export const Oauth2AuthenticationLimit = rateLimit({
         prefix: 'ratelimit:oauth2:'
     }), // Onde armazenar os dados do rate limit, neste caso usando Redis, o que é recomendado para aplicações em produção, já que o armazenamento em memória (MemoryStore) não é recomendado para produção, pois não é escalável e pode causar problemas de memória.
     keyGenerator: (req) => {
-        if(req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
+        if(req.user && req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
 
         if(req.user && req.user._id) return req.user._id
         return ipKeyGenerator(req.ip)
@@ -351,7 +354,7 @@ export const Oauth2AuthenticationLimit = rateLimit({
 //         prefix: 'ratelimit:verifyEmail:'
 //     }), // Onde armazenar os dados do rate limit, neste caso usando Redis, o que é recomendado para aplicações em produção, já que o armazenamento em memória (MemoryStore) não é recomendado para produção, pois não é escalável e pode causar problemas de memória.
 //     keyGenerator: (req) => {
-//         if(req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
+//         if(req.user && req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`
 
 //         if(req.user && req.user._id) return req.user._id
 //         return ipKeyGenerator(req.ip)
