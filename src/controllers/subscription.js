@@ -29,8 +29,8 @@ export const subscribe = async (req, res) => {
                 },
                 quantity: 1
             }],
-            success_url: `http://localhost:5000/api/user/success?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `http://localhost:5000/api/user/cancel?plan=${plan}&user=${userId}`,
+            success_url: `http://localhost:5000/success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `http://localhost:5000/cancel?plan=${plan}&user=${userId}`,
             metadata: { userId, plan } // Define o metatdata para identificar o usuário e o plano na hora do webhook para efetuar a assinatura (Modificar o usuário no banco de dados)
         })
 

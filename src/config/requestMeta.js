@@ -5,6 +5,7 @@ export const getRequestMeta = (req, extra = {}) => {
     const route = req?.originalUrl || req?.url || (req?.baseUrl ? `${req.baseUrl}${req.path}` : null);
     const method = req?.method || null;
     const userId = req?.user?._id || req?.user?.id || extra.userId || null;
+    const userFreeAccess = req?.user?.state === 'freeAccess' || false;
 
-    return { ip, agent, route, method, userId, ...extra };
+    return { ip, agent, route, method, userId, userFreeAccess, ...extra };
 }
