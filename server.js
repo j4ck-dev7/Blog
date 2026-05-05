@@ -1,23 +1,7 @@
 import 'dotenv/config';
-import express from 'express';
-import cookieParser from 'cookie-parser';
-
-// import adminRoute from './src/routes/admin/adminRoute.js';
-import userRoute from './src/routes/userRoute.js';
-import webhookRouter from './src/routes/webhookRouter.js';
-
+import app from './src/app.js';
 import { connect } from './src/config/db.js';
-import stripe from './src/config/stripe.js';
 import { logger } from './src/config/logger.js';
-
-const app = express();
-app.use('/api/webhooks', webhookRouter);
-
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
-app.use(express.json());
-
-app.use('/', userRoute);
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
