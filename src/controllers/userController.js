@@ -109,7 +109,9 @@ export const verifyUser = async (req, res) => {
     let service;
 
     try{
-        service = await verifyEmail(token);
+        const { verifyEmail: verifyEmailRuntime } = await import('../services/userService.js');
+        const verifyFn = verifyEmailRuntime || verifyEmail;
+        service = await verifyFn(token);
 
         logger.info('Usuário registrado com sucesso', getRequestMeta(req, { userId: service.id }));
 
@@ -136,11 +138,7 @@ export const verifyUser = async (req, res) => {
             return res.status(401).json({ error: error.message });
         }
 
-        logger.error('Erro ao verificar email', error, {
-            usuarioId: service?._id || 'Desconecido',
-            ip,
-            duracao: `${duracao}ms`
-        });
+        logger.error('Erro ao verificar email', { ...getRequestMeta(req, { usuarioId: service?._id || 'Desconecido' }), error: error.message, stack: error.stack });
 
         res.status(500).json({ error: 'Erro ao verificar email' });
     }

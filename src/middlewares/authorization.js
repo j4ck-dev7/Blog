@@ -5,7 +5,7 @@ import { verifyIfUserIsVerified } from '../repositories/userRepository.js';
 import { z } from 'zod';
 import { isCuid } from '@paralleldrive/cuid2';
 
-export const auth =  (req, res, next) => {
+export const auth = async (req, res, next) => {
     try {
         const cookie = req.cookies.userAuth;
         if(!cookie){ 

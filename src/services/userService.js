@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import { 
     findUserByEmail, 
     verifyUserExistsByEmail, 
@@ -86,7 +87,7 @@ export const registerUser = async (name, email, password) => {
                <p>Este link expira em 10 minutos.</p>`
     })
 
-    logger.info('Email de verificação enviado com sucesso', { email, usuarioId: newUser.id, ip });
+    logger.info('Email de verificação enviado com sucesso', { email, usuarioId: newUser.id });
 
     return newUser;
 }

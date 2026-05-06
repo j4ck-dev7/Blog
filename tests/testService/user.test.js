@@ -7,6 +7,8 @@ jest.unstable_mockModule('../../src/repositories/userRepository.js', () => ({
     updateUserSubscription: jest.fn(),
     findUserBySub: jest.fn(),
     verifyUserExistsBySub: jest.fn(),
+    findUserById: jest.fn(),
+    changeUserStatusActive: jest.fn(),
     createUserWithOauth: jest.fn()
 }))
 
@@ -35,6 +37,10 @@ jest.unstable_mockModule('../../src/config/logger.js', () => ({
     logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() }
 }));
 
+jest.unstable_mockModule('../../src/config/nodemailer.js', () => ({
+    transporter: { sendMail: jest.fn().mockResolvedValue(true) }
+}));
+
 jest.unstable_mockModule('bcryptjs', () => ({
     default: {
         hash: jest.fn().mockReturnValue('$2a$10$6OX/EUwCxD/OV2RPLi9g.eTiXJgU8zf/6avWU5YkpDGoBt8do8s3y'),
@@ -47,9 +53,49 @@ const { verifyUserExistsByEmail, findUserByEmail, createUser, verifyUserExistsBy
 const { registerUser, loginUser, getUrlForOauthSignIn, getUrlForOauthSignUp, registerUserByOauth, loginUserByOauth } = await import('../../src/services/userService.js');
 const { OAuth2Client, __mock } = await import('google-auth-library')
 
+describe('User Service verifyEmail', () => {
+    beforeEach(() => {
+        jest.clearAllMocks()
+    })
+
+    test('should throw when token is absent', async () => {
+        await expect((await import('../../src/services/userService.js')).verifyEmail()).rejects.toThrow('Token ausente');
+    });
+
+    test('should throw when token invalid (jwt.verify throws)', async () => {
+        const jwt = await import('jsonwebtoken');
+        jwt.default.verify = jest.fn(() => null);
+
+        await expect((await import('../../src/services/userService.js')).verifyEmail('bad')).rejects.toThrow('Token inválido');
+    });
+
+    test('should throw when user not found', async () => {
+        const { findUserById } = await import('../../src/repositories/userRepository.js');
+        const jwt = await import('jsonwebtoken');
+        jwt.default.verify = jest.fn().mockReturnValue({ id: 'notfound', email: 'no@one.com' });
+        findUserById.mockResolvedValue(undefined);
+
+        await expect((await import('../../src/services/userService.js')).verifyEmail('tok')).rejects.toThrow('Usuário não encontrado');
+    });
+
+    test('should verify and return user on success', async () => {
+        const { findUserById, changeUserStatusActive } = await import('../../src/repositories/userRepository.js');
+        const jwt = await import('jsonwebtoken');
+        const user = { id: '100', email: 'u@ex.com', name: 'U', isEmailVerified: false, subscriptionPlan: 'FREE', subscriptionExpiresAt: null };
+        jwt.default.verify = jest.fn().mockReturnValue({ id: '100', email: 'u@ex.com' });
+        findUserById.mockResolvedValue(user);
+        changeUserStatusActive.mockResolvedValue(true);
+
+        const result = await (await import('../../src/services/userService.js')).verifyEmail('goodtok');
+        expect(changeUserStatusActive).toHaveBeenCalledWith('100');
+        expect(result).toEqual(user);
+    })
+})
+
 describe('User Service Tests Register', () => {
     beforeEach(() => {
         jest.clearAllMocks()
+        process.env.EMAIL_VERIFICATION_SECRET = 'test-email-secret';
     });
 
     test('Register User - Failure when user already exists', async () => {

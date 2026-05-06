@@ -5,6 +5,7 @@ jest.unstable_mockModule('../../src/services/userService.js', () => ({
     loginUser: jest.fn(),
     loginUserByOauth: jest.fn(),
     registerUserByOauth: jest.fn(),
+    verifyEmail: jest.fn(),
     getUrlForOauthSignIn: jest.fn(),
     getUrlForOauthSignUp: jest.fn()
 }));
@@ -28,8 +29,8 @@ jest.unstable_mockModule('../../src/config/requestMeta.js', () => ({
 }));
 
 const { default: jwt } = await import('jsonwebtoken')
-const { registerUser, loginUser, loginUserByOauth, registerUserByOauth, getUrlForOauthSignIn, getUrlForOauthSignUp } = await import('../../src/services/userService.js');
-const { signIn, signUp, getSignInGoogleUrl, getSignUpGoogleUrl, signInWithOauth, signUpWithOauth } = await import('../../src/controllers/userController.js')
+const { registerUser, loginUser, loginUserByOauth, registerUserByOauth, getUrlForOauthSignIn, getUrlForOauthSignUp, verifyEmail } = await import('../../src/services/userService.js');
+const { signIn, signUp, getSignInGoogleUrl, getSignUpGoogleUrl, signInWithOauth, signUpWithOauth, verifyUser } = await import('../../src/controllers/userController.js')
 
 describe('User Controller signUp', () => {
     beforeEach(() => {
@@ -87,19 +88,27 @@ describe('User Controller signUp', () => {
 
         expect(registerUser).toHaveBeenCalledWith('Fabio', 'fabio@gmail.com', '12345678')
         expect(res.status).toHaveBeenCalledWith(201);
-        expect(res.cookie).toHaveBeenCalledWith(
-            'userAuth', 'fake-token', {
-                secure: true, httpOnly: true, expires: expect.any(Date) 
-            }
-        );
-        expect(jwt.sign).toHaveBeenCalledWith({
-            _id: '1',
-            name: 'Fabio',
-            email: 'fabio@gmail.com',
-            subscriptionPlan: 'FREE',
-            subscriptionExpire: null
-        }, 'test-secret')
-        expect(res.json).toHaveBeenCalledWith({ message: 'User registered successfully' });
+        expect(res.cookie).not.toHaveBeenCalled();
+        expect(jwt.sign).not.toHaveBeenCalled();
+        expect(res.json).toHaveBeenCalledWith({ message: 'User registered successfully, please verify your email' });
+    });
+});
+
+describe('User Controller verifyUser', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    })
+
+    test('should return 500 when verifyEmail throws known errors', async () => {
+        verifyEmail.mockRejectedValue(new Error('Token ausente'));
+
+        const req = { query: { token: '' } };
+        const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+
+        await verifyUser(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.json).toHaveBeenCalledWith({ error: 'Erro ao verificar email' });
     });
 });
 

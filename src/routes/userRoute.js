@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { signIn, signUp, signUpWithOauth, signInWithOauth, getSignInGoogleUrl, getSignUpGoogleUrl } from '../controllers/userController.js';
+import { signIn, signUp, signUpWithOauth, signInWithOauth, getSignInGoogleUrl, getSignUpGoogleUrl, verifyUser } from '../controllers/userController.js';
 import { like, DeleteLike, allLikes } from '../controllers/likeController.js';
 import { comment, removeComment, EditComment } from '../controllers/commentController.js';
 import { allArticles, loadArticle, findArticleByTag, searchArticles } from '../controllers/articleController.js';
@@ -27,6 +27,7 @@ router.get('get/url/Oauth/signIn', rateLimit.Oauth2UrlLimit, getSignInGoogleUrl)
 router.get('get/url/Oauth/signUp', rateLimit.Oauth2UrlLimit, getSignUpGoogleUrl);
 router.get('Oauth/signIn', rateLimit.Oauth2AuthenticationLimit, signInWithOauth);
 router.get('Oauth/signUp', rateLimit.Oauth2AuthenticationLimit, signUpWithOauth);
+router.get('verify-email', rateLimit.verifyEmailLimit, verifyUser);
 router.get('subscribe', rateLimit.subscribeLimit, auth, subscribe);
 
 router.post('signIn', rateLimit.autenticacaoLimit, loginValidate, signIn);
