@@ -6,44 +6,43 @@
 [![Redis](https://img.shields.io/badge/Redis-5.x-red)](https://redis.io/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Um projeto backend de um blog, com autenticação JWT, cache com Redis (cache-aside), sistema de artigos, assinatuas com Stripe, comentários, curtidas, pesquisa por tags e paginação.  
+Um projeto backend de um blog, com autenticação JWT, cache com Redis (cache-aside), sistema de artigos, assinaturas com Stripe, comentários, curtidas, pesquisa por tags e paginação.  
 Desenvolvida com **Node.js + Express + Mongoose + MongoDB + Prisma + PostgreSQL** e testada com **Insomnia/Postman** e **Testes unitários com Jest**.
 
 ## 🚀 Funcionalidades
 
-### Admin (gerenciamento de conteúdo)
-- `POST   /admin/signIn` → Login
-- `POST   /admin/addArticle` → Criar artigo  
-- `PUT    /admin/editArticle` → Editar artigo  
-- `DELETE /admin/delArticle` → Excluir artigo  
-
 ### Usuário
-- `POST   api/user/signUp` → Registro  
-- `GET    api/user/signUp/Oauth2` → Registro com Oauth2
-- `POST   api/user/signIn` → Login (retorna cookie HttpOnly com JWT)
-- `GET    api/user/signIn/Oauth2` → Login com Oauth2 (retorna cookie HttpOnly com JWT)
-- `GET    api/user/articles?page=1&limit=5` → Listar artigos com paginação
-- `GET    api/user/articles/tag?tag=tag&page=1&limit=5` → Busca de artigos por tag 
-- `GET    api/user/articles/search?search=busca&page=1&limit=5` → Busca de artigos por texto 
-- `GET    api/user/article/:slug` → Página do artigo  
-- `POST   api/user/article/:slug/comment` → Comentar  
-- `PUT    api/user/article/:slug/editComment/:commentId` → Editar comentário  
-- `DELETE api/user/article/:slug/delComment/:commentId` → Deletar comentário  
-- `POST   api/user/article/:slug/like` → Curtir artigo  
-- `DELETE api/user/article/:slug/delLike/:likeId` → Remover curtida  
-- `GET    api/user/likes` → Listar todos os artigos curtidos
-- `POST   api/subscribe` → Assina um plano basic, intermediate ou premium
+- `POST   /signUp` → Registro
+- `GET    /get/url/Oauth/signUp` → Obter URL de registro com OAuth2 (Google)
+- `GET    /Oauth/signUp` → Callback de registro via OAuth2 (Google)
+- `POST   /signIn` → Login (retorna cookie HttpOnly `userAuth` com JWT)
+- `GET    /get/url/Oauth/signIn` → Obter URL de login com OAuth2 (Google)
+- `GET    /Oauth/signIn` → Callback de login via OAuth2 (Google)
+- `GET    /verify-email?token=...` → Verificar email (token de verificação)
+- `GET    /articles?page=1&limit=5` → Listar artigos com paginação
+- `GET    /articles/tag?tag=tag&page=1&limit=5` → Buscar artigos por tag
+- `GET    /articles/search?search=busca&page=1&limit=5` → Buscar artigos por texto
+- `GET    /article/:slug` → Carregar artigo por slug
+- `GET    /likes` → Listar artigos curtidos pelo usuário
+- `GET    /subscribe` → Iniciar fluxo de assinatura (Stripe)
+- `POST   /article/:slug/like` → Curtir artigo
+- `DELETE /article/:slug/like/:likeId` → Remover curtida
+- `POST   /article/:slug/comment` → Comentar artigo
+- `PUT    /article/:slug/comment/:commentId` → Editar comentário
+- `DELETE /article/:slug/comment/:commentId` → Deletar comentário
 
 ### Recursos técnicos
 - Autenticação via **JWT + cookie HttpOnly**  
 - **Cache-aside** com Redis (artigos e buscas)  
 - Validação com **express-validator**  
-- Proteção de rotas admin e user (middleware `authAdmin | userAuth`)
+- Proteção de rotas (middlewares `auth`, `credentialsAuth`, `planValidation`, `authInteractions`)
+- Limitação de taxa (rate limiting) com **express-rate-limit** e armazenamento das chaves no Redis via **rate-limit-redis**
 - Paginação   
 - Invalidação automática de cache após alterações
-- Planos de assinaturas usando stripe
-- Testes unitários
-- Oauth2 com o Google
+- Planos de assinaturas usando Stripe
+- Testes unitários com Jest
+- Oauth2 com o Google (login/registro)
+- Envio de emails com **Nodemailer** via OAuth2 (Gmail)
 
 ## 📦 Tecnologias
 
@@ -64,6 +63,9 @@ Desenvolvida com **Node.js + Express + Mongoose + MongoDB + Prisma + PostgreSQL*
 | Stripe             | 20.0.0  | Gateway de pagamentos        |
 | Jest               | 30.2.0  | Testes unitários             |
 | Google-auth-library| 10.5.0  | Oauth2                       |
+| Nodemailer         | 8.0.7   | Envio de emails (OAuth2/Gmail)|
+| express-rate-limit | 8.5.0   | Rate limiting (middleware)   |
+| rate-limit-redis   | 4.3.1   | Redis store para rate limiter|
 
 ## ⚙️ Instalação
 
@@ -84,6 +86,15 @@ SECRET=SuaChaveSuperSecretaAqui!
 REDIS_URL=redis://localhost:6379
 ```
 Use Redis Cloud (gratuito) e MongoDB Atlas (free tier)
+ 
+ ### Variáveis adicionais para envio de emails (Nodemailer + OAuth2 Gmail)
+ ```env
+ SMTP_USER=seu-email@gmail.com
+ GOOGLE_CLIENT_ID=SEU_CLIENT_ID_GOOGLE
+ GOOGLE_CLIENT_SECRET=SEU_CLIENT_SECRET_GOOGLE
+ GOOGLE_REFRESH_TOKEN=SEU_REFRESH_TOKEN_GOOGLE
+ ```
+ O arquivo `src/config/nodemailer.js` utiliza essas variáveis (`SMTP_USER`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN`).
 
 ## 🏃‍♂️ Executando 
 ```bash
@@ -94,91 +105,63 @@ node server.js
 ```
 
 ## 🔐 Autenticação
-1. Criar admin
-   ```http
-   POST http://localhost:5000/api/user/signUp
-   Content-Type: application/json
+1. Registro (cria usuário)
+	```http
+	POST http://localhost:5000/signUp
+	Content-Type: application/json
    
-   {
-     "name": "Admin",
-     "email": "admin@blog.com",
-     "password": "admin123",
-   }
-   ```
-   Atenção: Para que o user vire usuário é necessário que modifique o valor do campo role para 'admin' no banco de dados.
+	{
+	  "name": "Seu Nome",
+	  "email": "usuario@exemplo.com",
+	  "password": "senha123",
+	}
+	```
 
 2. Login
-   ```http
-   POST http/localhost:5000/api/admin/signIn
-   ```
-   Retorna cookie: adminAuth=eyJhbGciOiJIUzI1NiIsIn...
+	```http
+	POST http://localhost:5000/signIn
+	Content-Type: application/json
 
-3. Todas as rotas protegidas exigem o cookie
-   Sem cookie → 401 Access denied
+	{
+	  "email": "usuario@exemplo.com",
+	  "password": "senha123"
+	}
+	```
+	Em caso de sucesso a API retorna um cookie HttpOnly chamado `userAuth` contendo o JWT.
+
+3. Verificação de email
+	- A API expõe `GET /verify-email?token=...` para confirmar o email após registro.
+
+4. Rotas protegidas
+	- Todas as rotas que exigem autenticação retornam `401` quando não há o cookie `userAuth`.
 
 ## 📋 Exemplos de Requisições
-Criar artigo (admin)
-```json
-POST /admin/addArticle
-{
-	"title":"PHP, Laravel, Orthogonality",
-	"author":"admin",
-	"banner":"assets/banner/img.png",
-	"tags":["php", "laravel", "orthogonality"],
-	"planRoles": "intermediate",
-	"content":[
-		{
-			"type":"paragraph",
-			"value":"Primeiro paragrafo"
-		},
-		{
-			"type":"paragraph",
-			"value":"Segundo paragrafo"
-		},
-		{
-			"type":"image",
-			"url":"assets/img/img.png",
-			"legend":"Legenda da imagem",
-			"alt":"Imagem.png"
-		}
-	]
-}
+Listar artigos (público/autenticado)
+```http
+GET /articles?page=1&limit=5
 ```
 Resposta:
 ```json
 {
-	"message": "Article created successfully",
-	"article": {
-		"title": "PHP, Laravel, Orthogonality",
-		"slug": "php-laravel-orthogonality",
-		"author": "admin",
-		"content": [
-			{
-				"type": "paragraph",
-				"value": "Primeiro paragrafo"
-			},
-			{
-				"type": "paragraph",
-				"value": "Segundo paragrafo"
-			},
-			{
-				"type": "image",
-				"url": "assets/img/img.png",
-				"legend": "Legenda da imagem",
-				"alt": "Imagem.png"
-			}
-		],
-		"banner": "assets/banner/img.png",
-		"tags": [
-			"php",
-			"laravel",
-			"orthogonality"
-		],
-		"planRoles": "intermediate",
-		"_id": "691cc504c5327f68d49516f8",
-		"creationDate": "2025-11-18T19:12:04.094Z",
-		"__v": 0
-	}
+  "message": "Articles obtained",
+  "articles": [ /* ... */ ],
+  "pagination": { /* ... */ }
+}
+```
+
+Curtir artigo
+```http
+POST /article/:slug/like
+Cookie: userAuth=...
+```
+
+Comentar artigo
+```http
+POST /article/:slug/comment
+Cookie: userAuth=...
+Content-Type: application/json
+{
+  "content": "Ótimo artigo!"
 }
 ```
 
@@ -301,6 +284,36 @@ Observação: o script `test` do `package.json` já invoca o Node com a flag nec
 
 Observação sobre OAuth2:
 - Os fluxos OAuth2 utilizados pelo projeto (Google) são mockados nos testes unitários, portanto não é necessário configurar credenciais do Google para executar a suíte de testes.
+
+## 📧 Nodemailer + OAuth2 (Gmail) — obtenção do Refresh Token
+
+O projeto usa `nodemailer` com OAuth2 para envio de e-mails (ex.: verificação de conta). As credenciais esperadas estão listadas acima (`SMTP_USER`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN`).
+
+Passo a passo para obter o `GOOGLE_REFRESH_TOKEN` (resumido):
+
+1. Acesse o Google Cloud Console (https://console.cloud.google.com/) e crie um novo projeto (ou use um existente).
+2. Habilite a API "Gmail API" no projeto.
+3. Configure a tela de consentimento OAuth (OAuth consent screen): preencha nome do aplicativo, e-mails de suporte e adicione os escopos necessários, por exemplo: `https://mail.google.com/` (escopo completo de envio de e-mail) ou `https://www.googleapis.com/auth/gmail.send`.
+4. Crie credenciais do tipo "OAuth 2.0 Client ID". Para simplicidade, escolha o tipo "Desktop app" (ou "Web application" se preferir). Copie o `Client ID` e `Client Secret`.
+5. Abra o OAuth 2.0 Playground (https://developers.google.com/oauthplayground/).
+	- Clique no ícone de engrenagem no canto superior direito e marque "Use your own OAuth credentials". Cole o `Client ID` e `Client Secret` e salve.
+	- Na coluna "Step 1" cole o escopo `https://mail.google.com/` (ou `https://www.googleapis.com/auth/gmail.send`) e clique em "Authorize APIs".
+	- Faça login com a conta Gmail que será usada como `SMTP_USER` e conceda as permissões.
+	- Em "Step 2" clique em "Exchange authorization code for tokens". O Playground retornará um `Access token` e um `Refresh token`.
+6. Copie o valor do `Refresh token` e adicione ao seu arquivo `.env` como `GOOGLE_REFRESH_TOKEN`.
+
+Observação: se optar por criar credenciais do tipo "Web application", adicione `https://developers.google.com/oauthplayground` como Redirect URI nas credenciais.
+
+Exemplo `.env` completo (trecho relevante):
+```env
+PORT=5000
+SMTP_USER=seu-email@gmail.com
+GOOGLE_CLIENT_ID=SEU_CLIENT_ID_GOOGLE
+GOOGLE_CLIENT_SECRET=SEU_CLIENT_SECRET_GOOGLE
+GOOGLE_REFRESH_TOKEN=SEU_REFRESH_TOKEN_GOOGLE
+```
+
+No código a configuração do transporte está em `src/config/nodemailer.js` e já faz uso dessas variáveis.
 
 ## 🏗️ Estrutura de Testes
 
