@@ -40,7 +40,8 @@ const {
     webhookStripeLimit,
     autenticacaoLimit,
     Oauth2UrlLimit,
-    Oauth2AuthenticationLimit
+    Oauth2AuthenticationLimit,
+    verifyEmailLimit
 } = await import('../../src/middlewares/rateLimit.js');
 
 const limits = [
@@ -58,7 +59,8 @@ const limits = [
     { name: 'autenticacaoLimit', ref: autenticacaoLimit, prefix: 'ratelimit:authentication:', limit: 6 },
     { name: 'Oauth2UrlLimit', ref: Oauth2UrlLimit, prefix: 'ratelimit:oauth2Url:', limit: 10 },
     { name: 'Oauth2AuthenticationLimit', ref: Oauth2AuthenticationLimit, prefix: 'ratelimit:oauth2:', limit: 10 },
-    { name: 'webhookStripeLimit', ref: webhookStripeLimit, prefix: 'ratelimit:webhook:stripe:', limit: 2 }
+    { name: 'webhookStripeLimit', ref: webhookStripeLimit, prefix: 'ratelimit:webhook:stripe:', limit: 2 },
+    { name:  'verifyEmailLimit', ref: verifyEmailLimit, prefix: 'ratelimit:verifyEmail:', limit: 2 }
 ];
 
 describe('Rate Limit Middleware - per rateLimit', () => {
