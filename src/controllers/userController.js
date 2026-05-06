@@ -109,9 +109,7 @@ export const verifyUser = async (req, res) => {
     let service;
 
     try{
-        const { verifyEmail: verifyEmailRuntime } = await import('../services/userService.js');
-        const verifyFn = verifyEmailRuntime || verifyEmail;
-        service = await verifyFn(token);
+        service = await verifyEmail(token);
 
         logger.info('Usuário registrado com sucesso', getRequestMeta(req, { userId: service.id }));
 
