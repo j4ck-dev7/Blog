@@ -1,6 +1,9 @@
 import jwt from 'jsonwebtoken';
 import { logger } from '../config/logger.js';
 import { getRequestMeta } from '../config/requestMeta.js';
+import { verifyIfUserIsVerified } from '../repositories/userRepository.js';
+import { z } from 'zod';
+import { isCuid } from '@paralleldrive/cuid2';
 
 export const auth =  (req, res, next) => {
     try {
@@ -17,6 +20,21 @@ export const auth =  (req, res, next) => {
             logger.info('Acesso freeAccess detectado', getRequestMeta(req));
             return next();
         }
+
+        const CuidSchema = z.string().refine(isCuid, {
+            message: "Invalid id format"
+        });
+
+        const id = cookie.id;
+        const isValid = CuidSchema.safeParse(id).success;
+        if (!isValid) {
+            logger.warn('Formato de id inválido', getRequestMeta(req, { id }));
+            return res.status(400).json({ message: 'Invalid id format' });
+        }
+
+        const userVerify = await verifyIfUserIsVerified(cookie.id);
+        if(!userVerify) return res.status(403).json({ message: 'User not found' });
+        if(!userVerify.isEmailVerified) return res.status(403).json({ message: 'Email not verified' });
 
         const userVerified = jwt.verify(cookie, process.env.SECRET);
         req.user = userVerified;

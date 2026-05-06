@@ -152,14 +152,14 @@ export const changeUserStatusActive = async (id) => {
     })
 }
 
-export const verifyIfUserIsActive = async (userId) => {
-    logger.debug('verifyIfUserIsActive called', { userId });
+export const verifyIfUserIsVerified = async (userId) => {
+    logger.debug('verifyIfUserIsVerified called', { userId });
     return await prisma.user.findUnique({
         where: {
             id: userId
         },
         select: {
-            status: true
+            isEmailVerified: true
         }
     });
 }
