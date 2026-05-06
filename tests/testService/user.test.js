@@ -107,7 +107,7 @@ describe('User Service Tests Register', () => {
 
         await expect(
             registerUser('Teste', 'teste@gmail.com', '12345678')
-        ).rejects.toThrow('Email already exists');
+        ).rejects.toThrow('User already exists');
 
         expect(verifyUserExistsByEmail).toHaveBeenCalledWith('teste@gmail.com');
         expect(createUser).not.toHaveBeenCalled();

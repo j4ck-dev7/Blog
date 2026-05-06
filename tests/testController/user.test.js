@@ -100,7 +100,7 @@ describe('User Controller verifyUser', () => {
     })
 
     test('should return 500 when verifyEmail throws known errors', async () => {
-        verifyEmail.mockRejectedValue(new Error('Token ausente'));
+        verifyEmail.mockRejectedValue(new Error('Erro desconhecido'));
 
         const req = { query: { token: '' } };
         const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
