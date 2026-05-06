@@ -1,8 +1,19 @@
 import bcrypt from 'bcryptjs';
-import { findUserByEmail, verifyUserExistsByEmail, createUser, updateUserSubscription, findUserBySub, verifyUserExistsBySub, createUserWithOauth } from "../repositories/userRepository.js";
+import { 
+    findUserByEmail, 
+    verifyUserExistsByEmail, 
+    createUser, 
+    updateUserSubscription, 
+    findUserBySub, 
+    verifyUserExistsBySub, 
+    createUserWithOauth,
+    changeUserStatusActive,
+    findUserById
+} from "../repositories/userRepository.js";
 import CryptoJS from "crypto-js";
 import { OAuth2Client } from 'google-auth-library'
 import { logger } from '../config/logger.js';
+import { transporter } from '../config/nodemailer.js';
 
 export const getUrlForOauthSignUp = async () => {
     const state =  CryptoJS.SHA256('testGoogle').toString(CryptoJS.enc.Hex);
@@ -62,7 +73,72 @@ export const registerUser = async (name, email, password) => {
     const passwordHash = await bcrypt.hash(password, 10);
     const newUser = await createUser(name, email, passwordHash);
     logger.info('registerUser - success', { id: newUser?.id, email: newUser?.email });
+
+    const token = jwt.sign({ id: newUser.id, email: email }, process.env.EMAIL_VERIFICATION_SECRET, { expiresIn: 1000 * 60 * 10 });
+    const verificationLink = `http://localhost:5000/verify-email?token=${token}`;
+    await transporter.sendMail({
+        from: process.env.SMTP_USER,
+        to: email,
+        subject: 'Verificação de Email',
+        html: `<p>Olá ${name},</p>
+               <p>Obrigado por se registrar. Por favor, clique no link abaixo para verificar seu email:</p>
+               <a href="${verificationLink}">Verificar Email</a>
+               <p>Este link expira em 10 minutos.</p>`
+    })
+
+    logger.info('Email de verificação enviado com sucesso', { email, usuarioId: newUser.id, ip });
+
     return newUser;
+}
+
+export const verifyEmail = async (token) => {
+    logger.debug('Iniciando processo de verificação de email', {
+        usuarioId: 'Desconecido',
+    });
+
+    if(!token){
+        logger.warn('Tentativa de verificação de email sem token', {
+            usuarioId: 'Desconecido',
+        });
+        throw new Error('Token ausente');
+    }
+
+    const decoded = jwt.verify(token, process.env.EMAIL_VERIFICATION_SECRET);
+    if (!decoded) {
+        logger.warn('Token de verificação de email inválido', {
+            usuarioId: 'Desconecido',
+        });
+        throw new Error('Token inválido');
+    }
+
+    const user = await findUserById(decoded.id);
+    if (!user) {
+        logger.warn('Usuário não encontrado para token de verificação de email', {
+            usuarioId: 'Desconecido',
+        });
+        throw new Error('Usuário não encontrado');
+    };
+
+    if(user.email !== decoded.email) {
+        logger.warn('Token de verificação de email não corresponde ao usuário', {
+            usuarioId: user.id,
+        });
+        throw new Error('Token inválido');
+    }
+
+    if (user.isEmailVerified) {
+        logger.info('Email já verificado', {
+            usuarioId: user.id,
+        });
+        throw new Error('Email já verificado');
+    }
+
+    await changeUserStatusActive(user.id);
+    logger.info('Email do usuário verificado com sucesso', {
+        usuarioId: user.id,
+    });
+
+    return user;
 }
 
 export const registerUserByOauth = async (code) => {

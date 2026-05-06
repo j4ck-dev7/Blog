@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken'
-import { loginUser, loginUserByOauth, registerUser, registerUserByOauth, getUrlForOauthSignIn, getUrlForOauthSignUp } from '../services/userService.js';
+import { loginUser, loginUserByOauth, registerUser, registerUserByOauth, getUrlForOauthSignIn, getUrlForOauthSignUp, verifyEmail } from '../services/userService.js';
 import { logger } from '../config/logger.js';
 import { getRequestMeta } from '../config/requestMeta.js';
 
@@ -90,20 +90,9 @@ export const signUp = async (req, res) => {
         const { name, email, password } = req.body;
         const user = await registerUser(name, email, password);
 
-        const token = jwt.sign(
-            {
-                name: user.name,
-                _id: user.id,
-                subscriptionExpire: user.subscriptionExpiresAt,
-                subscriptionPlan: user.subscriptionPlan,
-                email: user.email
-            },
-            process.env.SECRET
-        );
-        
-        res.cookie('userAuth', token, { secure: true, httpOnly: true, expires: new Date(Date.now() + 2 * 3600000) });
-        res.status(201).json({ message: 'User registered successfully' });  
         logger.info('Usuário registrado com sucesso', getRequestMeta(req, { userId: user.id }));
+
+        res.status(201).json({ message: 'User registered successfully, please verify your email' });  
     } catch (error) {
         if (error.message === 'User already exists') {
             logger.warn('Tentativa de registro com email existente', { ...getRequestMeta(req), error: error.message });
@@ -112,6 +101,48 @@ export const signUp = async (req, res) => {
         
         logger.error('Erro ao tentar registrar usuário', { ...getRequestMeta(req), error: error.message, stack: error.stack });
         res.status(500).json({ message: 'Internal server error' });
+    }
+}
+
+export const verifyUser = async (req, res) => {
+    const { token } = req.query;
+    let service;
+
+    try{
+        service = await verifyEmail(token);
+
+        logger.info('Usuário registrado com sucesso', getRequestMeta(req, { userId: service.id }));
+
+        const token = jwt.sign(
+            {
+                name: service.name,
+                _id: service.id,
+                subscriptionExpire: service.subscriptionExpiresAt,
+                subscriptionPlan: service.subscriptionPlan,
+                email: service.email
+            },
+            process.env.SECRET
+        );
+
+        res.cookie('userAuth', token, { secure: true, httpOnly: true, expires: new Date(Date.now() + 3 * 100000) });
+        res.status(200).json({ message: 'Email verified successfully' });
+    }catch(error){
+        if(
+            error.message === 'Token ausente' || 
+            error.message === 'Token inválido' || 
+            error.message === 'Usuário não encontrado' || 
+            error.message === 'Email já verificado'
+        ) {
+            return res.status(401).json({ error: error.message });
+        }
+
+        logger.error('Erro ao verificar email', error, {
+            usuarioId: service?._id || 'Desconecido',
+            ip,
+            duracao: `${duracao}ms`
+        });
+
+        res.status(500).json({ error: 'Erro ao verificar email' });
     }
 }
 

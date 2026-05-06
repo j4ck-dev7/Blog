@@ -121,3 +121,45 @@ export const getUserByIdVerifyCredentials = async (userId) => {
         }
     });
 }
+
+export const findUserById = async (id) => {
+    logger.debug('findUserById called', { id });
+    return await prisma.user.findUnique({
+        where: {
+            id
+        },
+        select: {
+            email: true,
+            isEmailVerified: true,
+            id: true,
+            name: true,
+            subscriptionPlan: true,
+            subscriptionExpiresAt: true,
+        }
+    });
+}
+
+export const changeUserStatusActive = async (id) => {
+    logger.info('changeUserStatusActive called', { id });
+    return await prisma.user.update({
+        where: {
+            id
+        },
+        data: {
+            status: 'active',
+            isEmailVerified: true
+        }
+    })
+}
+
+export const verifyIfUserIsActive = async (userId) => {
+    logger.debug('verifyIfUserIsActive called', { userId });
+    return await prisma.user.findUnique({
+        where: {
+            id: userId
+        },
+        select: {
+            status: true
+        }
+    });
+}
