@@ -96,7 +96,7 @@ export const signUp = async (req, res) => {
     } catch (error) {
         if (error.message === 'User already exists') {
             logger.warn('Tentativa de registro com email existente', { ...getRequestMeta(req), error: error.message });
-            return  res.status(401).json({ message: 'User already exists' });
+            return res.status(401).json({ message: 'User already exists' });
         }
         
         logger.error('Erro ao tentar registrar usuário', { ...getRequestMeta(req), error: error.message, stack: error.stack });
@@ -113,7 +113,7 @@ export const verifyUser = async (req, res) => {
 
         logger.info('Usuário registrado com sucesso', getRequestMeta(req, { userId: service.id }));
 
-        const token = jwt.sign(
+        const tokenAuth = jwt.sign(
             {
                 name: service.name,
                 _id: service.id,
@@ -124,7 +124,7 @@ export const verifyUser = async (req, res) => {
             process.env.SECRET
         );
 
-        res.cookie('userAuth', token, { secure: true, httpOnly: true, expires: new Date(Date.now() + 3 * 100000) });
+        res.cookie('userAuth', tokenAuth, { secure: true, httpOnly: true, expires: new Date(Date.now() + 3 * 100000) });
         res.status(200).json({ message: 'Email verified successfully' });
     }catch(error){
         if(

@@ -68,7 +68,7 @@ export const registerUser = async (name, email, password) => {
     const existingUser = await verifyUserExistsByEmail(email);
     if (existingUser) {
         logger.warn('registerUser - email already exists', { email });
-        throw new Error('Email already exists');
+        throw new Error('User already exists');
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
