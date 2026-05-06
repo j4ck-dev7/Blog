@@ -104,7 +104,9 @@ export const UserScalarFieldEnum = {
   subscriptionPlan: 'subscriptionPlan',
   subscriptionExpiresAt: 'subscriptionExpiresAt',
   sub: 'sub',
-  authenticationType: 'authenticationType'
+  authenticationType: 'authenticationType',
+  status: 'status',
+  isEmailVerified: 'isEmailVerified'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]

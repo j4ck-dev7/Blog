@@ -35,6 +35,8 @@ export type UserMinAggregateOutputType = {
   subscriptionExpiresAt: Date | null
   sub: string | null
   authenticationType: $Enums.AuthenticationType | null
+  status: $Enums.Status | null
+  isEmailVerified: boolean | null
 }
 
 export type UserMaxAggregateOutputType = {
@@ -48,6 +50,8 @@ export type UserMaxAggregateOutputType = {
   subscriptionExpiresAt: Date | null
   sub: string | null
   authenticationType: $Enums.AuthenticationType | null
+  status: $Enums.Status | null
+  isEmailVerified: boolean | null
 }
 
 export type UserCountAggregateOutputType = {
@@ -61,6 +65,8 @@ export type UserCountAggregateOutputType = {
   subscriptionExpiresAt: number
   sub: number
   authenticationType: number
+  status: number
+  isEmailVerified: number
   _all: number
 }
 
@@ -76,6 +82,8 @@ export type UserMinAggregateInputType = {
   subscriptionExpiresAt?: true
   sub?: true
   authenticationType?: true
+  status?: true
+  isEmailVerified?: true
 }
 
 export type UserMaxAggregateInputType = {
@@ -89,6 +97,8 @@ export type UserMaxAggregateInputType = {
   subscriptionExpiresAt?: true
   sub?: true
   authenticationType?: true
+  status?: true
+  isEmailVerified?: true
 }
 
 export type UserCountAggregateInputType = {
@@ -102,6 +112,8 @@ export type UserCountAggregateInputType = {
   subscriptionExpiresAt?: true
   sub?: true
   authenticationType?: true
+  status?: true
+  isEmailVerified?: true
   _all?: true
 }
 
@@ -188,6 +200,8 @@ export type UserGroupByOutputType = {
   subscriptionExpiresAt: Date | null
   sub: string | null
   authenticationType: $Enums.AuthenticationType
+  status: $Enums.Status
+  isEmailVerified: boolean
   _count: UserCountAggregateOutputType | null
   _min: UserMinAggregateOutputType | null
   _max: UserMaxAggregateOutputType | null
@@ -222,6 +236,8 @@ export type UserWhereInput = {
   subscriptionExpiresAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   sub?: Prisma.StringNullableFilter<"User"> | string | null
   authenticationType?: Prisma.EnumAuthenticationTypeFilter<"User"> | $Enums.AuthenticationType
+  status?: Prisma.EnumStatusFilter<"User"> | $Enums.Status
+  isEmailVerified?: Prisma.BoolFilter<"User"> | boolean
   comment?: Prisma.CommentListRelationFilter
 }
 
@@ -236,6 +252,8 @@ export type UserOrderByWithRelationInput = {
   subscriptionExpiresAt?: Prisma.SortOrderInput | Prisma.SortOrder
   sub?: Prisma.SortOrderInput | Prisma.SortOrder
   authenticationType?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  isEmailVerified?: Prisma.SortOrder
   comment?: Prisma.CommentOrderByRelationAggregateInput
 }
 
@@ -253,6 +271,8 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   subscriptionPlan?: Prisma.EnumSubscriptionPlanFilter<"User"> | $Enums.SubscriptionPlan
   subscriptionExpiresAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   authenticationType?: Prisma.EnumAuthenticationTypeFilter<"User"> | $Enums.AuthenticationType
+  status?: Prisma.EnumStatusFilter<"User"> | $Enums.Status
+  isEmailVerified?: Prisma.BoolFilter<"User"> | boolean
   comment?: Prisma.CommentListRelationFilter
 }, "id" | "name" | "email" | "sub">
 
@@ -267,6 +287,8 @@ export type UserOrderByWithAggregationInput = {
   subscriptionExpiresAt?: Prisma.SortOrderInput | Prisma.SortOrder
   sub?: Prisma.SortOrderInput | Prisma.SortOrder
   authenticationType?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  isEmailVerified?: Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
   _max?: Prisma.UserMaxOrderByAggregateInput
   _min?: Prisma.UserMinOrderByAggregateInput
@@ -286,6 +308,8 @@ export type UserScalarWhereWithAggregatesInput = {
   subscriptionExpiresAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   sub?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   authenticationType?: Prisma.EnumAuthenticationTypeWithAggregatesFilter<"User"> | $Enums.AuthenticationType
+  status?: Prisma.EnumStatusWithAggregatesFilter<"User"> | $Enums.Status
+  isEmailVerified?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
 }
 
 export type UserCreateInput = {
@@ -299,6 +323,8 @@ export type UserCreateInput = {
   subscriptionExpiresAt?: Date | string | null
   sub?: string | null
   authenticationType?: $Enums.AuthenticationType
+  status?: $Enums.Status
+  isEmailVerified?: boolean
   comment?: Prisma.CommentCreateNestedManyWithoutUserInput
 }
 
@@ -313,6 +339,8 @@ export type UserUncheckedCreateInput = {
   subscriptionExpiresAt?: Date | string | null
   sub?: string | null
   authenticationType?: $Enums.AuthenticationType
+  status?: $Enums.Status
+  isEmailVerified?: boolean
   comment?: Prisma.CommentUncheckedCreateNestedManyWithoutUserInput
 }
 
@@ -327,6 +355,8 @@ export type UserUpdateInput = {
   subscriptionExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   authenticationType?: Prisma.EnumAuthenticationTypeFieldUpdateOperationsInput | $Enums.AuthenticationType
+  status?: Prisma.EnumStatusFieldUpdateOperationsInput | $Enums.Status
+  isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   comment?: Prisma.CommentUpdateManyWithoutUserNestedInput
 }
 
@@ -341,6 +371,8 @@ export type UserUncheckedUpdateInput = {
   subscriptionExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   authenticationType?: Prisma.EnumAuthenticationTypeFieldUpdateOperationsInput | $Enums.AuthenticationType
+  status?: Prisma.EnumStatusFieldUpdateOperationsInput | $Enums.Status
+  isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   comment?: Prisma.CommentUncheckedUpdateManyWithoutUserNestedInput
 }
 
@@ -355,6 +387,8 @@ export type UserCreateManyInput = {
   subscriptionExpiresAt?: Date | string | null
   sub?: string | null
   authenticationType?: $Enums.AuthenticationType
+  status?: $Enums.Status
+  isEmailVerified?: boolean
 }
 
 export type UserUpdateManyMutationInput = {
@@ -368,6 +402,8 @@ export type UserUpdateManyMutationInput = {
   subscriptionExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   authenticationType?: Prisma.EnumAuthenticationTypeFieldUpdateOperationsInput | $Enums.AuthenticationType
+  status?: Prisma.EnumStatusFieldUpdateOperationsInput | $Enums.Status
+  isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type UserUncheckedUpdateManyInput = {
@@ -381,6 +417,8 @@ export type UserUncheckedUpdateManyInput = {
   subscriptionExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   authenticationType?: Prisma.EnumAuthenticationTypeFieldUpdateOperationsInput | $Enums.AuthenticationType
+  status?: Prisma.EnumStatusFieldUpdateOperationsInput | $Enums.Status
+  isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type UserScalarRelationFilter = {
@@ -399,6 +437,8 @@ export type UserCountOrderByAggregateInput = {
   subscriptionExpiresAt?: Prisma.SortOrder
   sub?: Prisma.SortOrder
   authenticationType?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  isEmailVerified?: Prisma.SortOrder
 }
 
 export type UserMaxOrderByAggregateInput = {
@@ -412,6 +452,8 @@ export type UserMaxOrderByAggregateInput = {
   subscriptionExpiresAt?: Prisma.SortOrder
   sub?: Prisma.SortOrder
   authenticationType?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  isEmailVerified?: Prisma.SortOrder
 }
 
 export type UserMinOrderByAggregateInput = {
@@ -425,6 +467,8 @@ export type UserMinOrderByAggregateInput = {
   subscriptionExpiresAt?: Prisma.SortOrder
   sub?: Prisma.SortOrder
   authenticationType?: Prisma.SortOrder
+  status?: Prisma.SortOrder
+  isEmailVerified?: Prisma.SortOrder
 }
 
 export type UserCreateNestedOneWithoutCommentInput = {
@@ -461,6 +505,14 @@ export type EnumAuthenticationTypeFieldUpdateOperationsInput = {
   set?: $Enums.AuthenticationType
 }
 
+export type EnumStatusFieldUpdateOperationsInput = {
+  set?: $Enums.Status
+}
+
+export type BoolFieldUpdateOperationsInput = {
+  set?: boolean
+}
+
 export type UserCreateWithoutCommentInput = {
   id?: string
   name: string
@@ -472,6 +524,8 @@ export type UserCreateWithoutCommentInput = {
   subscriptionExpiresAt?: Date | string | null
   sub?: string | null
   authenticationType?: $Enums.AuthenticationType
+  status?: $Enums.Status
+  isEmailVerified?: boolean
 }
 
 export type UserUncheckedCreateWithoutCommentInput = {
@@ -485,6 +539,8 @@ export type UserUncheckedCreateWithoutCommentInput = {
   subscriptionExpiresAt?: Date | string | null
   sub?: string | null
   authenticationType?: $Enums.AuthenticationType
+  status?: $Enums.Status
+  isEmailVerified?: boolean
 }
 
 export type UserCreateOrConnectWithoutCommentInput = {
@@ -514,6 +570,8 @@ export type UserUpdateWithoutCommentInput = {
   subscriptionExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   authenticationType?: Prisma.EnumAuthenticationTypeFieldUpdateOperationsInput | $Enums.AuthenticationType
+  status?: Prisma.EnumStatusFieldUpdateOperationsInput | $Enums.Status
+  isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type UserUncheckedUpdateWithoutCommentInput = {
@@ -527,6 +585,8 @@ export type UserUncheckedUpdateWithoutCommentInput = {
   subscriptionExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   authenticationType?: Prisma.EnumAuthenticationTypeFieldUpdateOperationsInput | $Enums.AuthenticationType
+  status?: Prisma.EnumStatusFieldUpdateOperationsInput | $Enums.Status
+  isEmailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 
@@ -571,6 +631,8 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   subscriptionExpiresAt?: boolean
   sub?: boolean
   authenticationType?: boolean
+  status?: boolean
+  isEmailVerified?: boolean
   comment?: boolean | Prisma.User$commentArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
@@ -586,6 +648,8 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   subscriptionExpiresAt?: boolean
   sub?: boolean
   authenticationType?: boolean
+  status?: boolean
+  isEmailVerified?: boolean
 }, ExtArgs["result"]["user"]>
 
 export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -599,6 +663,8 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   subscriptionExpiresAt?: boolean
   sub?: boolean
   authenticationType?: boolean
+  status?: boolean
+  isEmailVerified?: boolean
 }, ExtArgs["result"]["user"]>
 
 export type UserSelectScalar = {
@@ -612,9 +678,11 @@ export type UserSelectScalar = {
   subscriptionExpiresAt?: boolean
   sub?: boolean
   authenticationType?: boolean
+  status?: boolean
+  isEmailVerified?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "password" | "role" | "createdAt" | "subscriptionPlan" | "subscriptionExpiresAt" | "sub" | "authenticationType", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "password" | "role" | "createdAt" | "subscriptionPlan" | "subscriptionExpiresAt" | "sub" | "authenticationType" | "status" | "isEmailVerified", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   comment?: boolean | Prisma.User$commentArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
@@ -638,6 +706,8 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     subscriptionExpiresAt: Date | null
     sub: string | null
     authenticationType: $Enums.AuthenticationType
+    status: $Enums.Status
+    isEmailVerified: boolean
   }, ExtArgs["result"]["user"]>
   composites: {}
 }
@@ -1072,6 +1142,8 @@ export interface UserFieldRefs {
   readonly subscriptionExpiresAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly sub: Prisma.FieldRef<"User", 'String'>
   readonly authenticationType: Prisma.FieldRef<"User", 'AuthenticationType'>
+  readonly status: Prisma.FieldRef<"User", 'Status'>
+  readonly isEmailVerified: Prisma.FieldRef<"User", 'Boolean'>
 }
     
 

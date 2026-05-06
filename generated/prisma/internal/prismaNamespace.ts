@@ -699,7 +699,9 @@ export const UserScalarFieldEnum = {
   subscriptionPlan: 'subscriptionPlan',
   subscriptionExpiresAt: 'subscriptionExpiresAt',
   sub: 'sub',
-  authenticationType: 'authenticationType'
+  authenticationType: 'authenticationType',
+  status: 'status',
+  isEmailVerified: 'isEmailVerified'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -802,6 +804,27 @@ export type EnumAuthenticationTypeFieldRefInput<$PrismaModel> = FieldRefInputTyp
  * Reference to a field of type 'AuthenticationType[]'
  */
 export type ListEnumAuthenticationTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AuthenticationType[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Status'
+ */
+export type EnumStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Status'>
+    
+
+
+/**
+ * Reference to a field of type 'Status[]'
+ */
+export type ListEnumStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Status[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Boolean'
+ */
+export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 

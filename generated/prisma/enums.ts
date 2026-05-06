@@ -9,6 +9,15 @@
 * 🟢 You can import this file directly.
 */
 
+export const Status = {
+  pending: 'pending',
+  active: 'active',
+  blocked: 'blocked'
+} as const
+
+export type Status = (typeof Status)[keyof typeof Status]
+
+
 export const AuthenticationType = {
   google: 'google',
   local: 'local'

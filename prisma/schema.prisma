@@ -40,10 +40,18 @@ model User {
   subscriptionExpiresAt DateTime?
   sub String? @db.VarChar(50) @unique
   authenticationType AuthenticationType @default(local)
+  status Status @default(pending)
+  isEmailVerified Boolean @default(false)
 
   @@index([name]) // index de consultas
   @@index([email]) // index de consultas
   @@index([sub])
+}
+
+enum Status {
+  pending
+  active
+  blocked
 }
 
 enum AuthenticationType {
