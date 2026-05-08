@@ -13,7 +13,8 @@ export const findUserByEmail = async (email) => {
             password: true,
             id: true,
             subscriptionExpiresAt: true,
-            subscriptionPlan: true
+            subscriptionPlan: true,
+            isEmailVerified: true
         }
     })
 };

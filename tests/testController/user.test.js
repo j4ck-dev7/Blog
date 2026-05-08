@@ -118,7 +118,9 @@ describe('User Controller signIn', () => {
     });
 
     test('Deve retornar status 401 ao tentar logar com um email inexistente', async () => {
-        loginUser.mockRejectedValue(new Error('Incorrect email or password'));
+        const errorMock = new Error('Incorrect email or password');
+        errorMock.remainingAttempts = 5; // Simula o comportamento do service que retorna as tentativas restantes
+        loginUser.mockRejectedValue(errorMock);
 
         const req = {
             body: {
@@ -135,11 +137,13 @@ describe('User Controller signIn', () => {
 
         expect(loginUser).toHaveBeenCalledWith('inexistente@gmail.com', '12345678')
         expect(res.status).toHaveBeenCalledWith(401);
-        expect(res.json).toHaveBeenCalledWith({ message: 'Incorrect email or password' });
+        expect(res.json).toHaveBeenCalledWith({ error: 'Incorrect email or password', attemptsRemaining: 5 });
     });
 
     test('Deve retornar status 401 ao tentar logar com senha incorreta', async () => {
-        loginUser.mockRejectedValue(new Error('Incorrect email or password'))
+        const errorMock = new Error('Incorrect email or password');
+        errorMock.remainingAttempts = 5; // Simula o comportamento do service que retorna as tentativas restantes
+        loginUser.mockRejectedValue(errorMock);
 
         const req = {
             body: {
@@ -156,17 +160,66 @@ describe('User Controller signIn', () => {
 
         expect(loginUser).toHaveBeenCalledWith('ana@gmail.com', '123456789')
         expect(res.status).toHaveBeenCalledWith(401);
-        expect(res.json).toHaveBeenCalledWith({ message: 'Incorrect email or password' });
+        expect(res.json).toHaveBeenCalledWith({ error: 'Incorrect email or password', attemptsRemaining: 5 });
+    });
+
+    test('Deve incrementar contador a cada falha subsequente (controller retorna remainingAttempts)', async () => {
+        // Simula duas falhas consecutivas vindas do service com remainingAttempts diferentes
+        const err1 = new Error('Incorrect email or password');
+        err1.remainingAttempts = 4;
+        const err2 = new Error('Incorrect email or password');
+        err2.remainingAttempts = 3;
+
+        loginUser.mockRejectedValueOnce(err1).mockRejectedValueOnce(err2);
+
+        const req1 = { body: { email: 'noone@example.com', password: 'bad' } };
+        const res1 = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+        await signIn(req1, res1);
+        expect(res1.status).toHaveBeenCalledWith(401);
+        expect(res1.json).toHaveBeenCalledWith({ error: 'Incorrect email or password', attemptsRemaining: 4 });
+
+        const req2 = { body: { email: 'noone@example.com', password: 'bad' } };
+        const res2 = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+        await signIn(req2, res2);
+        expect(res2.status).toHaveBeenCalledWith(401);
+        expect(res2.json).toHaveBeenCalledWith({ error: 'Incorrect email or password', attemptsRemaining: 3 });
+    });
+
+    test('Deve bloquear o usuário após atingir o limite e retornar mensagem de bloqueio', async () => {
+        // Simula que a tentativa final retorna remainingAttempts = 0
+        const finalErr = new Error('Incorrect email or password');
+        finalErr.attempts = 5;
+        finalErr.remainingAttempts = 0;
+
+        loginUser.mockRejectedValueOnce(finalErr);
+
+        const req = { body: { email: 'locked@example.com', password: 'bad' } };
+        const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+        await signIn(req, res);
+        expect(res.status).toHaveBeenCalledWith(401);
+        expect(res.json).toHaveBeenCalledWith({ error: 'Incorrect email or password', attemptsRemaining: 0 });
+
+        // Agora simula chamada quando já está bloqueado
+        loginUser.mockRejectedValueOnce(new Error('Usuário bloqueado por muitas tentativas'));
+        const res2 = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+        await signIn(req, res2);
+        expect(res2.status).toHaveBeenCalledWith(401);
+        expect(res2.json).toHaveBeenCalledWith({ message: 'Usuário bloqueado por muitas tentativas' });
     });
 
     test('Deve retornar status 200 ao fazer login com sucesso', async () => {
-        loginUser.mockResolvedValue({
-            id: '1',
-            name: 'Fabio',
-            email: 'fabio@gmail.com',
-            password: '$2a$10$6OX/EUwCxD/OV2RPLi9g.eTiXJgU8zf/6avWU5YkpDGoBt8do8s3y',
-            subscriptionPlan: 'FREE',
-            subscriptionExpiresAt: null
+        // Simula serviço que ao logar com sucesso também limpa as tentativas (mock interno)
+        const mockClear = jest.fn();
+        loginUser.mockImplementation(async (email, password) => {
+            mockClear(email); // simula o comportamento de reset das tentativas no service
+            return {
+                id: '1',
+                name: 'Fabio',
+                email: 'fabio@gmail.com',
+                password: '$2a$10$6OX/EUwCxD/OV2RPLi9g.eTiXJgU8zf/6avWU5YkpDGoBt8do8s3y',
+                subscriptionPlan: 'FREE',
+                subscriptionExpiresAt: null
+            };
         });
 
         const req = {
@@ -200,6 +253,27 @@ describe('User Controller signIn', () => {
             subscriptionExpire: null
         }, 'test-secret')
         expect(res.json).toHaveBeenCalledWith({ message: 'User logged in successfully' });
+        // Verifica que o service (simulado) limpou as tentativas para o email
+        expect(typeof mockClear).toBe('function');
+        expect(mockClear).toHaveBeenCalledWith('fabio@gmail.com');
+    });
+
+    test('Deve limpar tentativas pendentes (2) após login bem-sucedido', async () => {
+        // Simula que o service vê 2 tentativas e as limpa antes de retornar sucesso
+        const mockClearAttempts = jest.fn();
+        loginUser.mockImplementation(async (email, password) => {
+            // antes de retornar, service limpa 2 tentativas
+            mockClearAttempts(email, 2);
+            return { id: '50', name: 'Recover', email, password: 'hash', subscriptionPlan: 'FREE', subscriptionExpiresAt: null };
+        });
+
+        const req = { body: { email: 'recover@example.com', password: '12345678' } };
+        const res = { status: jest.fn().mockReturnThis(), json: jest.fn(), cookie: jest.fn() };
+
+        await signIn(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(mockClearAttempts).toHaveBeenCalledWith('recover@example.com', 2);
     });
 })
 

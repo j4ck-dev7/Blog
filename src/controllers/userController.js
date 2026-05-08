@@ -47,7 +47,20 @@ export const signIn = async (req, res) => {
     } catch (error) {
         if (error.message === 'Incorrect email or password') {
             logger.warn('Falha no login', { ...getRequestMeta(req), error: error.message });
-            return res.status(401).json({ message: "Incorrect email or password" });
+            return res.status(401).json({ 
+                error: error.message,
+                attemptsRemaining: error.remainingAttempts
+            });        
+        }
+
+        if(error.message === 'Email não verificado'){
+            logger.warn('Tentativa de login com email não verificado', { ...getRequestMeta(req), error: error.message });
+            return res.status(401).json({ message: error.message });
+        }
+
+        if(error.message === 'Usuário bloqueado por muitas tentativas'){
+            logger.warn('Tentativa de login para usuário bloqueado por muitas tentativas', { ...getRequestMeta(req), error: error.message });
+            return res.status(401).json({ message: error.message });
         }
 
         logger.error('Erro ao tentar logar usuário', { ...getRequestMeta(req), error: error.message, stack: error.stack });

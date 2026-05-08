@@ -15,6 +15,7 @@ import CryptoJS from "crypto-js";
 import { OAuth2Client } from 'google-auth-library'
 import { logger } from '../config/logger.js';
 import { transporter } from '../config/nodemailer.js';
+import { incrementLoginAttempts, resetLoginAttempts, isLockedOut } from "../utils/redisLoginAttempts.js";
 
 export const getUrlForOauthSignUp = async () => {
     const state =  CryptoJS.SHA256('testGoogle').toString(CryptoJS.enc.Hex);
@@ -172,19 +173,57 @@ export const registerUserByOauth = async (code) => {
 
 export const loginUser = async (email, password) => {
     logger.info('loginUser attempt', { email });
+    const locked = await isLockedOut(email);
+    if (locked) {
+        logger.warn('Tentativa de login para usuário bloqueado por muitas tentativas', {
+            usuarioId: 'Desconecido',
+            email
+        });
+
+        throw new Error('Usuário bloqueado por muitas tentativas');
+    }
     const userVerify = await verifyUserExistsByEmail(email);
     if (!userVerify) {
-        logger.warn('loginUser failed - email not found', { email });
-        throw new Error('Invalid email or password');
+        const loginAttemps = await incrementLoginAttempts(email);
+        
+        logger.warn('Tentativa de login com credenciais incorretas', {
+            usuarioId: 'Desconecido',
+            email,
+            tentativas: loginAttemps.attempts,
+        });
+        
+        const error = new Error('Email ou senha incorretos');
+        error.attempts = loginAttemps.attempts;
+        error.remainingAttempts = 5 - loginAttemps.attempts;
+        throw error;
     }
 
     const user = await findUserByEmail(email);
+    if(!user.isEmailVerified){
+        logger.warn('Tentativa de login com email não verificado', {
+            usuarioId: user.id,
+        });
+
+        throw new Error('Email não verificado');
+    }
 
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
-        logger.warn('loginUser failed - invalid password', { email });
-        throw new Error('Invalid email or password');
+        const loginAttemps = await incrementLoginAttempts(email);
+        
+        logger.warn('Tentativa de login com credenciais incorretas', {
+            usuarioId: 'Desconecido',
+            email,
+            tentativas: loginAttemps.attempts
+        });
+
+        const error = new Error('Email ou senha incorretos');
+        error.attempts = loginAttemps.attempts;
+        error.remainingAttempts = 5 - loginAttemps.attempts;
+        throw error;
     }
+
+    await resetLoginAttempts(email);
 
     logger.info('loginUser success', { id: user.id, email: user.email });
     return user;

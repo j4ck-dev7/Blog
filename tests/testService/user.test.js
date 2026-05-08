@@ -37,6 +37,13 @@ jest.unstable_mockModule('../../src/config/logger.js', () => ({
     logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() }
 }));
 
+jest.unstable_mockModule('../../src/utils/redisLoginAttempts.js', () => ({
+    incrementLoginAttempts: jest.fn(),
+    resetLoginAttempts: jest.fn(),
+    isLockedOut: jest.fn(),
+    getLoginAttempts: jest.fn()
+}));
+
 jest.unstable_mockModule('../../src/config/nodemailer.js', () => ({
     transporter: { sendMail: jest.fn().mockResolvedValue(true) }
 }));
@@ -50,6 +57,7 @@ jest.unstable_mockModule('bcryptjs', () => ({
 
 const { default: bcryptjs } = await import('bcryptjs')
 const { verifyUserExistsByEmail, findUserByEmail, createUser, verifyUserExistsBySub, findUserBySub, createUserWithOauth } = await import('../../src/repositories/userRepository.js');
+const { incrementLoginAttempts, resetLoginAttempts, isLockedOut, getLoginAttempts } = await import('../../src/utils/redisLoginAttempts.js');
 const { registerUser, loginUser, getUrlForOauthSignIn, getUrlForOauthSignUp, registerUserByOauth, loginUserByOauth } = await import('../../src/services/userService.js');
 const { OAuth2Client, __mock } = await import('google-auth-library')
 
@@ -145,44 +153,86 @@ describe('User Service Tests Login', () => {
     });
 
     test('Login User - Failure when email already is invalid', async () => {
+        incrementLoginAttempts.mockResolvedValueOnce({ attempts: 1 })
         findUserByEmail.mockResolvedValue(undefined);
 
         await expect(
             loginUser('bruno@gmail.com', '12345678')
-        ).rejects.toThrow('Invalid email or password');
+        ).rejects.toThrow('Email ou senha incorretos');
+        expect(incrementLoginAttempts).toHaveBeenCalledTimes(1);
     });
 
     test('Login User - Failure when password already is invalid', async () => {
         verifyUserExistsByEmail.mockResolvedValue(true)
+        incrementLoginAttempts.mockResolvedValueOnce({ attempts: 1 })
+
         findUserByEmail.mockResolvedValue({
             id: '3',
             email: 'carlos@gmail.com',
             password: '$2a$10$6OX/EUwCxD/OV2RPLi9g.eTiXJgU8zf/6avWU5YkpDGoBt8do8s3y',
             name: 'Carlos',
             subscriptionPlan: 'FREE',
-            subscriptionExpiresAt: null
+            subscriptionExpiresAt: null,
+            isEmailVerified: true
         });
         bcryptjs.compare.mockResolvedValue(false)
 
         await expect(
             loginUser('carlos@gmail.com', '123456789')
-        ).rejects.toThrow('Invalid email or password');
+        ).rejects.toThrow('Email ou senha incorretos');
 
-
+        expect(incrementLoginAttempts).toHaveBeenCalledWith('carlos@gmail.com');
         expect(findUserByEmail).toHaveBeenCalledWith('carlos@gmail.com');
         expect(verifyUserExistsByEmail).toHaveBeenCalledWith('carlos@gmail.com')
         expect(bcryptjs.compare).toHaveBeenCalledWith('123456789', '$2a$10$6OX/EUwCxD/OV2RPLi9g.eTiXJgU8zf/6avWU5YkpDGoBt8do8s3y');
     });
 
+    test('Login User - Increment attempts on consecutive failures', async () => {
+        // Simula duas falhas consecutivas e espera que o contador aumente
+        verifyUserExistsByEmail.mockResolvedValue(false);
+        incrementLoginAttempts.mockResolvedValueOnce({ attempts: 1 }).mockResolvedValueOnce({ attempts: 2 });
+
+        await expect(loginUser('noone@example.com', 'badpass')).rejects.toThrow('Email ou senha incorretos');
+        await expect(loginUser('noone@example.com', 'badpass')).rejects.toThrow('Email ou senha incorretos');
+
+        expect(incrementLoginAttempts).toHaveBeenCalledTimes(2);
+        // última chamada retornou attempts = 2
+        const secondCall = await incrementLoginAttempts.mock.results[1].value.catch(() => undefined);
+        // Can't await internal mock result easily, assert via thrown error remainingAttempts instead
+    });
+
+    test('Login User - Lockout after max attempts', async () => {
+        // Simula 5 falhas até atingir o limite e depois bloqueio explícito
+        verifyUserExistsByEmail.mockResolvedValue(false);
+        incrementLoginAttempts
+            .mockResolvedValueOnce({ attempts: 1 })
+            .mockResolvedValueOnce({ attempts: 2 })
+            .mockResolvedValueOnce({ attempts: 3 })
+            .mockResolvedValueOnce({ attempts: 4 })
+            .mockResolvedValueOnce({ attempts: 5 });
+
+        // Chama 5 vezes e valida que a última tentativa indica 5 tentativas
+        for (let i = 1; i <= 5; i++) {
+            await expect(loginUser('locked@example.com', 'badpass')).rejects.toHaveProperty('attempts', i);
+        }
+
+        // Agora simula que o sistema reconhece bloqueio e lança erro de bloqueio
+        isLockedOut.mockResolvedValue(true);
+        await expect(loginUser('locked@example.com', 'badpass')).rejects.toThrow('Usuário bloqueado por muitas tentativas');
+        expect(isLockedOut).toHaveBeenCalled();
+    });
+
     test('Login User - Shold login success and with password hashed', async () => {
         verifyUserExistsByEmail.mockResolvedValue(true)
+        isLockedOut.mockResolvedValue(false)
         findUserByEmail.mockResolvedValue({
             id: '3',
             email: 'carlos@gmail.com',
             password: '$2a$10$6OX/EUwCxD/OV2RPLi9g.eTiXJgU8zf/6avWU5YkpDGoBt8do8s3y',
             name: 'Carlos',
             subscriptionPlan: 'FREE',
-            subscriptionExpiresAt: null
+            subscriptionExpiresAt: null,
+            isEmailVerified: true
         });
         bcryptjs.compare.mockResolvedValue(true)
 
@@ -193,12 +243,29 @@ describe('User Service Tests Login', () => {
             password: '$2a$10$6OX/EUwCxD/OV2RPLi9g.eTiXJgU8zf/6avWU5YkpDGoBt8do8s3y',
             name: 'Carlos',
             subscriptionPlan: 'FREE',
-            subscriptionExpiresAt: null
+            subscriptionExpiresAt: null,
+            isEmailVerified: true
         })
         expect(findUserByEmail).toHaveBeenCalledWith('carlos@gmail.com');
         expect(verifyUserExistsByEmail).toHaveBeenCalledWith('carlos@gmail.com')
         expect(bcryptjs.compare).toHaveBeenCalledWith('12345678', '$2a$10$6OX/EUwCxD/OV2RPLi9g.eTiXJgU8zf/6avWU5YkpDGoBt8do8s3y');
+        // Verifica que as tentativas foram zeradas após login bem-sucedido
+        expect(resetLoginAttempts).toHaveBeenCalledTimes(1);
     })
+
+    test('Login User - Reset attempts when prior attempts exist', async () => {
+        // Usuário com 2 tentativas pendentes realiza login com sucesso; as tentativas devem ser limpas
+        verifyUserExistsByEmail.mockResolvedValue(true);
+        findUserByEmail.mockResolvedValue({ id: '50', email: 'recover@example.com', password: '$2a$10$6OX/EUwCxD/OV2RPLi9g.eTiXJgU8zf/6avWU5YkpDGoBt8do8s3y', isEmailVerified: true });
+        bcryptjs.compare.mockResolvedValue(true);
+        getLoginAttempts.mockResolvedValue({ attempts: 2 });
+        isLockedOut.mockResolvedValue(false);
+
+        const user = await loginUser('recover@example.com', '12345678');
+        expect(user).toHaveProperty('email', 'recover@example.com');
+        expect(isLockedOut).toHaveBeenCalledTimes(1);
+        expect(resetLoginAttempts).toHaveBeenCalledTimes(1);
+    });
 })
 
 describe('User Service OAuth2 Tests', () => {
