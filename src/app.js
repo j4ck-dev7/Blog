@@ -8,6 +8,7 @@ import stripe from './config/stripe.js';
 import { logger } from './config/logger.js'
 import { loggerMiddleware } from './middlewares/loggerMiddleware.js';
 import { getRequestMeta } from './config/requestMeta.js';
+import helmet from 'helmet';
 
 const app = express();
 
@@ -15,6 +16,21 @@ app.use('/api/webhooks', webhookRouter);
 
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(helmet()); // Ativa o helmet com suas configurações padrão.
+app.use(helmet.frameguard({ action: 'deny' })); // Evita clickjacking, isso imped o uso de <iframe> em outro site
+app.use(helmet.xssFilter()); // Ativa proteção contro XSS nos navegadores antigos.
+app.use(helmet.noSniff()); // Impede que o navegador adivinhe o tipo de arquivo
+app.use(helmet.hsts({ maxAge: 31536000, includeSubDomains: true })); // Força o uso de HTTPS por um ano, incluindo subdomínios.
+// E também é recomendado usar o contentSecurityPolicy para evitar ataques de XSS
+app.use(helmet.contentSecurityPolicy({
+    directives: {
+        defaultSrc: ["'self'"], // Carrega recursos apenas do mesmo domínio
+        scriptSrc: ["'self'"], // Scripts apenas do mesmo domínio
+        styleSrc: ["'self'", "'unsafe-inline'"], // CSS da mesma orign, e estilos inline (útil para frameworks como React)
+        imgSrc: ["'self'", 'data:', 'https:'], // Imagens da mesma origem
+        connectSrc: ["'self'"] // Requisições (fetch, WebSockets) apenas para a mesma origem 
+    }
+}));
 app.use(express.json());
 app.use(loggerMiddleware);
 app.use((err, req, res, next) => {
