@@ -1,12 +1,13 @@
 import { incrementArticleCommentCount, decrementArticleCommentCount } from "../repositories/articleRepository.js";
 import { addComment, editComment, removeComment, verifyComment } from "../repositories/commentRepository.js";
+import { updateCounterService } from "../utils/updateConterService.js";
 import { logger } from '../config/logger.js';
 
 export const createComment = async (post, userId, userName, articleSlug) => {
     logger.info('createComment called', { userId, userName, articleSlug });
     const newComment = await addComment(post, userId, userName, articleSlug);
 
-    await incrementArticleCommentCount(articleSlug);
+    await updateCounterService(articleSlug, (s) => incrementArticleCommentCount(s));
     logger.info('createComment success', { id: newComment?.id, articleSlug });
     return newComment;
 };
@@ -32,7 +33,7 @@ export const deleteComment = async (commentId, articleSlug) => {
         throw new Error('Comment not found');
     }
 
-    await decrementArticleCommentCount(articleSlug);
+    await updateCounterService(articleSlug, (s) => decrementArticleCommentCount(s));
     const removed = await removeComment(commentId);
     logger.info('deleteComment success', { commentId, articleSlug });
     return removed;

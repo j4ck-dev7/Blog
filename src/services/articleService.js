@@ -2,6 +2,7 @@ import { allArticles, findArticleBySlug, findArticlesByTag, countArticlesByTag, 
 import { getCommentsBySlug } from "../repositories/commentRepository.js";
 import client from "../config/redis.js";
 import { logger } from '../config/logger.js';
+import { updateCounterService } from "../utils/updateConterService.js";
 
 const MAX_LIMIT = 100;
 
@@ -41,30 +42,6 @@ function sanitizeTextSearch(input, maxLen = 200) {
     
     // Escape MongoDB/regex special characters
     return s.replace(/[\\"]/g, '\\$&');
-}
-
-async function updateCounterService(slug, counterFn) {
-    if (!slug) throw new Error('Invalid slug');
-    logger.debug('updateCounterService called', { slug });
-    try {
-        const res = await counterFn(slug);
-        if (!res) {
-            logger.error('updateCounterService: no result returned', { slug });
-            throw new Error('Update operation failed');
-        }
-        // Se acknowledged existe e é false, erro
-        if ('acknowledged' in res && res.acknowledged === false) {
-            logger.error('updateCounterService: update not acknowledged', { slug, res });
-            throw new Error('Update operation failed');
-        }
-        if (res.modifiedCount === 0) {
-            logger.warn('updateCounterService: no documents modified', { slug });
-        }
-        return res;
-    } catch (err) {
-        logger.error('updateCounterService error', { err, slug });
-        throw err;
-    }
 }
 
 export const GetAllArticles = async (page, limit) => {

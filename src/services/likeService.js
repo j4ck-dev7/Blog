@@ -1,6 +1,7 @@
 import { createLike, deleteLike, getLikes, verifyUserLikeArticle } from "../repositories/likeRepository.js";
 import { decrementArticleLikeCount, incrementArticleLikeCount } from "../repositories/articleRepository.js";
 import { logger } from '../config/logger.js';
+import { updateCounterService } from "../utils/updateConterService.js";
 
 export const allLikesUser = async (userId) => {
     logger.info('allLikesUser called', { userId });
@@ -25,7 +26,7 @@ export const addLike = async (userId, articleSlug) => {
 
     const result = await Promise.all([
         createLike(userId, articleSlug),
-        incrementArticleLikeCount(articleSlug)
+        updateCounterService(articleSlug, (s)=> incrementArticleLikeCount(s))
     ]);
     logger.info('addLike - success', { userId, articleSlug });
     return result;
@@ -43,7 +44,7 @@ export const removeLike = async (userId, articleSlug) => {
 
     const result = await Promise.all([
         deleteLike(id),
-        decrementArticleLikeCount(articleSlug)
+        updateCounterService(articleSlug, (s) => decrementArticleLikeCount(s))
     ]);
     logger.info('removeLike - success', { userId, articleSlug });
     return result;

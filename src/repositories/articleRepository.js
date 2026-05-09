@@ -89,7 +89,7 @@ export const findArticleBySlugWithPlanRole = async (slug) => {
 export const incrementArticleViews = async (slug) => {
     logger.debug('incrementArticleViews called', { slug });
     try {
-        return await Article.updateOne({ slug }, { $inc: { viewsCount: 1 } });
+        return await Article.findOneAndUpdate({ slug }, { $inc: { viewsCount: 1 } });
     } catch (err) {
         logger.error('incrementArticleViews error', { err, slug });
         throw err;
@@ -99,7 +99,7 @@ export const incrementArticleViews = async (slug) => {
 export const decrementArticleCommentCount = async (slug) => {
     logger.debug('decrementArticleCommentCount called', { slug });
     try {
-        return await Article.updateOne({ slug }, { $inc: { commentCount: -1 } });
+        return await Article.findOneAndUpdate({ slug }, { $inc: { commentCount: -1 } });
     } catch (err) {
         logger.error('decrementArticleCommentCount error', { err, slug });
         throw err;
@@ -109,7 +109,7 @@ export const decrementArticleCommentCount = async (slug) => {
 export const incrementArticleLikeCount = async (slug) => {
     logger.debug('incrementArticleLikeCount called', { slug });
     try {
-        return await Article.updateOne({ slug }, { $inc: { likeCount: 1 } });
+        return await Article.findOneAndUpdate({ slug }, { $inc: { likeCount: 1 } });
     } catch (err) {
         logger.error('incrementArticleLikeCount error', { err, slug });
         throw err;
@@ -119,7 +119,7 @@ export const incrementArticleLikeCount = async (slug) => {
 export const decrementArticleLikeCount = async (slug) => {
     logger.debug('decrementArticleLikeCount called', { slug });
     try {
-        return await Article.updateOne({ slug }, { $inc: { likeCount: -1 } });
+        return await Article.findOneAndUpdate({ slug }, { $inc: { likeCount: -1 } });
     } catch (err) {
         logger.error('decrementArticleLikeCount error', { err, slug });
         throw err;
@@ -129,7 +129,7 @@ export const decrementArticleLikeCount = async (slug) => {
 export const incrementArticleCommentCount = async (slug) => {
     logger.debug('incrementArticleCommentCount called', { slug });
     try {
-        return await Article.updateOne({ slug }, { $inc: { commentCount: 1 } });
+        return await Article.findOneAndUpdate({ slug }, { $inc: { commentCount: 1 } });
     } catch (err) {
         logger.error('incrementArticleCommentCount error', { err, slug });
         throw err;
