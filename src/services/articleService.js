@@ -3,40 +3,106 @@ import { getCommentsBySlug } from "../repositories/commentRepository.js";
 import client from "../config/redis.js";
 import { logger } from '../config/logger.js';
 
+const MAX_LIMIT = 100;
+
+function sanitizePagination(rawSkip, rawLimit) {
+    const skipVal = rawSkip === undefined || rawSkip === null ? 0 : rawSkip;
+    const limitVal = rawLimit === undefined || rawLimit === null ? 20 : rawLimit;
+    
+    if (typeof skipVal !== 'number' && typeof skipVal !== 'string') {
+        throw new Error('skip must be a number or numeric string');
+    }
+    if (typeof limitVal !== 'number' && typeof limitVal !== 'string') {
+        throw new Error('limit must be a number or numeric string');
+    }
+    
+    const skip = Number.isFinite(Number(skipVal)) ? Math.max(0, Math.floor(Number(skipVal))) : 0;
+    let limit = Number.isFinite(Number(limitVal)) ? Math.max(1, Math.floor(Number(limitVal))) : 20;
+    limit = Math.min(limit, MAX_LIMIT);
+    return { skip, limit };
+}
+
+function sanitizeString(input, maxLen = 200) {
+    if (input == null) return '';
+    const s = String(input);
+    return s.trim().slice(0, maxLen);
+}
+
+function sanitizeTextSearch(input, maxLen = 200) {
+    if (input == null) return '';
+    const s = String(input).trim().slice(0, maxLen);
+    
+    // Prevent ReDoS: reject queries with too many special regex characters
+    const specialChars = (s.match(/[*+?\\^$|()[\]{}]/g) || []).length;
+    if (specialChars > 5) {
+        logger.warn('sanitizeTextSearch: too many special characters', { count: specialChars });
+        throw new Error('Query contains too many special characters');
+    }
+    
+    // Escape MongoDB/regex special characters
+    return s.replace(/[\\"]/g, '\\$&');
+}
+
+async function updateCounterService(slug, counterFn) {
+    if (!slug) throw new Error('Invalid slug');
+    logger.debug('updateCounterService called', { slug });
+    try {
+        const res = await counterFn(slug);
+        if (!res) {
+            logger.error('updateCounterService: no result returned', { slug });
+            throw new Error('Update operation failed');
+        }
+        // Se acknowledged existe e é false, erro
+        if ('acknowledged' in res && res.acknowledged === false) {
+            logger.error('updateCounterService: update not acknowledged', { slug, res });
+            throw new Error('Update operation failed');
+        }
+        if (res.modifiedCount === 0) {
+            logger.warn('updateCounterService: no documents modified', { slug });
+        }
+        return res;
+    } catch (err) {
+        logger.error('updateCounterService error', { err, slug });
+        throw err;
+    }
+}
+
 export const GetAllArticles = async (page, limit) => {
     try {
-        const skip = (page - 1) * limit;
         const pageNum = Math.max(1, parseInt(page));
-        const limitNum = Math.min(20, Math.max(1, parseInt(limit)));
+        const rawLimit = Math.max(1, parseInt(limit));
+        const skip = (pageNum - 1) * rawLimit;
+        
+        const { skip: validSkip, limit: validLimit } = sanitizePagination(skip, rawLimit);
         const CACHE_TTL = 300; // Tempo de vida do cache em segundos (5 minutos)
 
-        logger.info('GetAllArticles called', { page, limit, pageNum, limitNum });
+        logger.info('GetAllArticles called', { page, limit, pageNum, validSkip, validLimit });
 
-        const cacheKey = `articles:page:${pageNum}:limit:${limitNum}`;
+        const cacheKey = `articles:page:${pageNum}:limit:${validLimit}`;
         const cached = await client.get(cacheKey);
 
         if (cached) {
             const data = JSON.parse(cached);
-            logger.info('GetAllArticles cache hit', { pageNum, limitNum });
-            return data; // Se o cache existir ele retorna para o cliente, o tempo de resposta pode ser menor que 100ms
+            logger.info('GetAllArticles cache hit', { pageNum, validLimit });
+            return data;
         }
 
         const [total, articles] = await Promise.all([
             countArticles(),
-            allArticles(skip, limitNum)
+            allArticles(validSkip, validLimit)
         ]);
 
         if (!articles.length) {
-            logger.warn('GetAllArticles - Articles not found', { pageNum, limitNum });
+            logger.warn('GetAllArticles - Articles not found', { pageNum, validLimit });
             throw new Error('Articles not found');
         }
 
-        const totalPages = Math.ceil(total / limitNum);
+        const totalPages = Math.ceil(total / validLimit);
         const pagination = {
             total,
             pages: totalPages,
             currentPage: pageNum,
-            limit: limitNum,
+            limit: validLimit,
             hasNext: pageNum < totalPages,
             hasPrev: pageNum > 1
         };
@@ -47,7 +113,7 @@ export const GetAllArticles = async (page, limit) => {
         };
 
         await client.setEx(cacheKey, CACHE_TTL, JSON.stringify(data));
-        logger.info('GetAllArticles - fetched from DB and cached', { pageNum, limitNum, total });
+        logger.info('GetAllArticles - fetched from DB and cached', { pageNum, validLimit, total });
 
         return data;
     } catch (error) {
@@ -58,15 +124,18 @@ export const GetAllArticles = async (page, limit) => {
 
 export const LoadArticleBySlug = async (slug) => {
     try {
-        logger.info('LoadArticleBySlug called', { slug });
+        const sanitizedSlug = sanitizeString(slug);
+        if (!sanitizedSlug) throw new Error('Slug cannot be empty');
+        
+        logger.info('LoadArticleBySlug called', { slug: sanitizedSlug });
 
         const [article, comment] = await Promise.all([
-            findArticleBySlug(slug),
-            getCommentsBySlug(slug)
+            findArticleBySlug(sanitizedSlug),
+            getCommentsBySlug(sanitizedSlug)
         ]);
 
         if (!article) {
-            logger.warn('LoadArticleBySlug - Article not found', { slug });
+            logger.warn('LoadArticleBySlug - Article not found', { slug: sanitizedSlug });
             throw new Error('Article not found');
         }
 
@@ -75,8 +144,8 @@ export const LoadArticleBySlug = async (slug) => {
             comment
         };
 
-        await incrementArticleViews(slug);
-        logger.info('LoadArticleBySlug - views incremented', { slug });
+        await updateCounterService(sanitizedSlug, (s) => incrementArticleViews(s));
+        logger.info('LoadArticleBySlug - views incremented', { slug: sanitizedSlug });
 
         return data;
     } catch (error) {
@@ -87,28 +156,32 @@ export const LoadArticleBySlug = async (slug) => {
 
 export const FindArticlesByTag = async (tag, page, limit) => {
     try {
-        const skip = (page - 1) * limit;
+        const sanitizedTag = sanitizeString(tag);
+        if (!sanitizedTag) throw new Error('Tag cannot be empty');
+        
         const pageNum = Math.max(1, parseInt(page));
-        const limitNum = Math.min(20, Math.max(1, parseInt(limit)));
+        const rawLimit = Math.max(1, parseInt(limit));
+        const skip = (pageNum - 1) * rawLimit;
+        const { skip: validSkip, limit: validLimit } = sanitizePagination(skip, rawLimit);
 
-        logger.info('FindArticlesByTag called', { tag, pageNum, limitNum });
+        logger.info('FindArticlesByTag called', { tag: sanitizedTag, pageNum, validSkip, validLimit });
 
         const [total, articles] = await Promise.all([
-            countArticlesByTag(tag),
-            findArticlesByTag(tag, skip, limitNum)
+            countArticlesByTag(sanitizedTag),
+            findArticlesByTag(sanitizedTag, validSkip, validLimit)
         ]);
 
         if (!articles.length) {
-            logger.warn('FindArticlesByTag - Articles not found', { tag, pageNum, limitNum });
+            logger.warn('FindArticlesByTag - Articles not found', { tag: sanitizedTag, pageNum, validLimit });
             throw new Error('Articles not found');
         }
 
-        const totalPages = Math.ceil(total / limitNum);
+        const totalPages = Math.ceil(total / validLimit);
         const pagination = {
             total,
             pages: totalPages,
             currentPage: pageNum,
-            limit: limitNum,
+            limit: validLimit,
             hasNext: pageNum < totalPages,
             hasPrev: pageNum > 1
         };
@@ -118,7 +191,7 @@ export const FindArticlesByTag = async (tag, page, limit) => {
             pagination
         };
 
-        logger.info('FindArticlesByTag - success', { tag, pageNum, limitNum, total });
+        logger.info('FindArticlesByTag - success', { tag: sanitizedTag, pageNum, validLimit, total });
         return data;
     } catch (error) {
         logger.error('FindArticlesByTag error', { tag, error: error.message, stack: error.stack });
@@ -128,33 +201,37 @@ export const FindArticlesByTag = async (tag, page, limit) => {
 
 export const SearchForArticles = async (query, page, limit) => {
     try {
-        const skip = (page - 1) * limit;
+        const sanitizedQuery = sanitizeTextSearch(query);
+        if (!sanitizedQuery) throw new Error('Search query cannot be empty');
+        
         const pageNum = Math.max(1, parseInt(page));
-        const limitNum = Math.min(20, Math.max(1, parseInt(limit)));
+        const rawLimit = Math.max(1, parseInt(limit));
+        const skip = (pageNum - 1) * rawLimit;
+        const { skip: validSkip, limit: validLimit } = sanitizePagination(skip, rawLimit);
 
-        logger.info('SearchForArticles called', { query, pageNum, limitNum });
+        logger.info('SearchForArticles called', { query: sanitizedQuery, pageNum, validSkip, validLimit });
 
         const [total, articles] = await Promise.all([
-            searchArticlesCount(query),
-            searchArticles(query, skip, limitNum)
+            searchArticlesCount(sanitizedQuery),
+            searchArticles(sanitizedQuery, validSkip, validLimit)
         ]);
 
         if (!articles.length) {
-            logger.warn('SearchForArticles - Articles not found', { query, pageNum, limitNum });
+            logger.warn('SearchForArticles - Articles not found', { query: sanitizedQuery, pageNum, validLimit });
             throw new Error('Articles not found');
         }
 
-        const totalPages = Math.ceil(total / limitNum);
+        const totalPages = Math.ceil(total / validLimit);
         const pagination = {
             total,
             pages: totalPages,
             currentPage: pageNum,
-            limit: limitNum,
+            limit: validLimit,
             hasNext: pageNum < totalPages,
             hasPrev: pageNum > 1
         };
 
-        logger.info('SearchForArticles - success', { query, pageNum, limitNum, total });
+        logger.info('SearchForArticles - success', { query: sanitizedQuery, pageNum, validLimit, total });
         return {
             articles,
             pagination
