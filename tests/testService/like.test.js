@@ -37,9 +37,9 @@ describe('Like Service Test', () => {
             },
         ]);
 
-        const result = await allLikesUser('1');
+        const result = await allLikesUser('cjld2cjxh0000qzrmn831i7rn');
 
-        expect(getLikes).toHaveBeenCalledWith('1')
+        expect(getLikes).toHaveBeenCalledWith('cjld2cjxh0000qzrmn831i7rn')
         expect(result).toEqual([
             {
                 articleSlug: 'artigo-test1',
@@ -56,7 +56,7 @@ describe('Like Service Test', () => {
         verifyUserLikeArticle.mockResolvedValue(true);
         
         await expect(
-            addLike('1', 'article-test')
+            addLike('cjld2cjxh0000qzrmn831i7rn', 'article-test')
         ).rejects.toThrow('You already liked this article');
     });
 
@@ -67,20 +67,20 @@ describe('Like Service Test', () => {
         });
         createLike.mockResolvedValue({
             id: '1',
-            userId: '2',
+            userId: 'cjld2cjxh0000qzrmn831i7rn',
             articleSlug: 'article-test2',
             dateCreated: Date.now,
 
         });
 
-        const result = await addLike('2', 'article-test2');
+        const result = await addLike('cjld2cjxh0000qzrmn831i7rn', 'article-test2');
 
-        expect(createLike).toHaveBeenCalledWith('2', 'article-test2');
+        expect(createLike).toHaveBeenCalledWith('cjld2cjxh0000qzrmn831i7rn', 'article-test2');
         expect(incrementArticleLikeCount).toHaveBeenCalledWith('article-test2')
         expect(result).toEqual([
             {
                 id: '1',
-                userId: '2',
+                userId: 'cjld2cjxh0000qzrmn831i7rn',
                 articleSlug: 'article-test2',
                 dateCreated: Date.now
             },
@@ -94,29 +94,31 @@ describe('Like Service Test', () => {
         verifyUserLikeArticle.mockResolvedValue(undefined);
         
         await expect(
-            removeLike('3', 'article-test')
+            removeLike('cjld2cjxh0000qzrmn831i7rn', 'article-test')
         ).rejects.toThrow('Like does not exist');
     });
 
     test('Return delete like', async () => {
-        verifyUserLikeArticle.mockResolvedValue(true);
+        verifyUserLikeArticle.mockResolvedValue({
+            id: 'tz4a98xxat96iws9zmbrgj3a'
+        });
         decrementArticleLikeCount.mockResolvedValue({
             modifiedCount: 1 
         })
         deleteLike.mockResolvedValue({
-            id: '3',
+            id: 'tz4a98xxat96iws9zmbrgj3a',
             articleSlug: 'article-test',
-            userId: '2',
+            userId: 'cjld2cjxh0000qzrmn831i7rn',
             dateCreated: Date.now
         })
 
-        const result = await removeLike('2', 'article-test');  
-        expect(verifyUserLikeArticle).toHaveBeenCalledWith('2', 'article-test');
+        const result = await removeLike('cjld2cjxh0000qzrmn831i7rn', 'article-test');  
+        expect(verifyUserLikeArticle).toHaveBeenCalledWith('cjld2cjxh0000qzrmn831i7rn', 'article-test');
         expect(result).toEqual([
             { 
-                id: '3',
+                id: 'tz4a98xxat96iws9zmbrgj3a',
                 articleSlug: 'article-test',
-                userId: '2',
+                userId: 'cjld2cjxh0000qzrmn831i7rn',
                 dateCreated: Date.now
             },
             { modifiedCount: 1 }

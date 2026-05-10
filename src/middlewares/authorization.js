@@ -2,8 +2,7 @@ import jwt from 'jsonwebtoken';
 import { logger } from '../config/logger.js';
 import { getRequestMeta } from '../config/requestMeta.js';
 import { verifyIfUserIsVerified } from '../repositories/userRepository.js';
-import { z } from 'zod';
-import { isCuid } from '@paralleldrive/cuid2';
+import { isValidCuid } from '../utils/isValidCuid.js';
 
 export const auth = async (req, res, next) => {
     try {
@@ -21,12 +20,7 @@ export const auth = async (req, res, next) => {
             return next();
         }
 
-        const CuidSchema = z.string().refine(isCuid, {
-            message: "Invalid id format"
-        });
-
-        const id = cookie.id;
-        const isValid = CuidSchema.safeParse(id).success;
+        const isValid = isValidCuid(cookie.id);
         if (!isValid) {
             logger.warn('Formato de id inválido', getRequestMeta(req, { id }));
             return res.status(400).json({ message: 'Invalid id format' });
