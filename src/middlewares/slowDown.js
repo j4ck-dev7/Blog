@@ -1,6 +1,6 @@
 import slowDown from "express-slow-down";
 import { RedisStore } from 'rate-limit-redis';
-import { client } from '../config/redis.js';
+import client from '../config/redis.js';
 import { ipKeyGenerator } from "express-rate-limit";
 import { logger } from '../config/logger.js';
 import { getRequestMeta } from "../config/requestMeta.js";

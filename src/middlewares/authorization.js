@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { logger } from '../config/logger.js';
 import { getRequestMeta } from '../config/requestMeta.js';
-import { verifyIfUserIsVerified } from '../repositories/userRepository.js';
+import { verifyUserIsVerifiedAndExists } from '../repositories/userRepository.js';
 import { isValidCuid } from '../utils/isValidCuid.js';
 
 export const auth = async (req, res, next) => {
@@ -20,18 +20,21 @@ export const auth = async (req, res, next) => {
             return next();
         }
 
-        const isValid = isValidCuid(cookie.id);
+        const isValid = isValidCuid(cookie._id);
         if (!isValid) {
-            logger.warn('Formato de id inválido', getRequestMeta(req, { id }));
+            logger.warn('Formato de id inválido', getRequestMeta(req, { id: cookie._id }));
             return res.status(400).json({ message: 'Invalid id format' });
         }
 
-        const userVerify = await verifyIfUserIsVerified(cookie.id);
-        if(!userVerify) return res.status(403).json({ message: 'User not found' });
+        const userVerifyIfExists = await verifyUserIsVerifiedAndExists(cookie._id);
+        if(!userVerifyIfExists) return res.status(403).json({ message: 'User not found' });
+
+        const userVerify = await verifyUserIsVerifiedAndExists(cookie.id);
         if(!userVerify.isEmailVerified) return res.status(403).json({ message: 'Email not verified' });
 
         const userVerified = jwt.verify(cookie, process.env.SECRET);
         req.user = userVerified;
+        
         logger.info('Token verificado com sucesso', getRequestMeta(req, { userId: userVerified._id || userVerified.id }));
         next();
     } catch (error) {

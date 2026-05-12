@@ -9,7 +9,8 @@ jest.unstable_mockModule('../../src/repositories/userRepository.js', () => ({
     verifyUserExistsBySub: jest.fn(),
     findUserById: jest.fn(),
     changeUserStatusActive: jest.fn(),
-    createUserWithOauth: jest.fn()
+    createUserWithOauth: jest.fn(),
+    verifyUserSubscription: jest.fn()
 }))
 
 jest.unstable_mockModule('google-auth-library', () => {
@@ -56,7 +57,7 @@ jest.unstable_mockModule('bcryptjs', () => ({
 }))
 
 const { default: bcryptjs } = await import('bcryptjs')
-const { verifyUserExistsByEmail, findUserByEmail, createUser, verifyUserExistsBySub, findUserBySub, createUserWithOauth } = await import('../../src/repositories/userRepository.js');
+const { verifyUserExistsByEmail, findUserByEmail, createUser, verifyUserExistsBySub, findUserBySub, createUserWithOauth, verifyUserSubscription } = await import('../../src/repositories/userRepository.js');
 const { incrementLoginAttempts, resetLoginAttempts, isLockedOut, getLoginAttempts } = await import('../../src/utils/redisLoginAttempts.js');
 const { registerUser, loginUser, getUrlForOauthSignIn, getUrlForOauthSignUp, registerUserByOauth, loginUserByOauth } = await import('../../src/services/userService.js');
 const { OAuth2Client, __mock } = await import('google-auth-library')

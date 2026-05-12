@@ -58,7 +58,6 @@ export const removeLike = async (userId, articleSlug) => {
         logger.warn('removeLike - like does not exist', { userId, articleSlug });
         throw new Error('Like does not exist');
     };
-    console.log(verify)
     if(!isValidCuid(verify.id)){
         logger.warn('removeLike - invalid like id format', { userId, articleSlug, likeId: verify.id });
         throw new Error('Invalid like id format');

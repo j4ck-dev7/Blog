@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import stripe from "../config/stripe.js";
 import { 
     findUserByEmail, 
     verifyUserExistsByEmail, 
@@ -9,7 +10,7 @@ import {
     verifyUserExistsBySub, 
     createUserWithOauth,
     changeUserStatusActive,
-    findUserById
+    findUserById,
 } from "../repositories/userRepository.js";
 import CryptoJS from "crypto-js";
 import { OAuth2Client } from 'google-auth-library'
@@ -182,33 +183,12 @@ export const loginUser = async (email, password) => {
 
         throw new Error('Usuário bloqueado por muitas tentativas');
     }
-    const userVerify = await verifyUserExistsByEmail(email);
-    if (!userVerify) {
-        const loginAttemps = await incrementLoginAttempts(email);
-        
-        logger.warn('Tentativa de login com credenciais incorretas', {
-            usuarioId: 'Desconecido',
-            email,
-            tentativas: loginAttemps.attempts,
-        });
-        
-        const error = new Error('Email ou senha incorretos');
-        error.attempts = loginAttemps.attempts;
-        error.remainingAttempts = 5 - loginAttemps.attempts;
-        throw error;
-    }
 
     const user = await findUserByEmail(email);
-    if(!user.isEmailVerified){
-        logger.warn('Tentativa de login com email não verificado', {
-            usuarioId: user.id,
-        });
+    const passwordHash = user?.password || '$2b$10$invalidpasswordhash00000000000000000000000000000000000000';
+    const isValidPassword = await bcrypt.compare(passwordHash, user.password);
 
-        throw new Error('Email não verificado');
-    }
-
-    const passwordMatch = await bcrypt.compare(password, user.password);
-    if (!passwordMatch) {
+    if (!user || !isValidPassword) {
         const loginAttemps = await incrementLoginAttempts(email);
         
         logger.warn('Tentativa de login com credenciais incorretas', {
@@ -221,6 +201,14 @@ export const loginUser = async (email, password) => {
         error.attempts = loginAttemps.attempts;
         error.remainingAttempts = 5 - loginAttemps.attempts;
         throw error;
+    }
+
+    if(!user.isEmailVerified){
+        logger.warn('Tentativa de login com email não verificado', {
+            usuarioId: user.id,
+        });
+
+        throw new Error('Email não verificado');
     }
 
     await resetLoginAttempts(email);
@@ -257,9 +245,83 @@ export const loginUserByOauth = async (code) => {
     return user
 }
 
-export const subscribeUser = async (userId, plan) => {
-    logger.info('subscribeUser called', { userId, plan });
-    const updatedUser = await updateUserSubscription(userId, plan);
-    logger.info('subscribeUser success', { id: updatedUser?.id, plan: updatedUser?.subscriptionPlan });
-    return updatedUser;
+export const generateUrlForSubscription = async (userId, plan) => {
+    if(!userId || userId === 'freeAccess'){
+        logger.warn('generateUrlForSubscription - user not authenticated', { userId });
+        throw new Error('User not authenticated, please login or register');
+    }
+
+    let amount;
+    switch(plan) {
+        case 'basic': amount = 500; break;
+        case 'intermediate': amount = 700; break;
+        case 'premium': amount = 1000; break;
+        default: throw new Error('Invalid plan');
+    };
+
+    if(!isValidCuid(userId)){
+        logger.warn('changeUserSubscription - invalid userId format', { userId });
+        throw new Error('Invalid userId format');
+    }
+        
+    const session = await stripe.checkout.sessions.create({ // Cria a sessão de checkout na stripe com os dados necessários para o pagamento
+        mode: 'subscription',
+        payment_method_types: ['card'],
+        customer_email: req.user.email,
+        line_items: [{
+            price_data: {
+                currency: 'brl',
+                product_data: { name: `Plano ${plan}` },
+                unit_amount: amount,
+                recurring: { interval: "month" }
+            },
+            quantity: 1
+        }],
+        success_url: `http://localhost:5000/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `http://localhost:5000/cancel?plan=${plan}&user=${userId}`,
+        metadata: { userId, plan } // Define o metatdata para identificar o usuário e o plano na hora do webhook para efetuar a assinatura (Modificar o usuário no banco de dados)
+    })
+
+    return session.url;
+}
+
+export const changeUserSubscription = async (sig, body) => {
+    try {
+        let update, plan, userId;
+
+        logger.info('changeUserSubscription called (webhook)')
+        let event = stripe.webhooks.constructEvent(
+            body,
+            sig,
+            process.env.STRIPE_WEBHOOK_SECRET
+        );
+        
+        if(event.type === 'checkout.session.completed'){ // Verifica se o evento é de checkout completo para 
+            const session = event.data.object; // O session tem os dados da compra
+            userId = session.metadata.userId; // O metadata foi definido na criação da sessão de checkout
+            plan = session.metadata.plan;
+
+            logger.info('changeUserSubscription called', { userId, plan });
+
+            if(!isValidCuid(userId)){
+                logger.warn('changeUserSubscription - invalid userId format', { userId });
+                throw new Error('Invalid userId format');
+            }
+
+            switch(plan) { 
+                case 'basic':; break;
+                case 'intermediate':; break;
+                case 'premium':; break;
+                default: throw new Error('Invalid plan');
+            };
+
+            update = await updateUserSubscription(userId, plan);
+            logger.info('changeUserSubscription success', { id: update.id, plan: plan });
+        }
+
+        return update;
+    } catch (error) {
+        logger.error('changeUserSubscription failed', { userId, plan, error });
+        throw error;
+    }
 }

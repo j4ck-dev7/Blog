@@ -86,14 +86,36 @@ export const createUserWithOauth = async (name, email, sub) => {
 
 export const updateUserSubscription = async (userId, plan) => {
     logger.info('updateUserSubscription called', { userId, plan });
-    return await prisma.user.update({
-        where: {
-            id: userId
-        },
-        data: {
-            subscriptionPlan: plan,
-            subscriptionExpiresAt: new Date(Date.now() + 120_000)
+    return await prisma.$transaction(async (tx) => {
+        const current = await tx.user.findUniqueOrThrow({
+            where: {
+                id: userId
+            },
+            select: {
+                subscriptionPlan: true
+            }
+        });
+        
+        if (current.subscriptionPlan === plan) {
+            logger.warn('updateUserSubscription - user already subscribed to this plan', { userId, plan });
+            throw new Error('User already subscribed to this plan');
         }
+
+        const updatedUser = await tx.user.update({
+            where: {
+                id: userId
+            },
+            data: {
+                subscriptionPlan: plan,
+                subscriptionExpiresAt: new Date(Date.now() + 120_000)
+            },
+            select: {
+                id: true
+            }
+        });
+
+        logger.info('updateUserSubscription success', { id: userId, plan });
+        return updatedUser;
     })
 }
 
@@ -103,22 +125,10 @@ export const downgradeUserSubscription = async (email) => {
         where: { email: email },
         data: {
             subscriptionExpiresAt: null,
-            subscriptionPlan: 'FREE'
-        }
-    });
-}
-
-export const getUserByIdVerifyCredentials = async (userId) => {
-    logger.debug('getUserByIdVerifyCredentials called', { userId });
-    return await prisma.user.findFirst({
-        where: {
-            id: userId
+            subscriptionPlan: 'free'
         },
         select: {
-            email: true,
-            subscriptionPlan: true,
-            subscriptionExpiresAt: true,
-            name: true
+
         }
     });
 }
@@ -130,12 +140,7 @@ export const findUserById = async (id) => {
             id
         },
         select: {
-            email: true,
-            isEmailVerified: true,
             id: true,
-            name: true,
-            subscriptionPlan: true,
-            subscriptionExpiresAt: true,
         }
     });
 }
@@ -149,12 +154,15 @@ export const changeUserStatusActive = async (id) => {
         data: {
             status: 'active',
             isEmailVerified: true
+        },
+        select: {
+            
         }
     })
 }
 
-export const verifyIfUserIsVerified = async (userId) => {
-    logger.debug('verifyIfUserIsVerified called', { userId });
+export const verifyUserIsVerifiedAndExists = async (userId) => {
+    logger.debug('verifyUserIsVerifiedAndExists called', { userId });
     return await prisma.user.findUnique({
         where: {
             id: userId

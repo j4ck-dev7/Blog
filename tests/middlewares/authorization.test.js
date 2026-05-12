@@ -9,23 +9,24 @@ jest.unstable_mockModule('../../src/config/requestMeta.js', () => ({
 }));
 
 jest.unstable_mockModule('../../src/repositories/userRepository.js', () => ({
-    verifyIfUserIsVerified: jest.fn()
+    verifyIfUserIsVerified: jest.fn(),
+    verifyIfUserExistsById: jest.fn()
 }));
 
 jest.unstable_mockModule('jsonwebtoken', () => ({
     default: { verify: jest.fn() }
 }));
 
-jest.unstable_mockModule('@paralleldrive/cuid2', () => ({
-    isCuid: jest.fn()
+jest.unstable_mockModule('../../src/utils/isValidCuid.js', () => ({
+    isValidCuid: jest.fn()
 }));
 
 const { auth } = await import('../../src/middlewares/authorization.js');
 const { logger } = await import('../../src/config/logger.js');
 const { getRequestMeta } = await import('../../src/config/requestMeta.js');
-const { verifyIfUserIsVerified } = await import('../../src/repositories/userRepository.js');
+const { verifyIfUserIsVerified, verifyIfUserExistsById } = await import('../../src/repositories/userRepository.js');
 const jwt = await import('jsonwebtoken');
-const { isCuid } = await import('@paralleldrive/cuid2');
+const { isValidCuid } = await import('../../src/utils/isValidCuid.js');
 
 describe('Authorization middleware', () => {
     beforeEach(() => {
@@ -45,41 +46,41 @@ describe('Authorization middleware', () => {
     });
 
     test('should return 400 when id from cookie is not a valid cuid', async () => {
-        isCuid.mockReturnValue(false);
-
-        const req = { cookies: { userAuth: { id: 'not-a-cuid' } } };
+        isValidCuid.mockReturnValue(false);
+        const req = { cookies: { userAuth: { _id: 'not-a-cuid' } } };
         const res = { status: jest.fn().mockReturnThis(), json: jest.fn(), cookie: jest.fn() };
         const next = jest.fn();
 
         await auth(req, res, next);
 
+        expect(isValidCuid).toHaveBeenCalledWith('not-a-cuid');
         expect(res.status).toHaveBeenCalledWith(400);
         expect(res.json).toHaveBeenCalledWith({ message: 'Invalid id format' });
         expect(next).not.toHaveBeenCalled();
     });
 
     test('should return 403 when user not found', async () => {
-        isCuid.mockReturnValue(true);
-        verifyIfUserIsVerified.mockResolvedValue(null);
+        isValidCuid.mockReturnValue(true);
+        verifyIfUserExistsById.mockResolvedValue(false);
 
-        const req = { cookies: { userAuth: { id: 'cuid123valid' } } };
+        const req = { cookies: { userAuth: { _id: 'cuid123valid' } } };
         const res = { status: jest.fn().mockReturnThis(), json: jest.fn(), cookie: jest.fn() };
         const next = jest.fn();
 
         await auth(req, res, next);
 
-        expect(verifyIfUserIsVerified).toHaveBeenCalledWith('cuid123valid');
+        expect(verifyIfUserExistsById).toHaveBeenCalledWith('cuid123valid');
         expect(res.status).toHaveBeenCalledWith(403);
         expect(res.json).toHaveBeenCalledWith({ message: 'User not found' });
         expect(next).not.toHaveBeenCalled();
     });
 
     test('should return 500 when jwt.verify throws (invalid token)', async () => {
-        isCuid.mockReturnValue(true);
+        verifyIfUserExistsById.mockResolvedValue(true);
         verifyIfUserIsVerified.mockResolvedValue({ isEmailVerified: true });
         jwt.default.verify.mockImplementation(() => { throw new Error('invalid token'); });
 
-        const req = { cookies: { userAuth: { id: 'validcuid' } } };
+        const req = { cookies: { userAuth: { _id: 'validcuid' } } };
         const res = { status: jest.fn().mockReturnThis(), json: jest.fn(), cookie: jest.fn() };
         const next = jest.fn();
 
