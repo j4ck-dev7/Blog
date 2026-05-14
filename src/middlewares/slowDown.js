@@ -1,6 +1,6 @@
 import slowDown from "express-slow-down";
 import { RedisStore } from 'rate-limit-redis';
-import client from '../config/redis.js';
+import { client } from '../config/redis.js';
 import { ipKeyGenerator } from "express-rate-limit";
 import { logger } from '../config/logger.js';
 import { getRequestMeta } from "../config/requestMeta.js";
@@ -13,7 +13,7 @@ export const authenticationSlowDown = slowDown({
     maxDelayMs: 25 * 1000,
     store: new RedisStore({
         sendCommand: (...args) => client.sendCommand(args),
-        prefix: 'slowdown:authentication:'
+        prefix: 'slowdown:authentication:',
     }), // Onde armazenar os dados do rate limit, neste caso usando Redis, o que é recomendado para aplicações em produção, já que o armazenamento em memória (MemoryStore) não é recomendado para produção, pois não é escalável e pode causar problemas de memória.
     keyGenerator: (req) => {
         if(req.user && req.user.state && req.user.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`

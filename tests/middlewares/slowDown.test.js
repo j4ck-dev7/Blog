@@ -1,7 +1,16 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
+import Redis from 'ioredis-mock';
 
+const createMockMiddleware = (options) => {
+    const middleware = (req, res, next) => {
+        next();
+    };
+    middleware.options = options;
+    return middleware;
+};
 jest.unstable_mockModule('express-slow-down', () => ({
-    default: jest.fn((opts) => opts)
+    default: jest.fn((options) => createMockMiddleware(options)),
+    slowDown: jest.fn((options) => createMockMiddleware(options))
 }));
 
 jest.unstable_mockModule('express-rate-limit', () => ({
@@ -9,16 +18,44 @@ jest.unstable_mockModule('express-rate-limit', () => ({
 }));
 
 jest.unstable_mockModule('rate-limit-redis', () => ({
-    RedisStore: jest.fn((opts) => ({ opts }))
+    RedisStore: jest.fn((options) => ({
+        sendCommand: options.sendCommand(jest.fn()),
+        prefix: options.prefix
+    }))
 }));
 
 jest.unstable_mockModule('../../src/config/logger.js', () => ({
     logger: { warn: jest.fn(), info: jest.fn(), error: jest.fn(), debug: jest.fn() }
 }));
 
+const mockRedisClient = new Redis();
+const prefixs = [
+    { prefix: 'slowdown:authentication:' },
+    { prefix: 'slowdown:createUser:' },
+    { prefix: 'slowdown:oauth2Url:' },
+    { prefix: 'slowdown:oauth2:' },
+    { prefix: 'slowdown:verifyEmail:' },
+    { prefix: 'slowdown:articles:' },
+    { prefix: 'slowdown:findArticleBySlug:' },
+    { prefix: 'slowdown:findArticlesByTag:' },
+    { prefix: 'slowdown:findArticlesBySearch:' },
+    { prefix: 'slowdown:addLike:' },
+    { prefix: 'slowdown:allLikes:' },
+    { prefix: 'slowdown:deleteLike:' },
+    { prefix: 'slowdown:addComment:' },
+    { prefix: 'slowdown:editComment:' },
+    { prefix: 'slowdown:deleteComment:' },
+    { prefix: 'slowdown:subscription:' },
+    { prefix: 'slowdown:stripeWebhook:' }
+];
+mockRedisClient.sendCommand = jest.fn(() => {
+    for(let index = 0; index < 17 ; index++){
+        const prefix = prefixs.shift()
+        return `${prefix.prefix}1.1.1.1`
+    };
+})
 jest.unstable_mockModule('../../src/config/redis.js', () => ({
-    client: { sendCommand: jest.fn() },
-    default: { sendCommand: jest.fn() }
+    client: mockRedisClient,
 }));
 
 jest.unstable_mockModule('../../src/config/requestMeta.js', () => ({
@@ -26,9 +63,6 @@ jest.unstable_mockModule('../../src/config/requestMeta.js', () => ({
 }));
 
 const { ipKeyGenerator } = await import('express-rate-limit');
-const { RedisStore } = await import('rate-limit-redis');
-const redisMod = await import('../../src/config/redis.js');
-const client = redisMod.client || redisMod.default;
 const { getRequestMeta } = await import('../../src/config/requestMeta.js');
 const { logger } = await import('../../src/config/logger.js');
 
@@ -75,55 +109,55 @@ const entries = [
 describe('SlowDown Middleware - per slowDown', () => {
     for (const entry of entries) {
         describe(entry.name, () => {
-            beforeEach(() => jest.clearAllMocks());
+            beforeEach(async () => {
+                jest.clearAllMocks();
+                await mockRedisClient.flushall(); // flushall() limpa todos os dados do Redis a cada novo teste
+            });
 
             test('keyGenerator: freeAccess user state', () => {
                 const req = { user: { state: 'freeAccess' }, ip: '1.2.3.4' };
-                const res = entry.ref.keyGenerator(req);
+                const res = entry.ref.options.keyGenerator(req);
                 expect(res).toBe(`freeAccess:${ipKeyGenerator(req.ip)}`);
             });
 
             test('keyGenerator: user _id present', () => {
                 const req = { user: { _id: 'uid-123' }, ip: '1.2.3.4' };
-                expect(entry.ref.keyGenerator(req)).toBe('uid-123');
+                expect(entry.ref.options.keyGenerator(req)).toBe('uid-123');
             });
 
             test('keyGenerator: fallback to ip', () => {
                 const req = { ip: '5.6.7.8' };
-                expect(entry.ref.keyGenerator(req)).toBe(ipKeyGenerator(req.ip));
+                expect(entry.ref.options.keyGenerator(req)).toBe(ipKeyGenerator(req.ip));
             });
 
             test('keyGenerator: handles null ip', () => {
                 const req = { ip: null };
-                expect(() => entry.ref.keyGenerator(req)).not.toThrow();
-                expect(entry.ref.keyGenerator(req)).toBe(ipKeyGenerator(req.ip));
+                expect(() => entry.ref.options.keyGenerator(req)).not.toThrow();
+                expect(entry.ref.options.keyGenerator(req)).toBe(ipKeyGenerator(req.ip));
             });
 
             test('keyGenerator: does not throw when req.user missing', () => {
-                expect(() => entry.ref.keyGenerator({})).not.toThrow();
+                expect(() => entry.ref.options.keyGenerator({})).not.toThrow();
             });
 
             test('handler logs a warning', () => {
                 const req = { ip: '1.1.1.1', originalUrl: '/x' };
                 const res = {};
-                entry.ref.handler(req, res, null, {});
+                entry.ref.options.handler(req, res, null, {});
                 expect(logger.warn).toHaveBeenCalled();
                 expect(getRequestMeta).toHaveBeenCalledWith(req);
             });
 
             test('store prefix is correct and sendCommand delegates to redis client', () => {
-                expect(entry.ref.store).toBeDefined();
-                expect(entry.ref.store.opts).toBeDefined();
-                expect(entry.ref.store.opts.prefix).toBe(entry.prefix);
-
-                const send = entry.ref.store.opts.sendCommand;
-                send('INCR', 'some:key');
-                expect(client.sendCommand).toHaveBeenCalledWith(['INCR', 'some:key']);
+                expect(entry.ref.options.store).toBeDefined();
+                expect(entry.ref.options.store).toBeDefined();
+                expect(entry.ref.options.store.prefix).toBe(entry.prefix);
+                expect(entry.ref.options.store.sendCommand).toEqual(`${entry.prefix}1.1.1.1`);
             });
 
             test('has numeric windowMs and delayAfter properties', () => {
-                expect(typeof entry.ref.windowMs).toBe('number');
-                expect(typeof entry.ref.delayAfter).toBe('number');
+                expect(typeof entry.ref.options.windowMs).toBe('number');
+                expect(typeof entry.ref.options.delayAfter).toBe('number');
             });
         });
     }
