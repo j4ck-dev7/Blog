@@ -1,164 +1,108 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
-import Redis from 'ioredis-mock';
 
 const createMockMiddleware = (options) => {
-    const middleware = (req, res, next) => {
-        next();
-    };
-    middleware.options = options;
-    return middleware;
+  const middleware = (req, res, next) => {
+    next();
+  };
+  middleware.options = options;
+  return middleware;
 };
+
 jest.unstable_mockModule('express-slow-down', () => ({
-    default: jest.fn((options) => createMockMiddleware(options)),
-    slowDown: jest.fn((options) => createMockMiddleware(options))
+  default: jest.fn((options) => createMockMiddleware(options)),
+  slowDown: jest.fn((options) => createMockMiddleware(options))
 }));
 
 jest.unstable_mockModule('express-rate-limit', () => ({
-    ipKeyGenerator: jest.fn((ip) => `ip:${ip}`)
+  ipKeyGenerator: jest.fn((ip) => `ip:${ip}`)
 }));
 
 jest.unstable_mockModule('rate-limit-redis', () => ({
-    RedisStore: jest.fn((options) => ({
-        sendCommand: options.sendCommand(jest.fn()),
-        prefix: options.prefix
-    }))
+  RedisStore: jest.fn((options) => ({
+    sendCommand: options.sendCommand,
+    prefix: options.prefix
+  }))
 }));
 
 jest.unstable_mockModule('../../src/config/logger.js', () => ({
-    logger: { warn: jest.fn(), info: jest.fn(), error: jest.fn(), debug: jest.fn() }
+  logger: { warn: jest.fn(), info: jest.fn(), error: jest.fn(), debug: jest.fn() }
 }));
 
-const mockRedisClient = new Redis();
-const prefixs = [
-    { prefix: 'slowdown:authentication:' },
-    { prefix: 'slowdown:createUser:' },
-    { prefix: 'slowdown:oauth2Url:' },
-    { prefix: 'slowdown:oauth2:' },
-    { prefix: 'slowdown:verifyEmail:' },
-    { prefix: 'slowdown:articles:' },
-    { prefix: 'slowdown:findArticleBySlug:' },
-    { prefix: 'slowdown:findArticlesByTag:' },
-    { prefix: 'slowdown:findArticlesBySearch:' },
-    { prefix: 'slowdown:addLike:' },
-    { prefix: 'slowdown:allLikes:' },
-    { prefix: 'slowdown:deleteLike:' },
-    { prefix: 'slowdown:addComment:' },
-    { prefix: 'slowdown:editComment:' },
-    { prefix: 'slowdown:deleteComment:' },
-    { prefix: 'slowdown:subscription:' },
-    { prefix: 'slowdown:stripeWebhook:' }
-];
-mockRedisClient.sendCommand = jest.fn(() => {
-    for(let index = 0; index < 17 ; index++){
-        const prefix = prefixs.shift()
-        return `${prefix.prefix}1.1.1.1`
-    };
-})
 jest.unstable_mockModule('../../src/config/redis.js', () => ({
-    client: mockRedisClient,
+  client: { sendCommand: jest.fn() }
 }));
 
 jest.unstable_mockModule('../../src/config/requestMeta.js', () => ({
-    getRequestMeta: jest.fn().mockReturnValue({ meta: true })
+  getRequestMeta: jest.fn().mockReturnValue({ meta: true })
 }));
 
 const { ipKeyGenerator } = await import('express-rate-limit');
 const { getRequestMeta } = await import('../../src/config/requestMeta.js');
 const { logger } = await import('../../src/config/logger.js');
+const mockRedisClient = (await import('../../src/config/redis.js')).client;
 
 const {
-    authenticationSlowDown,
-    createUserSlowDown,
-    Oauth2UrlSlowDown,
-    Oauth2SlowDown,
-    verifyEmailSlowDown,
-    articlesSlowDown,
-    findArticleBySlugSlowDown,
-    findArticlesByTagSlowDown,
-    findArticlesBySearchSlowDown,
-    addLikeSlowDown,
-    allLikesSlowDown,
-    deleteLikeSlowDown,
-    addCommentSlowDown,
-    editCommentSlowDown,
-    deleteCommentSlowDown,
-    subscriptionSlowDown,
-    stripeWebhookSlowDown
+  lightSlowDown,
+  heavySlowDown,
+  sensitiveSlowDown
 } = await import('../../src/middlewares/slowDown.js');
 
 const entries = [
-    { name: 'authenticationSlowDown', ref: authenticationSlowDown, prefix: 'slowdown:authentication:' },
-    { name: 'createUserSlowDown', ref: createUserSlowDown, prefix: 'slowdown:createUser:' },
-    { name: 'Oauth2UrlSlowDown', ref: Oauth2UrlSlowDown, prefix: 'slowdown:oauth2Url:' },
-    { name: 'Oauth2SlowDown', ref: Oauth2SlowDown, prefix: 'slowdown:oauth2:' },
-    { name: 'verifyEmailSlowDown', ref: verifyEmailSlowDown, prefix: 'slowdown:verifyEmail:' },
-    { name: 'articlesSlowDown', ref: articlesSlowDown, prefix: 'slowdown:articles:' },
-    { name: 'findArticleBySlugSlowDown', ref: findArticleBySlugSlowDown, prefix: 'slowdown:findArticleBySlug:' },
-    { name: 'findArticlesByTagSlowDown', ref: findArticlesByTagSlowDown, prefix: 'slowdown:findArticlesByTag:' },
-    { name: 'findArticlesBySearchSlowDown', ref: findArticlesBySearchSlowDown, prefix: 'slowdown:findArticlesBySearch:' },
-    { name: 'addLikeSlowDown', ref: addLikeSlowDown, prefix: 'slowdown:addLike:' },
-    { name: 'allLikesSlowDown', ref: allLikesSlowDown, prefix: 'slowdown:allLikes:' },
-    { name: 'deleteLikeSlowDown', ref: deleteLikeSlowDown, prefix: 'slowdown:deleteLike:' },
-    { name: 'addCommentSlowDown', ref: addCommentSlowDown, prefix: 'slowdown:addComment:' },
-    { name: 'editCommentSlowDown', ref: editCommentSlowDown, prefix: 'slowdown:editComment:' },
-    { name: 'deleteCommentSlowDown', ref: deleteCommentSlowDown, prefix: 'slowdown:deleteComment:' },
-    { name: 'subscriptionSlowDown', ref: subscriptionSlowDown, prefix: 'slowdown:subscription:' },
-    { name: 'stripeWebhookSlowDown', ref: stripeWebhookSlowDown, prefix: 'slowdown:stripeWebhook:' }
+  { name: 'lightSlowDown', fn: lightSlowDown, scope: 'articles', prefix: 'slowdown:light:articles:', windowMs: 60 * 1000, limit: 30 },
+  { name: 'lightSlowDown', fn: lightSlowDown, scope: 'articlesFindByTag', prefix: 'slowdown:light:articlesFindByTag:', windowMs: 60 * 1000, limit: 30 },
+  { name: 'heavySlowDown', fn: heavySlowDown, scope: 'addComment', prefix: 'slowdown:heavy:addComment:', windowMs: 60 * 1000, limit: 5 },
+  { name: 'heavySlowDown', fn: heavySlowDown, scope: 'editComment', prefix: 'slowdown:heavy:editComment:', windowMs: 60 * 1000, limit: 5 },
+  { name: 'sensitiveSlowDown', fn: sensitiveSlowDown, scope: 'subscribe', prefix: 'slowdown:sensitive:subscribe:', windowMs: 15 * 60 * 1000, limit: 2 }
 ];
 
-describe('SlowDown Middleware - per slowDown', () => {
-    for (const entry of entries) {
-        describe(entry.name, () => {
-            beforeEach(async () => {
-                jest.clearAllMocks();
-                await mockRedisClient.flushall(); // flushall() limpa todos os dados do Redis a cada novo teste
-            });
+describe('SlowDown Middleware', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
-            test('keyGenerator: freeAccess user state', () => {
-                const req = { user: { state: 'freeAccess' }, ip: '1.2.3.4' };
-                const res = entry.ref.options.keyGenerator(req);
-                expect(res).toBe(`freeAccess:${ipKeyGenerator(req.ip)}`);
-            });
+  test('keyGenerator: freeAccess user state returns freeAccess prefix', () => {
+    const req = { user: { state: 'freeAccess' }, ip: '1.2.3.4' };
+    const opts = lightSlowDown('articles');
+    expect(opts.options.keyGenerator(req)).toBe(`freeAccess:${ipKeyGenerator(req.ip)}`);
+  });
 
-            test('keyGenerator: user _id present', () => {
-                const req = { user: { _id: 'uid-123' }, ip: '1.2.3.4' };
-                expect(entry.ref.options.keyGenerator(req)).toBe('uid-123');
-            });
+  test('keyGenerator: user _id present returns user id', () => {
+    const req = { user: { _id: 'uid-123' }, ip: '1.2.3.4' };
+    const opts = heavySlowDown('addComment');
+    expect(opts.options.keyGenerator(req)).toBe('uid-123');
+  });
 
-            test('keyGenerator: fallback to ip', () => {
-                const req = { ip: '5.6.7.8' };
-                expect(entry.ref.options.keyGenerator(req)).toBe(ipKeyGenerator(req.ip));
-            });
+  test('keyGenerator: fallback to ip uses ipKeyGenerator', () => {
+    const req = { ip: '5.6.7.8' };
+    const opts = sensitiveSlowDown('subscribe');
+    expect(opts.options.keyGenerator(req)).toBe(ipKeyGenerator(req.ip));
+  });
 
-            test('keyGenerator: handles null ip', () => {
-                const req = { ip: null };
-                expect(() => entry.ref.options.keyGenerator(req)).not.toThrow();
-                expect(entry.ref.options.keyGenerator(req)).toBe(ipKeyGenerator(req.ip));
-            });
+  test('handler logs a warning and uses request meta', () => {
+    const req = { ip: '1.1.1.1', originalUrl: '/x' };
+    const res = {};
+    const opts = heavySlowDown('addComment');
+    opts.options.handler(req, res, null, {});
+    expect(logger.warn).toHaveBeenCalled();
+    expect(getRequestMeta).toHaveBeenCalledWith(req);
+  });
 
-            test('keyGenerator: does not throw when req.user missing', () => {
-                expect(() => entry.ref.options.keyGenerator({})).not.toThrow();
-            });
+  for (const entry of entries) {
+    describe(entry.name, () => {
+      test(`creates correct slowDown config for ${entry.scope}`, () => {
+        const opts = entry.fn(entry.scope);
+        expect(opts.options.windowMs).toBe(entry.windowMs);
+        expect(opts.options.delayAfter).toBeGreaterThanOrEqual(Math.ceil(entry.limit / 3));
+        expect(opts.options.keyGenerator).toBeDefined();
+        expect(opts.options.store.prefix).toBe(entry.prefix);
+      });
 
-            test('handler logs a warning', () => {
-                const req = { ip: '1.1.1.1', originalUrl: '/x' };
-                const res = {};
-                entry.ref.options.handler(req, res, null, {});
-                expect(logger.warn).toHaveBeenCalled();
-                expect(getRequestMeta).toHaveBeenCalledWith(req);
-            });
-
-            test('store prefix is correct and sendCommand delegates to redis client', () => {
-                expect(entry.ref.options.store).toBeDefined();
-                expect(entry.ref.options.store).toBeDefined();
-                expect(entry.ref.options.store.prefix).toBe(entry.prefix);
-                expect(entry.ref.options.store.sendCommand).toEqual(`${entry.prefix}1.1.1.1`);
-            });
-
-            test('has numeric windowMs and delayAfter properties', () => {
-                expect(typeof entry.ref.options.windowMs).toBe('number');
-                expect(typeof entry.ref.options.delayAfter).toBe('number');
-            });
-        });
-    }
+      test('slowdown store sendCommand is configured', () => {
+        const opts = entry.fn(entry.scope);
+        expect(opts.options.store.sendCommand).toBeDefined();
+        opts.options.store.sendCommand('INCR', 'some:key');
+        expect(mockRedisClient.sendCommand).toHaveBeenCalledWith(['INCR', 'some:key']);
+      });
+    });
+  }
 });

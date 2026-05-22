@@ -12,14 +12,15 @@ export const allLikesUser = async (userId) => {
         throw new Error('Invalid user id format');
     }
 
-    const likesData = await getLikes(userId);
+    const likesResult = await getLikes(userId);
+    const likesData = likesResult?.data ?? [];
 
     if(!userId) {
         logger.warn('allLikesUser - unauthenticated user', { userId });
         throw new Error('User not authenticated, please login or register')
     }
 
-    logger.info('allLikesUser - success', { userId, count: likesData?.length || 0 });
+    logger.info('allLikesUser - success', { userId, count: likesData.length });
     return likesData.map(like => ({ articleSlug: like.articleSlug, id: like.id }));
 }
 
@@ -31,8 +32,8 @@ export const addLike = async (userId, articleSlug) => {
         throw new Error('Invalid user id format');
     }
 
-    const verify = await verifyUserLikeArticle(userId, articleSlug);
-    if(verify) {
+    const verifyResult = await verifyUserLikeArticle(userId, articleSlug);
+    if(verifyResult?.data) {
         logger.warn('addLike - already liked', { userId, articleSlug });
         throw new Error('You already liked this article');
     };
@@ -53,18 +54,18 @@ export const removeLike = async (userId, articleSlug) => {
         throw new Error('Invalid user id format');
     }
 
-    const verify = await verifyUserLikeArticle(userId, articleSlug);
-    if(!verify) {
+    const verifyResult = await verifyUserLikeArticle(userId, articleSlug);
+    if(!verifyResult?.data) {
         logger.warn('removeLike - like does not exist', { userId, articleSlug });
         throw new Error('Like does not exist');
     };
-    if(!isValidCuid(verify.id)){
-        logger.warn('removeLike - invalid like id format', { userId, articleSlug, likeId: verify.id });
+    if(!isValidCuid(verifyResult.data.id)){
+        logger.warn('removeLike - invalid like id format', { userId, articleSlug, likeId: verifyResult.data.id });
         throw new Error('Invalid like id format');
     }
 
     const result = await Promise.all([
-        deleteLike(verify.id),
+        deleteLike(verifyResult.data.id),
         updateCounterService(articleSlug, (s) => decrementArticleLikeCount(s))
     ]);
     logger.info('removeLike - success', { userId, articleSlug });

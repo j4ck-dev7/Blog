@@ -1,17 +1,20 @@
 import { logger } from '../config/logger.js'
 
 export const updateCounterService = async (slug, counterFn) => {
-    if (!slug) throw new Error('Invalid slug');
-    logger.debug('updateCounterService called', { slug });
     try {
+        if (!slug) {
+            logger.warn('updateCounterService - missing slug');
+            throw new Error('Invalid slug');
+        }
+
+        logger.debug('updateCounterService called', { slug });
+        
         const res = await counterFn(slug);
-        if (!res) {
-            logger.error('updateCounterService: no result returned', { slug });
+        if (res == null) {
             throw new Error('Update operation failed');
         }
         // Se acknowledged existe e é false, erro
         if ('acknowledged' in res && res.acknowledged === false) {
-            logger.error('updateCounterService: update not acknowledged', { slug, res });
             throw new Error('Update operation failed');
         }
         if (res.modifiedCount === 0) {
@@ -19,7 +22,7 @@ export const updateCounterService = async (slug, counterFn) => {
         }
         return res;
     } catch (err) {
-        logger.error('updateCounterService error', { err, slug });
+        logger.error('updateCounterService error', { error: err.message, slug, stack: err.stack });
         throw err;
     }
 }

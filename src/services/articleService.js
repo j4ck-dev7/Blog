@@ -3,6 +3,9 @@ import { getCommentsBySlug } from "../repositories/commentRepository.js";
 import client from "../config/redis.js";
 import { logger } from '../config/logger.js';
 import { updateCounterService } from "../utils/updateConterService.js";
+import { isValidCuid } from "../utils/isValidCuid.js";
+import { findUserByIdForAccessArticles } from "../repositories/userRepository.js";
+
 
 const MAX_LIMIT = 100;
 
@@ -64,10 +67,13 @@ export const GetAllArticles = async (page, limit) => {
             return data;
         }
 
-        const [total, articles] = await Promise.all([
+        const [totalResult, articlesResult] = await Promise.all([
             countArticles(),
             allArticles(validSkip, validLimit)
         ]);
+
+        const total = totalResult?.data ?? 0;
+        const articles = articlesResult?.data ?? [];
 
         if (!articles.length) {
             logger.warn('GetAllArticles - Articles not found', { pageNum, validLimit });
@@ -99,32 +105,62 @@ export const GetAllArticles = async (page, limit) => {
     }
 }
 
-export const LoadArticleBySlug = async (slug) => {
+export const LoadArticleBySlug = async (slug, id) => {
     try {
         const sanitizedSlug = sanitizeString(slug);
-        if (!sanitizedSlug) throw new Error('Slug cannot be empty');
-        
-        logger.info('LoadArticleBySlug called', { slug: sanitizedSlug });
+        if (!sanitizedSlug){
+            logger.warn('LoadArticleBySlug - Slug cannot be empty', { slug });
+            throw new Error('Slug cannot be empty');
+        }
 
-        const [article, comment] = await Promise.all([
-            findArticleBySlug(sanitizedSlug),
-            getCommentsBySlug(sanitizedSlug)
-        ]);
+        logger.info('LoadArticleBySlug called', { slug: sanitizedSlug});
 
+        const articleResult = await findArticleBySlug(sanitizedSlug);
+        const article = articleResult?.data;
         if (!article) {
             logger.warn('LoadArticleBySlug - Article not found', { slug: sanitizedSlug });
             throw new Error('Article not found');
         }
 
-        const data = {
-            article,
-            comment
-        };
+        const commentResult = await getCommentsBySlug(sanitizedSlug);
+        const comment = commentResult?.data ?? [];
+
+        if (article.planRole === 'free') {
+            logger.info('LoadArticleBySlug - free article accessed', { slug: sanitizedSlug });
+            return {
+                article,
+                comment
+            };
+        }
+
+        if (!id || !isValidCuid(id)) {
+            logger.warn('LoadArticleBySlug - Invalid user ID format', { id });
+            throw new Error('Invalid Id');
+        }
+
+        logger.info('LoadArticleBySlug called, content premium', { slug: sanitizedSlug, id, plan: article.planRole });
+
+        const userResult = await findUserByIdForAccessArticles(id, article.planRole);
+        const user = userResult?.data;
+        if (!user?.hasAccess) {
+            if (user?.reason === 'expired') {
+                logger.warn('LoadArticleBySlug - Access denied due to expired subscription', { id, slug: sanitizedSlug });
+                throw new Error('Access denied: Please renew your subscription');
+            }
+            if (user?.reason === 'upgrade_needed') {
+                logger.warn('LoadArticleBySlug - Access denied due to insufficient subscription plan', { id, slug: sanitizedSlug });
+                throw new Error('Access denied: Upgrade your subscription');
+            }
+        }
 
         await updateCounterService(sanitizedSlug, (s) => incrementArticleViews(s));
         logger.info('LoadArticleBySlug - views incremented', { slug: sanitizedSlug });
 
-        return data;
+        logger.info('LoadArticleBySlug - success', { slug: sanitizedSlug, id, plan: article.planRole });
+        return {
+            article,
+            comment
+        };
     } catch (error) {
         logger.error('LoadArticleBySlug error', { slug, error: error.message, stack: error.stack });
         throw error;
@@ -143,10 +179,13 @@ export const FindArticlesByTag = async (tag, page, limit) => {
 
         logger.info('FindArticlesByTag called', { tag: sanitizedTag, pageNum, validSkip, validLimit });
 
-        const [total, articles] = await Promise.all([
+        const [totalResult, articlesResult] = await Promise.all([
             countArticlesByTag(sanitizedTag),
             findArticlesByTag(sanitizedTag, validSkip, validLimit)
         ]);
+
+        const total = totalResult?.data ?? 0;
+        const articles = articlesResult?.data ?? [];
 
         if (!articles.length) {
             logger.warn('FindArticlesByTag - Articles not found', { tag: sanitizedTag, pageNum, validLimit });
@@ -188,10 +227,13 @@ export const SearchForArticles = async (query, page, limit) => {
 
         logger.info('SearchForArticles called', { query: sanitizedQuery, pageNum, validSkip, validLimit });
 
-        const [total, articles] = await Promise.all([
+        const [totalResult, articlesResult] = await Promise.all([
             searchArticlesCount(sanitizedQuery),
             searchArticles(sanitizedQuery, validSkip, validLimit)
         ]);
+
+        const total = totalResult?.data ?? 0;
+        const articles = articlesResult?.data ?? [];
 
         if (!articles.length) {
             logger.warn('SearchForArticles - Articles not found', { query: sanitizedQuery, pageNum, validLimit });
