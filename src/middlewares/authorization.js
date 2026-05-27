@@ -38,6 +38,13 @@ export const auth = async (req, res, next) => {
         logger.info('Token verificado com sucesso', getRequestMeta(req, { userId: userVerified._id || userVerified.id }));
         next();
     } catch (error) {
+        if (
+            error instanceof jwt.JsonWebTokenError ||
+            error instanceof jwt.TokenExpiredError
+        ) {
+            return res.status(401).json({ message: 'Invalid token' });
+        }
+
         logger.error('Erro na autenticação', { ...getRequestMeta(req), error: error.message, stack: error.stack });
         res.status(500).json({ message: 'Internal server error' });
     }

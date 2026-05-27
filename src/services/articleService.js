@@ -72,8 +72,8 @@ export const GetAllArticles = async (page, limit) => {
             allArticles(validSkip, validLimit)
         ]);
 
-        const total = totalResult?.data ?? 0;
-        const articles = articlesResult?.data ?? [];
+        const total = totalResult?.data?.count ?? 0;
+        const articles = articlesResult?.data?.articles ?? [];
 
         if (!articles.length) {
             logger.warn('GetAllArticles - Articles not found', { pageNum, validLimit });
@@ -116,14 +116,14 @@ export const LoadArticleBySlug = async (slug, id) => {
         logger.info('LoadArticleBySlug called', { slug: sanitizedSlug});
 
         const articleResult = await findArticleBySlug(sanitizedSlug);
-        const article = articleResult?.data;
+        const article = articleResult?.data?.article;
         if (!article) {
             logger.warn('LoadArticleBySlug - Article not found', { slug: sanitizedSlug });
             throw new Error('Article not found');
         }
 
         const commentResult = await getCommentsBySlug(sanitizedSlug);
-        const comment = commentResult?.data ?? [];
+        const comment = commentResult?.data?.comments ?? [];
 
         if (article.planRole === 'free') {
             logger.info('LoadArticleBySlug - free article accessed', { slug: sanitizedSlug });
@@ -184,8 +184,8 @@ export const FindArticlesByTag = async (tag, page, limit) => {
             findArticlesByTag(sanitizedTag, validSkip, validLimit)
         ]);
 
-        const total = totalResult?.data ?? 0;
-        const articles = articlesResult?.data ?? [];
+        const total = totalResult?.data?.count ?? 0;
+        const articles = articlesResult?.data?.articles ?? [];
 
         if (!articles.length) {
             logger.warn('FindArticlesByTag - Articles not found', { tag: sanitizedTag, pageNum, validLimit });
@@ -232,8 +232,8 @@ export const SearchForArticles = async (query, page, limit) => {
             searchArticles(sanitizedQuery, validSkip, validLimit)
         ]);
 
-        const total = totalResult?.data ?? 0;
-        const articles = articlesResult?.data ?? [];
+        const total = totalResult?.data?.count ?? 0;
+        const articles = articlesResult?.data?.articles ?? [];
 
         if (!articles.length) {
             logger.warn('SearchForArticles - Articles not found', { query: sanitizedQuery, pageNum, validLimit });

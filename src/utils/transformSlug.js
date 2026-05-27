@@ -20,4 +20,9 @@ export const transformSlug = (slug) => {
             data: newSlug
         }
     }
+
+    return {
+        success: true,
+        data: slug
+    }
 };

@@ -5,16 +5,14 @@ import { like, DeleteLike, allLikes } from '../controllers/likeController.js';
 import { comment, removeComment, EditComment } from '../controllers/commentController.js';
 import { allArticles, loadArticle, findArticleByTag, searchArticles } from '../controllers/articleController.js';
 import { subscribe } from '../controllers/subscription.js';
+import { signInSchema, signInErrorMap } from '../validators/signIn.validation.js';
+import { signUpSchema, signUpErrorMap } from '../validators/signUp.validation.js';
+import { commentSchema, commentErrorMap } from '../validators/comment.validation.js';
+
 import { lightRateLimit, heavyRateLimit, sensitiveRateLimit } from '../middlewares/rateLimit.js';
 import { lightSlowDown, heavySlowDown, sensitiveSlowDown } from '../middlewares/slowDown.js';
-
-import { signUpValidator } from '../middlewares/signUpValidation.js';
-import { loginValidate } from '../middlewares/loginValidate.js';
-import { postValidate } from '../middlewares/postValidation.js';
+import { validate } from '../middlewares/validation.js';
 import { auth } from '../middlewares/authorization.js';
-import { planValidation } from '../middlewares/planValidation.js';
-import { credentialsAuth } from '../middlewares/credentialsAuth.js';
-import { searchValidation } from '../middlewares/searchValidation.js';
 import { authInteractions } from '../middlewares/authorizationInteractions.js';
 
 const router = express.Router();
@@ -29,14 +27,14 @@ router.get('/get/url/Oauth/signUp', sensitiveSlowDown('oauth2Url'), sensitiveRat
 router.get('/Oauth/signIn', sensitiveSlowDown('oauth2'), sensitiveRateLimit('oauth2'), signInWithOauth);
 router.get('/Oauth/signUp', sensitiveSlowDown('oauth2'), sensitiveRateLimit('oauth2'), signUpWithOauth);
 router.get('/verify-email', sensitiveSlowDown('verifyEmail'), sensitiveRateLimit('verifyEmail'), verifyUser);
-router.get('/subscribe', sensitiveSlowDown('subscribe'), sensitiveRateLimit('subscribe'), auth, subscribe);
+router.get('/subscribe', sensitiveSlowDown('subscribe'), sensitiveRateLimit('subscribe'), auth, subscriptionValidation, subscribe);
 
-router.post('/signIn', heavySlowDown('authentication'), heavyRateLimit('authentication'), loginValidate, signIn);
-router.post('/signUp', heavySlowDown('authentication'), heavyRateLimit('authentication'), signUpValidator, signUp);
+router.post('/signIn', heavySlowDown('authentication'), heavyRateLimit('authentication'), validate(signInSchema, signInErrorMap), signIn);
+router.post('/signUp', heavySlowDown('authentication'), heavyRateLimit('authentication'), validate(signUpSchema, signUpErrorMap), signUp);
 router.post('/article/:slug/like', heavySlowDown('addLike'), heavyRateLimit('addLike'), auth, authInteractions, credentialsAuth, planValidation, like);
-router.post('/article/:slug/comment', heavySlowDown('addComment'), heavyRateLimit('addComment'), auth, authInteractions, credentialsAuth, planValidation, postValidate, comment);
+router.post('/article/:slug/comment', heavySlowDown('addComment'), heavyRateLimit('addComment'), auth, authInteractions, credentialsAuth, planValidation, validate(commentSchema, commentErrorMap), comment);
 
-router.put('/article/:slug/comment/:commentId', heavySlowDown('editComment'), heavyRateLimit('editComment'), auth, authInteractions, credentialsAuth, planValidation, postValidate, EditComment);
+router.put('/article/:slug/comment/:commentId', heavySlowDown('editComment'), heavyRateLimit('editComment'), auth, authInteractions, credentialsAuth, planValidation, validate(commentSchema, commentErrorMap), EditComment);
 
 router.delete('/article/:slug/like/:likeId', heavySlowDown('deleteLike'), heavyRateLimit('deleteLike'), auth, authInteractions, credentialsAuth, planValidation, DeleteLike);
 router.delete('/article/:slug/comment/:commentId', heavySlowDown('deleteComment'), heavyRateLimit('deleteComment'), auth, authInteractions, credentialsAuth, planValidation, removeComment);

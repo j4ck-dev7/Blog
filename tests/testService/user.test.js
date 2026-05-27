@@ -49,6 +49,13 @@ jest.unstable_mockModule('../../src/config/nodemailer.js', () => ({
     transporter: { sendMail: jest.fn().mockResolvedValue(true) }
 }));
 
+jest.unstable_mockModule('../../src/config/stripe.js', () => ({
+    default: {
+        checkout: { sessions: { create: jest.fn() } },
+        webhooks: { constructEvent: jest.fn() }
+    }
+}));
+
 jest.unstable_mockModule('bcryptjs', () => ({
     default: {
         hash: jest.fn().mockReturnValue('$2a$10$6OX/EUwCxD/OV2RPLi9g.eTiXJgU8zf/6avWU5YkpDGoBt8do8s3y'),
@@ -92,7 +99,7 @@ describe('User Service verifyEmail', () => {
         const jwt = await import('jsonwebtoken');
         const user = { id: '100', email: 'u@ex.com', name: 'U', isEmailVerified: false, subscriptionPlan: 'FREE', subscriptionExpiresAt: null };
         jwt.default.verify = jest.fn().mockReturnValue({ id: '100', email: 'u@ex.com' });
-        findUserById.mockResolvedValue(user);
+        findUserById.mockResolvedValue({ success: true, data: { user } });
         changeUserStatusActive.mockResolvedValue(true);
 
         const result = await (await import('../../src/services/userService.js')).verifyEmail('goodtok');
@@ -109,9 +116,14 @@ describe('User Service Tests Register', () => {
 
     test('Register User - Failure when user already exists', async () => {
         verifyUserExistsByEmail.mockResolvedValue({
-            id: '1',
-            email: 'teste@gmail.com',
-            password: '$2a$10$6OX/EUwCxD/OV2RPLi9g.eTiXJgU8zf/6avWU5YkpDGoBt8do8s3y'
+            success: true,
+            data: {
+                user: {
+                    id: '1',
+                    email: 'teste@gmail.com',
+                    password: '$2a$10$6OX/EUwCxD/OV2RPLi9g.eTiXJgU8zf/6avWU5YkpDGoBt8do8s3y'
+                }
+            }
         });
 
         await expect(
@@ -123,14 +135,19 @@ describe('User Service Tests Register', () => {
     });
 
     test('Register User - Should register user with password hashed', async () => {
-        verifyUserExistsByEmail.mockResolvedValue(undefined);
+        verifyUserExistsByEmail.mockResolvedValue({ success: true, data: { user: null } });
         createUser.mockResolvedValue({
-            id: 2,
-            email: 'ana@gmail.com',
-            name: 'Ana',
-            password: '$2a$10$6OX/EUwCxD/OV2RPLi9g.eTiXJgU8zf/6avWU5YkpDGoBt8do8s3y', // 12345678
-            subscriptionPlan: 'FREE',
-            subscriptionExpiresAt: null
+            success: true,
+            data: {
+                user: {
+                    id: 2,
+                    email: 'ana@gmail.com',
+                    name: 'Ana',
+                    password: '$2a$10$6OX/EUwCxD/OV2RPLi9g.eTiXJgU8zf/6avWU5YkpDGoBt8do8s3y',
+                    subscriptionPlan: 'FREE',
+                    subscriptionExpiresAt: null
+                }
+            }
         });
 
         const result = await registerUser('Ana', 'ana@gmail.com', '123456789');
@@ -155,7 +172,7 @@ describe('User Service Tests Login', () => {
 
     test('Login User - Failure when email already is invalid', async () => {
         incrementLoginAttempts.mockResolvedValueOnce({ attempts: 1 })
-        findUserByEmail.mockResolvedValue(undefined);
+        findUserByEmail.mockResolvedValue({ success: true, data: { user: null } });
 
         await expect(
             loginUser('bruno@gmail.com', '12345678')
@@ -164,17 +181,22 @@ describe('User Service Tests Login', () => {
     });
 
     test('Login User - Failure when password already is invalid', async () => {
-        verifyUserExistsByEmail.mockResolvedValue(true)
+        verifyUserExistsByEmail.mockResolvedValue({ success: true, data: { user: { email: 'carlos@gmail.com' } } })
         incrementLoginAttempts.mockResolvedValueOnce({ attempts: 1 })
 
         findUserByEmail.mockResolvedValue({
-            id: '3',
-            email: 'carlos@gmail.com',
-            password: '$2a$10$6OX/EUwCxD/OV2RPLi9g.eTiXJgU8zf/6avWU5YkpDGoBt8do8s3y',
-            name: 'Carlos',
-            subscriptionPlan: 'FREE',
-            subscriptionExpiresAt: null,
-            isEmailVerified: true
+            success: true,
+            data: {
+                user: {
+                    id: '3',
+                    email: 'carlos@gmail.com',
+                    password: '$2a$10$6OX/EUwCxD/OV2RPLi9g.eTiXJgU8zf/6avWU5YkpDGoBt8do8s3y',
+                    name: 'Carlos',
+                    subscriptionPlan: 'FREE',
+                    subscriptionExpiresAt: null,
+                    isEmailVerified: true
+                }
+            }
         });
         bcryptjs.compare.mockResolvedValue(false)
 
@@ -184,13 +206,12 @@ describe('User Service Tests Login', () => {
 
         expect(incrementLoginAttempts).toHaveBeenCalledWith('carlos@gmail.com');
         expect(findUserByEmail).toHaveBeenCalledWith('carlos@gmail.com');
-        expect(verifyUserExistsByEmail).toHaveBeenCalledWith('carlos@gmail.com')
         expect(bcryptjs.compare).toHaveBeenCalledWith('123456789', '$2a$10$6OX/EUwCxD/OV2RPLi9g.eTiXJgU8zf/6avWU5YkpDGoBt8do8s3y');
     });
 
     test('Login User - Increment attempts on consecutive failures', async () => {
         // Simula duas falhas consecutivas e espera que o contador aumente
-        verifyUserExistsByEmail.mockResolvedValue(false);
+        verifyUserExistsByEmail.mockResolvedValue({ success: true, data: { user: null } });
         incrementLoginAttempts.mockResolvedValueOnce({ attempts: 1 }).mockResolvedValueOnce({ attempts: 2 });
 
         await expect(loginUser('noone@example.com', 'badpass')).rejects.toThrow('Email ou senha incorretos');
@@ -204,7 +225,7 @@ describe('User Service Tests Login', () => {
 
     test('Login User - Lockout after max attempts', async () => {
         // Simula 5 falhas até atingir o limite e depois bloqueio explícito
-        verifyUserExistsByEmail.mockResolvedValue(false);
+        verifyUserExistsByEmail.mockResolvedValue({ success: true, data: { user: null } });
         incrementLoginAttempts
             .mockResolvedValueOnce({ attempts: 1 })
             .mockResolvedValueOnce({ attempts: 2 })
@@ -224,16 +245,21 @@ describe('User Service Tests Login', () => {
     });
 
     test('Login User - Shold login success and with password hashed', async () => {
-        verifyUserExistsByEmail.mockResolvedValue(true)
+        verifyUserExistsByEmail.mockResolvedValue({ success: true, data: { user: { email: 'carlos@gmail.com' } } })
         isLockedOut.mockResolvedValue(false)
         findUserByEmail.mockResolvedValue({
-            id: '3',
-            email: 'carlos@gmail.com',
-            password: '$2a$10$6OX/EUwCxD/OV2RPLi9g.eTiXJgU8zf/6avWU5YkpDGoBt8do8s3y',
-            name: 'Carlos',
-            subscriptionPlan: 'FREE',
-            subscriptionExpiresAt: null,
-            isEmailVerified: true
+            success: true,
+            data: {
+                user: {
+                    id: '3',
+                    email: 'carlos@gmail.com',
+                    password: '$2a$10$6OX/EUwCxD/OV2RPLi9g.eTiXJgU8zf/6avWU5YkpDGoBt8do8s3y',
+                    name: 'Carlos',
+                    subscriptionPlan: 'FREE',
+                    subscriptionExpiresAt: null,
+                    isEmailVerified: true
+                }
+            }
         });
         bcryptjs.compare.mockResolvedValue(true)
 
@@ -248,7 +274,6 @@ describe('User Service Tests Login', () => {
             isEmailVerified: true
         })
         expect(findUserByEmail).toHaveBeenCalledWith('carlos@gmail.com');
-        expect(verifyUserExistsByEmail).toHaveBeenCalledWith('carlos@gmail.com')
         expect(bcryptjs.compare).toHaveBeenCalledWith('12345678', '$2a$10$6OX/EUwCxD/OV2RPLi9g.eTiXJgU8zf/6avWU5YkpDGoBt8do8s3y');
         // Verifica que as tentativas foram zeradas após login bem-sucedido
         expect(resetLoginAttempts).toHaveBeenCalledTimes(1);
@@ -256,8 +281,8 @@ describe('User Service Tests Login', () => {
 
     test('Login User - Reset attempts when prior attempts exist', async () => {
         // Usuário com 2 tentativas pendentes realiza login com sucesso; as tentativas devem ser limpas
-        verifyUserExistsByEmail.mockResolvedValue(true);
-        findUserByEmail.mockResolvedValue({ id: '50', email: 'recover@example.com', password: '$2a$10$6OX/EUwCxD/OV2RPLi9g.eTiXJgU8zf/6avWU5YkpDGoBt8do8s3y', isEmailVerified: true });
+        verifyUserExistsByEmail.mockResolvedValue({ success: true, data: { user: { email: 'recover@example.com' } } });
+        findUserByEmail.mockResolvedValue({ success: true, data: { user: { id: '50', email: 'recover@example.com', password: '$2a$10$6OX/EUwCxD/OV2RPLi9g.eTiXJgU8zf/6avWU5YkpDGoBt8do8s3y', isEmailVerified: true } } });
         bcryptjs.compare.mockResolvedValue(true);
         getLoginAttempts.mockResolvedValue({ attempts: 2 });
         isLockedOut.mockResolvedValue(false);
@@ -295,8 +320,8 @@ describe('User Service OAuth2 Tests', () => {
     test('registerUserByOauth should create new user when sub not exists', async () => {
         __mock.getToken.mockResolvedValue({ tokens: { id_token: 'id-token' } })
         __mock.verifyIdToken.mockResolvedValue({ payload: { email: 'o@auth.com', name: 'Oauth', sub: 'sub-123' } })
-        verifyUserExistsBySub.mockResolvedValue(undefined)
-        createUserWithOauth.mockResolvedValue({ id: '20', email: 'o@auth.com', name: 'Oauth', subscriptionPlan: 'FREE' })
+        verifyUserExistsBySub.mockResolvedValue({ success: true, data: { user: null } })
+        createUserWithOauth.mockResolvedValue({ success: true, data: { user: { id: '20', email: 'o@auth.com', name: 'Oauth', subscriptionPlan: 'FREE' } } })
 
         // call service
         const user = await registerUserByOauth('code-1')
@@ -310,7 +335,7 @@ describe('User Service OAuth2 Tests', () => {
     test('registerUserByOauth should throw if user already exists', async () => {
         __mock.getToken.mockResolvedValue({ tokens: { id_token: 'id-token' } })
         __mock.verifyIdToken.mockResolvedValue({ payload: { email: 'o@auth.com', name: 'Oauth', sub: 'sub-123' } })
-        verifyUserExistsBySub.mockResolvedValue(true)
+        verifyUserExistsBySub.mockResolvedValue({ success: true, data: { user: { sub: 'sub-123' } } })
 
         await expect(registerUserByOauth('code-2')).rejects.toThrow('User already exists')
     })
@@ -318,8 +343,8 @@ describe('User Service OAuth2 Tests', () => {
     test('loginUserByOauth should return user when sub exists', async () => {
         __mock.getToken.mockResolvedValue({ tokens: { id_token: 'id-token' } })
         __mock.verifyIdToken.mockResolvedValue({ payload: { sub: 'sub-999' } })
-        verifyUserExistsBySub.mockResolvedValue(true)
-        findUserBySub.mockResolvedValue({ id: '30', email: 'found@auth.com', name: 'Found' })
+        verifyUserExistsBySub.mockResolvedValue({ success: true, data: { user: { sub: 'sub-999' } } })
+        findUserBySub.mockResolvedValue({ success: true, data: { user: { id: '30', email: 'found@auth.com', name: 'Found' } } })
 
         const user = await loginUserByOauth('code-3')
 
@@ -332,7 +357,7 @@ describe('User Service OAuth2 Tests', () => {
     test('loginUserByOauth should throw when account not found', async () => {
         __mock.getToken.mockResolvedValue({ tokens: { id_token: 'id-token' } })
         __mock.verifyIdToken.mockResolvedValue({ payload: { sub: 'sub-notfound' } })
-        verifyUserExistsBySub.mockResolvedValue(false)
+        verifyUserExistsBySub.mockResolvedValue({ success: true, data: { user: null } })
 
         await expect(loginUserByOauth('code-4')).rejects.toThrow('Conta não encontrada')
     })

@@ -10,7 +10,12 @@ jest.unstable_mockModule('../../src/repositories/commentRepository.js', () => ({
 
 jest.unstable_mockModule('../../src/repositories/articleRepository.js', () => ({
     incrementArticleCommentCount: jest.fn(),
-    decrementArticleCommentCount: jest.fn()
+    decrementArticleCommentCount: jest.fn(),
+    articleExistsBySlug: jest.fn()
+}))
+
+jest.unstable_mockModule('../../src/repositories/userRepository.js', () => ({
+    findUserById: jest.fn()
 }))
 
 jest.unstable_mockModule('../../src/config/logger.js', () => ({
@@ -18,7 +23,8 @@ jest.unstable_mockModule('../../src/config/logger.js', () => ({
 }));
 
 const { addComment, editComment, removeComment, verifyComment } = await import('../../src/repositories/commentRepository.js');
-const { incrementArticleCommentCount, decrementArticleCommentCount } = await import('../../src/repositories/articleRepository.js')
+const { incrementArticleCommentCount, decrementArticleCommentCount, articleExistsBySlug } = await import('../../src/repositories/articleRepository.js')
+const { findUserById } = await import('../../src/repositories/userRepository.js');
 const { createComment, updateComment, deleteComment } = await import('../../src/services/commentService.js');
 
 describe('Comment Service Test', () => {
@@ -27,103 +33,154 @@ describe('Comment Service Test', () => {
     });
 
     test('Return comment created', async () => {
+        const validUserId = 'ckzj0qwz80000jg63c3glyb1h';
+        findUserById.mockResolvedValue({ success: true, data: { user: { id: validUserId, name: 'teste' } } });
+        articleExistsBySlug.mockResolvedValue({ success: true, data: { article: { id: 'article-1' } } });
         addComment.mockResolvedValue({
-            id: '1',
-            articleSlug: 'article-test',
-            post: 'comment',
-            userName: 'test',
-            userId: '1',
-            creationDate: 1234567890
+            success: true,
+            data: {
+                comment: {
+                    id: 'ckzj0qwz80000jg63c3glyb1i',
+                    articleSlug: 'article-test',
+                    post: 'comment',
+                    userName: 'teste',
+                    userId: validUserId,
+                    creationDate: 1234567890
+                }
+            }
         });
         incrementArticleCommentCount.mockResolvedValue({
             modifiedCount: 1 
         });
 
-        const result = await createComment('comment', '1', 'teste', 'article-test');
+        const result = await createComment({ comment: 'comment', userId: validUserId, articleSlug: 'article-test' });
 
-        expect(addComment).toHaveBeenCalledWith('comment', '1', 'teste', 'article-test');
+        expect(findUserById).toHaveBeenCalledWith(validUserId);
+        expect(articleExistsBySlug).toHaveBeenCalledWith('article-test');
+        expect(addComment).toHaveBeenCalledWith('comment', validUserId, 'teste', 'article-test');
         expect(incrementArticleCommentCount).toHaveBeenCalledWith('article-test');
         expect(result).toEqual({
-            id: '1',
-            articleSlug: 'article-test',
-            post: 'comment',
-            userName: 'test',
-            userId: '1',
-            creationDate: 1234567890
+            success: true,
+            data: {
+                comment: {
+                    id: 'ckzj0qwz80000jg63c3glyb1i',
+                    articleSlug: 'article-test',
+                    post: 'comment',
+                    userName: 'teste',
+                    userId: validUserId,
+                    creationDate: 1234567890
+                }
+            }
         })
     });
 
     test('Return error when comment not found | exists', async () => {
-        verifyComment.mockResolvedValue(undefined);
+        const validCommentId = 'ckzj0qwz80000jg63c3glyb1i';
+        const validUserId = 'ckzj0qwz80000jg63c3glyb1h';
+
+        verifyComment.mockResolvedValue({ success: true, data: { comment: null } });
 
         await expect(
-            updateComment('1', 'comment')
+            updateComment({ commentId: validCommentId, commentEdit: 'comment', userId: validUserId })
         ).rejects.toThrow('Comment not found');
     });
 
     test('Return comment edited', async () => {
+        const validCommentId = 'ckzj0qwz80000jg63c3glyb1i';
+        const validUserId = 'ckzj0qwz80000jg63c3glyb1h';
+
         verifyComment.mockResolvedValue({
-            post: 'comment'
-        })
+            success: true,
+            data: {
+                comment: {
+                    id: validCommentId,
+                    userId: validUserId,
+                    articleSlug: 'article-test'
+                }
+            }
+        });
         editComment.mockResolvedValue({
-            id: '1',
+            id: validCommentId,
             articleSlug: 'article-test',
             post: 'commentEdit',
             userName: 'test',
-            userId: '1',
+            userId: validUserId,
             creationDate: 1234567890
         });
 
-        const result = await updateComment('1', 'commentEdit');
+        const result = await updateComment({ commentId: validCommentId, commentEdit: 'commentEdit', userId: validUserId });
 
-        expect(verifyComment).toHaveBeenCalledWith('1');
-        expect(editComment).toHaveBeenCalledWith('1', 'commentEdit')
+        expect(verifyComment).toHaveBeenCalledWith({ commentId: validCommentId });
+        expect(editComment).toHaveBeenCalledWith(validCommentId, 'commentEdit')
         expect(result).toEqual({
-            id: '1',
+            id: validCommentId,
             articleSlug: 'article-test',
             post: 'commentEdit',
             userName: 'test',
-            userId: '1',
+            userId: validUserId,
             creationDate: 1234567890
         })
     });
 
     test('Return error when comment not found | exists', async () => {
-        verifyComment.mockResolvedValue(undefined);
+        const validCommentId = 'ckzj0qwz80000jg63c3glyb1i';
+        const validUserId = 'ckzj0qwz80000jg63c3glyb1h';
+
+        verifyComment.mockResolvedValue({ success: true, data: { comment: null } });
 
         await expect(
-            deleteComment('1', 'article-test')
-        ).rejects.toThrow('Comment not found');
+            deleteComment({ commentId: validCommentId, userId: validUserId })
+        ).rejects.toThrow('Comment or user not found');
     });
 
     test('Return comment deleted', async () => {
+        const validCommentId = 'ckzj0qwz80000jg63c3glyb1i';
+        const validUserId = 'ckzj0qwz80000jg63c3glyb1h';
+
         verifyComment.mockResolvedValue({
-            post: 'comment'
+            success: true,
+            data: {
+                comment: {
+                    id: validCommentId,
+                    userId: validUserId,
+                    articleSlug: 'article-test'
+                }
+            }
         });
         decrementArticleCommentCount.mockResolvedValue({
             modifiedCount: 1 
         })
         removeComment.mockResolvedValue({
-            id: '1',
-            articleSlug: 'article-test',
-            post: 'commentEdit',
-            userName: 'test',
-            userId: '1',
-            creationDate: 1234567890
+            success: true,
+            data: {
+                comment: {
+                    id: validCommentId,
+                    articleSlug: 'article-test',
+                    post: 'commentEdit',
+                    userName: 'test',
+                    userId: validUserId,
+                    creationDate: 1234567890
+                }
+            }
         });
 
-        const result = await deleteComment('1', 'article-test');
+        const result = await deleteComment({ commentId: validCommentId, userId: validUserId });
 
-        expect(verifyComment).toHaveBeenCalledWith('1');
+        expect(verifyComment).toHaveBeenCalledWith({ commentId: validCommentId });
         expect(decrementArticleCommentCount).toHaveBeenCalledWith('article-test');
-        expect(removeComment).toHaveBeenCalledWith('1');
+        expect(removeComment).toHaveBeenCalledWith(validCommentId);
         expect(result).toEqual({
-            id: '1',
-            articleSlug: 'article-test',
-            post: 'commentEdit',
-            userName: 'test',
-            userId: '1',
-            creationDate: 1234567890
+            success: true,
+            data: {
+                comment: {
+                    id: validCommentId,
+                    articleSlug: 'article-test',
+                    post: 'commentEdit',
+                    userName: 'test',
+                    userId: validUserId,
+                    creationDate: 1234567890
+                }
+            }
         })
     })
 })

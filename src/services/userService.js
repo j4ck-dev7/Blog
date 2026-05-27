@@ -68,14 +68,14 @@ export const getUrlForOauthSignIn = async () => {
 export const registerUser = async (name, email, password) => {
     logger.info('registerUser called', { name, email });
     const existingUserResult = await verifyUserExistsByEmail(email);
-    if (existingUserResult?.data) {
+    if (existingUserResult?.data?.user) {
         logger.warn('registerUser - email already exists', { email });
         throw new Error('User already exists');
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
     const newUserResult = await createUser(name, email, passwordHash);
-    const newUser = newUserResult?.data;
+    const newUser = newUserResult?.data?.user;
     logger.info('registerUser - success', { id: newUser?.id, email: newUser?.email });
 
     const token = jwt.sign({ id: newUser.id, email: email }, process.env.EMAIL_VERIFICATION_SECRET, { expiresIn: 1000 * 60 * 10 });
@@ -116,7 +116,7 @@ export const verifyEmail = async (token) => {
     }
 
     const userResult = await findUserById(decoded.id);
-    const user = userResult?.data;
+    const user = userResult?.data?.user;
     if (!user) {
         logger.warn('Usuário não encontrado para token de verificação de email', {
             usuarioId: 'Desconecido',
@@ -164,13 +164,13 @@ export const registerUserByOauth = async (code) => {
     logger.info('registerUserByOauth called', { sub, email });
 
     const verifyIfUserExists = await verifyUserExistsBySub(sub);
-    if(verifyIfUserExists?.data) {
+    if(verifyIfUserExists?.data?.user) {
         logger.warn('registerUserByOauth - user already exists', { sub });
         throw new Error('User already exists');
     }
 
     const newUserResult = await createUserWithOauth(name, email, sub);
-    const newUser = newUserResult?.data;
+    const newUser = newUserResult?.data?.user;
     logger.info('registerUserByOauth - success', { id: newUser?.id, sub, email });
     return newUser;
 }
@@ -188,7 +188,7 @@ export const loginUser = async (email, password) => {
     }
 
     const userResult = await findUserByEmail(email);
-    const user = userResult?.data;
+    const user = userResult?.data?.user;
     const passwordHash = user?.password || '$2b$10$invalidpasswordhash00000000000000000000000000000000000000';
     const isValidPassword = await bcrypt.compare(password, passwordHash);
 
@@ -239,13 +239,13 @@ export const loginUserByOauth = async (code) => {
     logger.info('loginUserByOauth called', { sub });
 
     const userVerify = await verifyUserExistsBySub(sub);
-    if (!userVerify?.data) {
+    if (!userVerify?.data?.user) {
         logger.warn('loginUserByOauth - account not found', { sub });
         throw new Error('Conta não encontrada');
     };
 
     const userResult = await findUserBySub(sub);
-    const user = userResult?.data;
+    const user = userResult?.data?.user;
     logger.info('loginUserByOauth success', { id: user?.id, sub });
     return user;
 }

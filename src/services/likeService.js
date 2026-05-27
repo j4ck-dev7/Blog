@@ -13,7 +13,7 @@ export const allLikesUser = async (userId) => {
     }
 
     const likesResult = await getLikes(userId);
-    const likesData = likesResult?.data ?? [];
+    const likesData = likesResult?.data?.likes ?? [];
 
     if(!userId) {
         logger.warn('allLikesUser - unauthenticated user', { userId });
@@ -33,7 +33,7 @@ export const addLike = async (userId, articleSlug) => {
     }
 
     const verifyResult = await verifyUserLikeArticle(userId, articleSlug);
-    if(verifyResult?.data) {
+    if(verifyResult?.data?.like) {
         logger.warn('addLike - already liked', { userId, articleSlug });
         throw new Error('You already liked this article');
     };
@@ -55,17 +55,17 @@ export const removeLike = async (userId, articleSlug) => {
     }
 
     const verifyResult = await verifyUserLikeArticle(userId, articleSlug);
-    if(!verifyResult?.data) {
+    if(!verifyResult?.data?.like) {
         logger.warn('removeLike - like does not exist', { userId, articleSlug });
         throw new Error('Like does not exist');
     };
-    if(!isValidCuid(verifyResult.data.id)){
-        logger.warn('removeLike - invalid like id format', { userId, articleSlug, likeId: verifyResult.data.id });
+    if(!isValidCuid(verifyResult.data.like?.id)){
+        logger.warn('removeLike - invalid like id format', { userId, articleSlug, likeId: verifyResult.data.like?.id });
         throw new Error('Invalid like id format');
     }
 
     const result = await Promise.all([
-        deleteLike(verifyResult.data.id),
+        deleteLike(verifyResult.data.like.id),
         updateCounterService(articleSlug, (s) => decrementArticleLikeCount(s))
     ]);
     logger.info('removeLike - success', { userId, articleSlug });

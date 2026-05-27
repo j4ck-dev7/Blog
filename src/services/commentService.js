@@ -41,8 +41,8 @@ export const createComment = async ({ comment, userId, articleSlug }) => {
             articleExistsBySlug(transformedSlug.data)
         ]);
 
-        const userExists = userExistsResult?.data;
-        const articleExists = articleExistsResult?.data;
+        const userExists = userExistsResult?.data?.user;
+        const articleExists = articleExistsResult?.data?.article;
 
         if (!userExists) {
             logger.warn('createComment - user not found', { userId });
@@ -105,12 +105,12 @@ export const updateComment = async ({ commentId, commentEdit, userId }) => {
 
         const existingComment = await verifyComment({ commentId })
 
-        if (!existingComment?.data) {
+        if (!existingComment?.data?.comment) {
             logger.warn('updateComment - comment not found', { commentId });
             throw new Error('Comment not found');
         }
 
-        if (existingComment?.data?.userId !== userId) {
+        if (existingComment?.data?.comment?.userId !== userId) {
             logger.warn('updateComment - user is not the comment owner', { commentId, userId });
             throw new Error('Unauthorized');
         }
@@ -142,12 +142,12 @@ export const deleteComment = async ({ commentId, userId }) => {
         }
 
         const existingComment = await verifyComment({ commentId });
-        if (!existingComment?.data) {
+        if (!existingComment?.data?.comment) {
             logger.warn('deleteComment - comment found', { commentId });
             throw new Error('Comment or user not found');
         }
-        if(existingComment?.data?.userId !== userId){
-            logger.warn('deleteComment - user is not the comment owner', { userId, commentId, commentOwner: existingComment.data.userId });
+        if(existingComment?.data?.comment?.userId !== userId){
+            logger.warn('deleteComment - user is not the comment owner', { userId, commentId, commentOwner: existingComment.data.comment?.userId });
             throw new Error('Comment or user not found');
         }
 
@@ -155,8 +155,8 @@ export const deleteComment = async ({ commentId, userId }) => {
 
         // Valida com acknowledged e modifiedCount do mongoose, futuramente migrar para o postgres + prisma
         // para melhor consistencia, junto com o uso de transaction
-        await updateCounterService(existingComment.data.articleSlug, (s) => decrementArticleCommentCount(s));
-        logger.info('deleteComment success', { commentId, article: existingComment.data.articleSlug });
+        await updateCounterService(existingComment.data.comment?.articleSlug, (s) => decrementArticleCommentCount(s));
+        logger.info('deleteComment success', { commentId, article: existingComment.data.comment?.articleSlug });
 
         return removed;
     } catch (error) {

@@ -20,7 +20,6 @@ const {
     findArticlesByTag,
     searchArticles,
     findArticleBySlug,
-    findArticleContentBySlug,
     findArticleBySlugWithPlanRole,
     incrementArticleViews,
     decrementArticleCommentCount,
@@ -58,7 +57,7 @@ describe('Article Repository', () => {
             expect(chainMethods.sort).toHaveBeenCalledWith({ creationDate: -1 });
             expect(chainMethods.skip).toHaveBeenCalledWith(0);
             expect(chainMethods.limit).toHaveBeenCalledWith(10);
-            expect(result).toEqual(mockArticles);
+            expect(result).toEqual({ success: true, data: { articles: mockArticles } });
         });
 
         test('should throw error when query fails', async () => {
@@ -92,7 +91,7 @@ describe('Article Repository', () => {
             const result = await findArticlesByTag('javascript', 0, 10);
 
             expect(Article.find).toHaveBeenCalledWith({ tags: 'javascript' });
-            expect(result).toEqual(mockArticles);
+            expect(result).toEqual({ success: true, data: { articles: mockArticles } });
         });
 
         test('should return empty array when tag not found', async () => {
@@ -108,15 +107,29 @@ describe('Article Repository', () => {
 
             const result = await findArticlesByTag('nonexistent', 0, 10);
 
-            expect(result).toEqual([]);
+            expect(result).toEqual({ success: true, data: { articles: [] } });
         });
     });
 
     describe('searchArticles', () => {
         test('should search articles by query', async () => {
             const mockArticles = [
-                { title: 'JavaScript Guide', slug: 'javascript-guide', score: 5 },
-                { title: 'JavaScript Advanced', slug: 'javascript-advanced', score: 4 }
+                {
+                    _id: '1',
+                    title: 'JavaScript Guide',
+                    slug: 'javascript-guide',
+                    summary: 'Guide summary',
+                    creationDate: '2024-01-01',
+                    author: 'author1'
+                },
+                {
+                    _id: '2',
+                    title: 'JavaScript Advanced',
+                    slug: 'javascript-advanced',
+                    summary: 'Advanced summary',
+                    creationDate: '2024-02-01',
+                    author: 'author2'
+                }
             ];
 
             const chainMethods = {
@@ -132,7 +145,31 @@ describe('Article Repository', () => {
             const result = await searchArticles('JavaScript', 0, 10);
 
             expect(Article.find).toHaveBeenCalled();
-            expect(result).toEqual(mockArticles);
+            expect(result).toEqual({
+                success: true,
+                data: {
+                    articles: [
+                        {
+                            id: '1',
+                            title: 'JavaScript Guide',
+                            summary: 'Guide summary',
+                            slug: 'javascript-guide',
+                            creationDate: '2024-01-01',
+                            tags: undefined,
+                            author: 'author1'
+                        },
+                        {
+                            id: '2',
+                            title: 'JavaScript Advanced',
+                            summary: 'Advanced summary',
+                            slug: 'javascript-advanced',
+                            creationDate: '2024-02-01',
+                            tags: undefined,
+                            author: 'author2'
+                        }
+                    ]
+                }
+            });
         });
     });
 
@@ -150,7 +187,7 @@ describe('Article Repository', () => {
             const result = await findArticleBySlug('article-1');
 
             expect(Article.findOne).toHaveBeenCalledWith({ slug: 'article-1' });
-            expect(result).toEqual(mockArticle);
+            expect(result).toEqual({ success: true, data: { article: mockArticle } });
         });
 
         test('should return null when article not found', async () => {
@@ -163,39 +200,10 @@ describe('Article Repository', () => {
 
             const result = await findArticleBySlug('nonexistent');
 
-            expect(result).toBeNull();
+            expect(result).toEqual({ success: true, data: { article: null } });
         });
     });
 
-    describe('findArticleContentBySlug', () => {
-        test('should return article content', async () => {
-            const mockArticle = { content: '<p>Article content here</p>' };
-
-            const chainMethods = {
-                select: jest.fn().mockReturnThis(),
-                lean: jest.fn().mockResolvedValue(mockArticle)
-            };
-
-            Article.findOne.mockReturnValue(chainMethods);
-
-            const result = await findArticleContentBySlug('article-1');
-
-            expect(result).toEqual('<p>Article content here</p>');
-        });
-
-        test('should return null when article not found', async () => {
-            const chainMethods = {
-                select: jest.fn().mockReturnThis(),
-                lean: jest.fn().mockResolvedValue(null)
-            };
-
-            Article.findOne.mockReturnValue(chainMethods);
-
-            const result = await findArticleContentBySlug('nonexistent');
-
-            expect(result).toBeNull();
-        });
-    });
 
     describe('findArticleBySlugWithPlanRole', () => {
         test('should return article with planRole', async () => {
@@ -210,72 +218,227 @@ describe('Article Repository', () => {
 
             const result = await findArticleBySlugWithPlanRole('article-1');
 
-            expect(result).toEqual(mockArticle);
+            expect(result).toEqual({ success: true, data: { article: mockArticle } });
         });
     });
 
     describe('incrementArticleViews', () => {
         test('should increment viewsCount', async () => {
-            const mockResult = { _id: '1', slug: 'article-1', viewsCount: 11 };
+            const mockResult = {
+                _id: '1',
+                title: 'Article 1',
+                slug: 'article-1',
+                summary: 'Summary',
+                creationDate: '2024-01-01',
+                tags: ['test'],
+                author: 'author1',
+                content: 'content',
+                viewsCount: 11,
+                likeCount: 0,
+                commentCount: 0,
+                planRole: 'BASIC'
+            };
 
-            Article.findOneAndUpdate.mockResolvedValue(mockResult);
+            Article.findOneAndUpdate.mockReturnValue({ lean: jest.fn().mockResolvedValue(mockResult) });
 
             const result = await incrementArticleViews('article-1');
 
-            expect(Article.findOneAndUpdate).toHaveBeenCalledWith({ slug: 'article-1' }, { $inc: { viewsCount: 1 } });
-            expect(result).toEqual(mockResult);
+            expect(Article.findOneAndUpdate).toHaveBeenCalledWith({ slug: 'article-1' }, { $inc: { viewsCount: 1 } }, { new: true });
+            expect(result).toEqual({
+                success: true,
+                data: {
+                    article: {
+                        id: '1',
+                        title: 'Article 1',
+                        summary: 'Summary',
+                        slug: 'article-1',
+                        creationDate: '2024-01-01',
+                        tags: ['test'],
+                        author: 'author1',
+                        content: 'content',
+                        viewsCount: 11,
+                        likeCount: 0,
+                        commentCount: 0,
+                        planRole: 'BASIC'
+                    }
+                }
+            });
         });
     });
 
     describe('decrementArticleCommentCount', () => {
         test('should decrement commentCount', async () => {
-            const mockResult = { _id: '1', slug: 'article-1', commentCount: 4 };
+            const mockResult = {
+                _id: '1',
+                title: 'Article 1',
+                slug: 'article-1',
+                summary: 'Summary',
+                creationDate: '2024-01-01',
+                tags: ['test'],
+                author: 'author1',
+                content: 'content',
+                viewsCount: 10,
+                likeCount: 0,
+                commentCount: 4,
+                planRole: 'BASIC'
+            };
 
-            Article.findOneAndUpdate.mockResolvedValue(mockResult);
+            Article.findOneAndUpdate.mockReturnValue({ lean: jest.fn().mockResolvedValue(mockResult) });
 
             const result = await decrementArticleCommentCount('article-1');
 
-            expect(Article.findOneAndUpdate).toHaveBeenCalledWith({ slug: 'article-1' }, { $inc: { commentCount: -1 } });
-            expect(result).toEqual(mockResult);
+            expect(Article.findOneAndUpdate).toHaveBeenCalledWith({ slug: 'article-1' }, { $inc: { commentCount: -1 } }, { new: true });
+            expect(result).toEqual({
+                success: true,
+                data: {
+                    article: {
+                        id: '1',
+                        title: 'Article 1',
+                        summary: 'Summary',
+                        slug: 'article-1',
+                        creationDate: '2024-01-01',
+                        tags: ['test'],
+                        author: 'author1',
+                        content: 'content',
+                        viewsCount: 10,
+                        likeCount: 0,
+                        commentCount: 4,
+                        planRole: 'BASIC'
+                    }
+                }
+            });
         });
     });
 
     describe('incrementArticleLikeCount', () => {
         test('should increment likeCount', async () => {
-            const mockResult = { _id: '1', slug: 'article-1', likeCount: 5 };
+            const mockResult = {
+                _id: '1',
+                title: 'Article 1',
+                slug: 'article-1',
+                summary: 'Summary',
+                creationDate: '2024-01-01',
+                tags: ['test'],
+                author: 'author1',
+                content: 'content',
+                viewsCount: 10,
+                likeCount: 5,
+                commentCount: 0,
+                planRole: 'BASIC'
+            };
 
-            Article.findOneAndUpdate.mockResolvedValue(mockResult);
+            Article.findOneAndUpdate.mockReturnValue({ lean: jest.fn().mockResolvedValue(mockResult) });
 
             const result = await incrementArticleLikeCount('article-1');
 
-            expect(Article.findOneAndUpdate).toHaveBeenCalledWith({ slug: 'article-1' }, { $inc: { likeCount: 1 } });
-            expect(result).toEqual(mockResult);
+            expect(Article.findOneAndUpdate).toHaveBeenCalledWith({ slug: 'article-1' }, { $inc: { likeCount: 1 } }, { new: true });
+            expect(result).toEqual({
+                success: true,
+                data: {
+                    article: {
+                        id: '1',
+                        title: 'Article 1',
+                        summary: 'Summary',
+                        slug: 'article-1',
+                        creationDate: '2024-01-01',
+                        tags: ['test'],
+                        author: 'author1',
+                        content: 'content',
+                        viewsCount: 10,
+                        likeCount: 5,
+                        commentCount: 0,
+                        planRole: 'BASIC'
+                    }
+                }
+            });
         });
     });
 
     describe('decrementArticleLikeCount', () => {
         test('should decrement likeCount', async () => {
-            const mockResult = { _id: '1', slug: 'article-1', likeCount: 3 };
+            const mockResult = {
+                _id: '1',
+                title: 'Article 1',
+                slug: 'article-1',
+                summary: 'Summary',
+                creationDate: '2024-01-01',
+                tags: ['test'],
+                author: 'author1',
+                content: 'content',
+                viewsCount: 10,
+                likeCount: 3,
+                commentCount: 0,
+                planRole: 'BASIC'
+            };
 
-            Article.findOneAndUpdate.mockResolvedValue(mockResult);
+            Article.findOneAndUpdate.mockReturnValue({ lean: jest.fn().mockResolvedValue(mockResult) });
 
             const result = await decrementArticleLikeCount('article-1');
 
-            expect(Article.findOneAndUpdate).toHaveBeenCalledWith({ slug: 'article-1' }, { $inc: { likeCount: -1 } });
-            expect(result).toEqual(mockResult);
+            expect(Article.findOneAndUpdate).toHaveBeenCalledWith({ slug: 'article-1' }, { $inc: { likeCount: -1 } }, { new: true });
+            expect(result).toEqual({
+                success: true,
+                data: {
+                    article: {
+                        id: '1',
+                        title: 'Article 1',
+                        summary: 'Summary',
+                        slug: 'article-1',
+                        creationDate: '2024-01-01',
+                        tags: ['test'],
+                        author: 'author1',
+                        content: 'content',
+                        viewsCount: 10,
+                        likeCount: 3,
+                        commentCount: 0,
+                        planRole: 'BASIC'
+                    }
+                }
+            });
         });
     });
 
     describe('incrementArticleCommentCount', () => {
         test('should increment commentCount', async () => {
-            const mockResult = { _id: '1', slug: 'article-1', commentCount: 5 };
+            const mockResult = {
+                _id: '1',
+                title: 'Article 1',
+                slug: 'article-1',
+                summary: 'Summary',
+                creationDate: '2024-01-01',
+                tags: ['test'],
+                author: 'author1',
+                content: 'content',
+                viewsCount: 10,
+                likeCount: 0,
+                commentCount: 5,
+                planRole: 'BASIC'
+            };
 
-            Article.findOneAndUpdate.mockResolvedValue(mockResult);
+            Article.findOneAndUpdate.mockReturnValue({ lean: jest.fn().mockResolvedValue(mockResult) });
 
             const result = await incrementArticleCommentCount('article-1');
 
-            expect(Article.findOneAndUpdate).toHaveBeenCalledWith({ slug: 'article-1' }, { $inc: { commentCount: 1 } });
-            expect(result).toEqual(mockResult);
+            expect(Article.findOneAndUpdate).toHaveBeenCalledWith({ slug: 'article-1' }, { $inc: { commentCount: 1 } }, { new: true });
+            expect(result).toEqual({
+                success: true,
+                data: {
+                    article: {
+                        id: '1',
+                        title: 'Article 1',
+                        summary: 'Summary',
+                        slug: 'article-1',
+                        creationDate: '2024-01-01',
+                        tags: ['test'],
+                        author: 'author1',
+                        content: 'content',
+                        viewsCount: 10,
+                        likeCount: 0,
+                        commentCount: 5,
+                        planRole: 'BASIC'
+                    }
+                }
+            });
         });
     });
 
@@ -286,7 +449,7 @@ describe('Article Repository', () => {
             const result = await searchArticlesCount('JavaScript');
 
             expect(Article.countDocuments).toHaveBeenCalledWith({ $text: { $search: 'JavaScript' } });
-            expect(result).toEqual(42);
+            expect(result).toEqual({ success: true, data: { count: 42 } });
         });
 
         test('should return 0 when no articles match', async () => {
@@ -294,7 +457,7 @@ describe('Article Repository', () => {
 
             const result = await searchArticlesCount('nonexistent');
 
-            expect(result).toEqual(0);
+            expect(result).toEqual({ success: true, data: { count: 0 } });
         });
     });
 });
