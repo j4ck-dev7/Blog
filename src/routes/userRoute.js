@@ -17,6 +17,62 @@ import { authInteractions } from '../middlewares/authorizationInteractions.js';
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /api/likes:
+ *   get:
+ *     summary: Retorna uma lista de todos os likes do usuário autenticado
+ *     description: 
+ *       Recupera os registros de likes realizados pelo usuário.
+ *       Esta rota está protegida por autenticação via Cookie e possui limitação de taxa (rate limiting).
+ *     tags:
+ *       - Likes
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de likes retornada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Like'
+ *       401:
+ *         description: Não autorizado. Cookie de autenticação inválido ou ausente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       403:
+ *         description: Acesso proibido.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       429:
+ *         description: Muitas solicitações (Rate Limit excedido).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Muitas solicitações. Por favor, tente novamente mais tarde."
+ *       500:
+ *         description: Erro interno do servidor
+ *     x-rate-limit:
+ *       max_requests: 30
+ *       window: 60s
+ *       note: "Limites aplicados pelos middlewares lightSlowDown e lightRateLimit"
+ */
 router.get('/likes', lightSlowDown('likes'), lightRateLimit('likes'), auth, authInteractions, allLikes);
 router.get('/articles', lightSlowDown('articles'), lightRateLimit('articles'), auth, allArticles);
 router.get('/articles/tag', lightSlowDown('articlesFindByTag'), lightRateLimit('articlesFindByTag'), auth, findArticleByTag);
