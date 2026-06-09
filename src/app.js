@@ -40,7 +40,10 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: 'Erro interno do servidor' });
 })
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+    explorer: true,
+    isExplorer: true
+}))
 app.use('/', userRoute);
 
 export default app;

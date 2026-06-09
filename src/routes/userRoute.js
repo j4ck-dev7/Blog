@@ -19,31 +19,23 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/likes:
+ * /likes:
  *   get:
  *     summary: Retorna uma lista de todos os likes do usuário autenticado
  *     description: 
  *       Recupera os registros de likes realizados pelo usuário.
- *       Esta rota está protegida por autenticação via Cookie e possui limitação de taxa (rate limiting).
+ *       Esta rota está protegida por autenticação via Cookie, possui limitação de taxa (rate limiting) e delay de requisição exponencial (slow down).
  *     tags:
  *       - Likes
- *     security:
- *       - cookieAuth: []
+ *     security: 
+ *      - cookieAuth: []
  *     responses:
  *       200:
  *         description: Lista de likes retornada com sucesso
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Like'
+ *               $ref: '#/components/schemas/Like'
  *       401:
  *         description: Não autorizado. Cookie de autenticação inválido ou ausente.
  *         content:
@@ -62,7 +54,7 @@ const router = express.Router();
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
- *               properties:
+ *               example:
  *                 message:
  *                   type: string
  *                   example: "Muitas solicitações. Por favor, tente novamente mais tarde."
