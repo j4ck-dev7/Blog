@@ -21,13 +21,18 @@ const options = {
     ],
     components: {
         securitySchemes: {
-            bearerAuth: {
-                type: 'http',
-                scheme: 'bearer',
-                bearerFormat: 'JWT'
+            cookieAuth: {
+                type: 'apiKey',
+                scheme: 'cookie',
+                name: 'userAuth'
             }
         }
     },
+    security: [
+        {
+            cookieAuth: []
+        }
+    ],
     apis: ['./src/routes/*.js']
 };
 
