@@ -9,6 +9,8 @@ import { logger } from './config/logger.js'
 import { loggerMiddleware } from './middlewares/loggerMiddleware.js';
 import { getRequestMeta } from './config/requestMeta.js';
 import helmet from 'helmet';
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpec from './config/swagger.js';
 
 const app = express();
 
@@ -35,10 +37,10 @@ app.use(express.json());
 app.use(loggerMiddleware);
 app.use((err, req, res, next) => {
     logger.error('Erro na aplicação', err, getRequestMeta(req));
-
     res.status(500).json({ error: 'Erro interno do servidor' });
 })
 
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 app.use('/', userRoute);
 
 export default app;
