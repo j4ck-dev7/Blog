@@ -73,7 +73,8 @@ router.get('/likes', lightSlowDown('likes'), lightRateLimit('likes'), auth, auth
  *   get:
  *     summary: Retorna uma lista paginada de todos os artigos
  *     description: 
- *       Recupera todos os artigos com paginação. Esta rota está protegida por autenticação via Cookie,
+ *       Recupera todos os artigos com paginação. Esta rota está protegida por autenticação via Cookie, mas está disponível para usuários com qualquer nível de assinatura, 
+ *       incluindo usuários sem assinaturas (free) e sem autenticação.
  *       possui limitação de taxa (rate limiting) e delay de requisição exponencial (slow down).
  *     tags:
  *       - Articles
@@ -147,7 +148,8 @@ router.get('/articles', lightSlowDown('articles'), lightRateLimit('articles'), a
  *     summary: Retorna artigos filtrados por tag
  *     description: 
  *       Recupera artigos que possuem a tag especificada, com paginação.
- *       Esta rota está protegida por autenticação via Cookie, possui limitação de taxa e delay de requisição.
+ *       Esta rota está protegida por autenticação via Cookie, mas está disponível para usuários com qualquer nível de assinatura, 
+ *       incluindo usuários sem assinaturas (free) e sem autenticação.possui limitação de taxa e delay de requisição.
  *     tags:
  *       - Articles
  *     security: 
@@ -227,7 +229,8 @@ router.get('/articles/tag', lightSlowDown('articlesFindByTag'), lightRateLimit('
  *     summary: Carrega um artigo pelo slug
  *     description: 
  *       Recupera um artigo específico pelo seu slug, junto com seus comentários.
- *       Esta rota está protegida por autenticação via Cookie, possui limitação de taxa e delay de requisição.
+ *       Esta rota está protegida por autenticação via Cookie, mas está disponível para usuários com qualquer nível de assinatura, 
+ *       incluindo usuários sem assinaturas (free) e sem autenticação, desde que tenha a assinatura necessária. possui limitação de taxa e delay de requisição.
  *     tags:
  *       - Articles
  *     security: 
@@ -295,7 +298,8 @@ router.get('/article/:slug', lightSlowDown('articleBySlug'), lightRateLimit('art
  *     summary: Busca artigos por termo
  *     description: 
  *       Realiza busca textual em artigos com paginação.
- *       Esta rota está protegida por autenticação via Cookie, possui limitação de taxa e delay de requisição.
+ *       Esta rota está protegida por autenticação via Cookie, mas está disponível para usuários com qualquer nível de assinatura, 
+ *       incluindo usuários sem assinaturas (free) e sem autenticação. possui limitação de taxa e delay de requisição.
  *     tags:
  *       - Articles
  *     security: 
