@@ -76,7 +76,7 @@ export const findArticleByTag = async (req, res) => {
 
 export const searchArticles = async (req, res) => {
   try {
-    const search = req.query.search; // Termo de busca, para APIs REST geralmente é passado via query params, sendo a melhor opção.
+    const search = req.query.search;
     const pageNum = req.query.page;
     const limitNum = req.query.limit;
 
@@ -97,4 +97,40 @@ export const searchArticles = async (req, res) => {
     logger.error('Erro ao pesquisar artigos', { ...getRequestMeta(req), error: error.message, stack: error.stack });
     return res.status(500).json({ message: 'Internal server error' });
   }  
-}
+};
+
+export const renderMainPage = async (req, res) => {
+  try {
+    const pageNum = req.query.page;
+    const limitNum = req.query.limit;
+
+    const data = await GetAllArticles(pageNum, limitNum);
+
+    const user = req.user || null;
+
+    res.render('main', {
+      articles: data.articles,
+      pagination: data.pagination,
+      user: user
+    });
+    logger.info('Página principal renderizada', getRequestMeta(req));
+  } catch (error) {
+    if(error.message === 'Articles not found'){
+      logger.warn('Artigos não encontrados para renderizar página principal', getRequestMeta(req, { error: error.message }));
+      return res.status(404).render('main', {
+        articles: [],
+        pagination: null,
+        user: null,
+        error: 'Articles not found'
+      });
+    }
+
+    logger.error('Erro ao renderizar página principal', { ...getRequestMeta(req), error: error.message, stack: error.stack });
+    return res.status(500).render('main', {
+      articles: [],
+      pagination: null,
+      user: null,
+      error: 'Internal server error'
+    });
+  }
+};
