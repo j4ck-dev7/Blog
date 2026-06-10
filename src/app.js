@@ -20,6 +20,7 @@ app.use('/api/webhooks', webhookRouter);
 
 app.set("views", path.join(__dirname, 'views'));
 app.set("view engine", "ejs");
+
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(helmet()); // Ativa o helmet com suas configurações padrão.
