@@ -1,4 +1,6 @@
 import 'dotenv/config';
+import fs from 'fs';
+import path from 'path';
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import userRoute from './routes/userRoute.js';
@@ -16,6 +18,8 @@ const app = express();
 
 app.use('/api/webhooks', webhookRouter);
 
+app.set("views", path.join(__dirname, 'views'));
+app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(helmet()); // Ativa o helmet com suas configurações padrão.
