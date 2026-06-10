@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog - Artigos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+        }
+        
+        header {
+            background: #333;
+            color: #fff;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .user-section {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .user-section a {
+            color: #fff;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        .user-section a:hover {
+            background-color: #555;
+        }
+        
+        main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #333;
+        }
+        
+        .articles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+        
+        .article-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .article-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .article-title {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+        
+        .article-title a {
+            color: #333;
+            text-decoration: none;
+        }
+        
+        .article-title a:hover {
+            color: #007bff;
+        }
+        
+        .article-summary {
+            color: #666;
+            margin-bottom: 1rem;
+        }
+        
+        .article-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            color: #999;
+        }
+        
+        .article-author {
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .article-date {
+            font-style: italic;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+            background: #333;
+            color: #fff;
+            margin-top: 2rem;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .pagination a, .pagination span {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #333;
+        }
+        
+        .pagination .current {
+            background: #333;
+            color: #fff;
+            border-color: #333;
+        }
+        
+        .pagination a:hover {
+            background: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">Meu Blog</div>
+        <div class="user-section">
+            <% if (user && user.authenticationType) { %>
+                <% if (user.authenticationType === 'local') { %>
+                    <a href="/user/menu">Menu do Usuário</a>
+                <% } else if (user.authenticationType === 'google' || user.authenticationType === 'Oauth2') { %>
+                    <a href="/auth/oauth">Login com OAuth</a>
+                <% } %>
+            <% } else { %>
+                <a href="/auth/login">Login</a>
+                <a href="/auth/register">Registro</a>
+            <% } %>
+        </div>
+    </header>
+    
+    <main>
+        <h1>Artigos</h1>
+        
+        <% if (articles && articles.length > 0) { %>
+            <div class="articles-grid">
+                <% articles.forEach(article => { %>
+                    <article class="article-card">
+                        <h2 class="article-title">
+                            <a href="/article/<%= article.slug %>"><%= article.title %></a>
+                        </h2>
+                        <p class="article-summary"><%= article.summary %></p>
+                        <div class="article-meta">
+                            <span class="article-author">Por: <%= article.author %></span>
+                            <span class="article-date">
+                                <%= new Date(article.creationDate).toLocaleDateString('pt-BR') %>
+                            </span>
+                        </div>
+                    </article>
+                <% }); %>
+            </div>
+            
+            <% if (pagination) { %>
+                <div class="pagination">
+                    <% if (pagination.hasPrev) { %>
+                        <a href="?page=<%= pagination.currentPage - 1 %>&limit=<%= pagination.limit %>">Anterior</a>
+                    <% } else { %>
+                        <span>Anterior</span>
+                    <% } %>
+                    
+                    <% for (let i = 1; i <= pagination.pages; i++) { %>
+                        <% if (i === pagination.currentPage) { %>
+                            <span class="current"><%= i %></span>
+                        <% } else { %>
+                            <a href="?page=<%= i %>&limit=<%= pagination.limit %>"><%= i %></a>
+                        <% } %>
+                    <% } %>
+                    
+                    <% if (pagination.hasNext) { %>
+                        <a href="?page=<%= pagination.currentPage + 1 %>&limit=<%= pagination.limit %>">Próximo</a>
+                    <% } else { %>
+                        <span>Próximo</span>
+                    <% } %>
+                </div>
+            <% } %>
+        <% } else { %>
+            <p>Nenhum artigo encontrado.</p>
+        <% } %>
+    </main>
+    
+    <footer>
+        <p>&copy; <%= new Date().getFullYear() %> - Meu Blog. Todos os direitos reservados.</p>
+    </footer>
+</body>
+</html>
