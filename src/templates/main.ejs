@@ -143,21 +143,7 @@
     </style>
 </head>
 <body>
-    <header>
-        <div class="logo">Blog</div>
-        <div class="user-section">
-            <% if (user && user.authenticationType) { %>
-                <% if (user.authenticationType === 'local') { %>
-                    <a href="/user/menu">Menu do Usuário</a>
-                <% } else if (user.authenticationType === 'google' || user.authenticationType === 'Oauth2') { %>
-                    <a href="/auth/oauth">Login com OAuth</a>
-                <% } %>
-            <% } else { %>
-                <a href="/auth/login">Login</a>
-                <a href="/auth/register">Cadastrar</a>
-            <% } %>
-        </div>
-    </header>
+    <%- include('partials/_header', { user: user }) %>
     
     <main>        
         <% if (articles && articles.length > 0) { %>
@@ -208,15 +194,7 @@
     
     <footer>
         <div class="container">
-            <div class="footer-div">
-                <div class="footer-logo">
-                    <p>&copy; <%= new Date().getFullYear() %> - Blog</p>
-                </div>
-
-                <div class="link">
-                    <a href="/github">Github</a>
-                </div>
-            </div>
+            <%- include('partials/_footer') %>
         </div>
     </footer>
 </body>

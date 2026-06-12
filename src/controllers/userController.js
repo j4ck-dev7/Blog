@@ -184,3 +184,33 @@ export const signUpWithOauth = async (req, res) => {
         res.status(500).json({ message: 'Internal server error' });
     }
 }
+
+export const renderLoginPage = async (req, res) => {
+    try {
+        const user = req.user || null;
+        res.render('login', { user: user, error: null, success: null });
+        logger.info('Página de login renderizada', getRequestMeta(req));
+    } catch (error) {
+        logger.error('Erro ao renderizar página de login', { ...getRequestMeta(req), error: error.message, stack: error.stack });
+        res.status(500).render('login', {
+            user: null,
+            error: 'Erro interno do servidor',
+            success: null
+        });
+    }
+}
+
+export const renderRegisterPage = async (req, res) => {
+    try {
+        const user = req.user || null;
+        res.render('register', { user: user, error: null, success: null });
+        logger.info('Página de registro renderizada', getRequestMeta(req));
+    } catch (error) {
+        logger.error('Erro ao renderizar página de registro', { ...getRequestMeta(req), error: error.message, stack: error.stack });
+        res.status(500).render('register', {
+            user: null,
+            error: 'Erro interno do servidor',
+            success: null
+        });
+    }
+}

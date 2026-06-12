@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { signIn, signUp, signUpWithOauth, signInWithOauth, getSignInGoogleUrl, getSignUpGoogleUrl, verifyUser } from '../controllers/userController.js';
+import { signIn, signUp, signUpWithOauth, signInWithOauth, getSignInGoogleUrl, getSignUpGoogleUrl, verifyUser, renderLoginPage, renderRegisterPage } from '../controllers/userController.js';
 import { like, DeleteLike, allLikes } from '../controllers/likeController.js';
 import { comment, removeComment, EditComment } from '../controllers/commentController.js';
 import { allArticles, loadArticle, findArticleByTag, searchArticles, renderMainPage } from '../controllers/articleController.js';
@@ -1262,5 +1262,57 @@ router.delete('/article/:slug/comment/:commentId', heavySlowDown('deleteComment'
  *               type: string
  */
 router.get('/main', lightSlowDown('main'), lightRateLimit('main'), auth, renderMainPage);
+
+/**
+ * @swagger
+ * /auth/login:
+ *   get:
+ *     summary: Renderiza a página de login
+ *     description: 
+ *       Exibe o formulário de login com opção de autenticação via Google OAuth.
+ *       Esta rota é acessível sem autenticação.
+ *     tags:
+ *       - Authentication
+ *     responses:
+ *       200:
+ *         description: Página de login renderizada com sucesso
+ *         content:
+ *           text/html:
+ *             schema:
+ *               type: string
+ *       500:
+ *         description: Erro interno do servidor
+ *         content:
+ *           text/html:
+ *             schema:
+ *               type: string
+ */
+router.get('/auth/login', lightSlowDown('login'), lightRateLimit('login'), renderLoginPage);
+
+/**
+ * @swagger
+ * /auth/register:
+ *   get:
+ *     summary: Renderiza a página de registro
+ *     description: 
+ *       Exibe o formulário de registro com opção de autenticação via Google OAuth.
+ *       Esta rota é acessível sem autenticação.
+ *     tags:
+ *       - Authentication
+ *     responses:
+ *       200:
+ *         description: Página de registro renderizada com sucesso
+ *         content:
+ *           text/html:
+ *             schema:
+ *               type: string
+ *       500:
+ *         description: Erro interno do servidor
+ *         content:
+ *           text/html:
+ *             schema:
+ *               type: string
+ */
+router.get('/auth/register', lightSlowDown('register'), lightRateLimit('register'), renderRegisterPage);
 
 export default router;

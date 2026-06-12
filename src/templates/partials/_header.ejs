@@ -1,0 +1,15 @@
+<header>
+    <div class="logo">Blog</div>
+    <div class="user-section">
+        <% if (user && user.authenticationType) { %>
+            <% if (user.authenticationType === 'local') { %>
+                <a href="/user/menu">Menu do Usuário</a>
+            <% } else if (user.authenticationType === 'google' || user.authenticationType === 'Oauth2') { %>
+                <a href="/auth/oauth">Login com OAuth</a>
+            <% } %>
+        <% } else { %>
+            <a href="/auth/login">Login</a>
+            <a href="/auth/register">Cadastrar</a>
+        <% } %>
+    </div>
+</header>
