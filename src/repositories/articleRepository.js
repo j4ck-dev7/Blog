@@ -88,7 +88,7 @@ export const findArticleBySlug = async (slug) => {
     logger.debug('findArticleBySlug called', { slug });
     try {
         const article = await Article.findOne({ slug })
-            .select('title author creationDate tags content')
+            .select('title author creationDate content')
             .lean();
         return { success: true, data: { article: normalizeArticle(article) } };
     } catch (err) {

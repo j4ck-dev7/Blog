@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog - <%= article.title %></title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+            background-color: #000000;
+        }
+        
+        header {
+            color: #fff;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .search-container {
+            max-width: 300px;
+            height: 32px;
+            padding-inline: 13px;
+        }
+        
+        .search-container form {
+            display: flex;
+            height: 100%;
+        }
+        
+        .search-container input {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: transparent;
+            color: #fff;
+            outline: none;
+        }
+
+        #theme-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #fff;
+            font-size: 1.2rem;
+            padding: 0 8px;
+        }
+        
+        .user-section {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+        
+        .user-section a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .user-section a:hover {
+            color: #555;
+        }
+        
+        main {
+            max-width: 964px;
+            margin: 2.7rem auto;
+            padding: 1.5rem;
+        }
+        
+        .article-detail {
+            width: 100%;
+            margin-bottom: 2rem;
+        }
+        
+        .article-title-detail {
+            font-size: 1.5rem;
+            color: #ffffff;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .article-content {
+            color: #d0c5b8;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+            white-space: pre-line;
+        }
+        
+        .article-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.8rem;
+            color: #d0c5b8;
+            margin-bottom: 2rem;
+        }
+        
+        .interactions-section {
+            border-top: 1px solid #706450;
+            padding-top: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .interactions-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .like-section {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .like-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: #fff;
+            transition: color 0.2s;
+            padding: 0.2rem;
+        }
+        
+        .like-button:hover {
+            opacity: 0.8;
+        }
+        
+        .like-button.liked {
+            color: #00640a;
+        }
+        
+        .like-button.filled {
+            color: #00640a;
+        }
+        
+        .like-text {
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .comment-section {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .comment-button {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 0.3rem 0.6rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .comment-button:hover {
+            color: #555;
+        }
+        
+        .comments-section {
+            border-top: 1px solid #706450;
+            padding-top: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .comments-header {
+            color: #ffffff;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .comment-form {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .comment-input {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid #706450;
+            border-radius: 4px;
+            background: #1a1a1a;
+            color: #fff;
+            font-size: 0.9rem;
+            resize: none;
+            min-height: 80px;
+        }
+        
+        .comment-input:focus {
+            outline: none;
+            border-color: #00640a;
+        }
+        
+        .comment-input::placeholder {
+            color: #888;
+        }
+        
+        .comment-submit {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            align-self: flex-end;
+        }
+        
+        .comment-submit:hover {
+            color: #555;
+        }
+        
+        .comments-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .comment-item {
+            border-top: 1px solid #706450;
+            padding-top: 1rem;
+        }
+        
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .comment-author {
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .comment-date {
+            color: #d0c5b8;
+            font-size: 0.75rem;
+        }
+        
+        .comment-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .comment-action-btn {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            padding: 0.2rem 0.4rem;
+        }
+        
+        .comment-action-btn:hover {
+            color: #555;
+        }
+        
+        .comment-text {
+            color: #d0c5b8;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        
+        .no-comments {
+            color: #d0c5b8;
+            font-style: italic;
+            text-align: center;
+            padding: 1rem;
+        }
+        
+        footer {
+            width: 100%;
+        }
+
+        .container{
+            max-width: 964px;
+            margin: auto;
+            padding-inline: 1.5rem;
+            padding-top: 1rem;
+        }
+
+        .footer-div{
+            text-align: center;
+            padding: 2rem;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid #706450;
+        }
+        
+        .footer-logo p{
+            color: #ffffff;
+        }
+
+        .link a{
+            color: #31bcff;
+            text-decoration: none;
+        }
+
+        .link a:hover{
+            text-decoration: underline;
+        }
+        
+        .loading {
+            color: #d0c5b8;
+            font-size: 0.9rem;
+            text-align: center;
+            padding: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <%- include('partials/_header', { user: user }) %>
+    
+    <main>
+        <article class="article-detail">
+            <h1 class="article-title-detail"><%= article.title %></h1>
+            <div class="article-content"><%= article.content %></div>
+            <div class="article-meta">
+                <span class="article-likes" id="like-count"><%= article.likeCount %> curtidas</span>
+                <span class="article-comments" id="comment-count"><%= article.commentCount %> comentários</span>
+                <span class="article-views"><%= article.viewsCount %> visualizações</span>
+                <span class="article-author"><%= article.author %></span>
+                <span class="article-date">
+                    <%= new Date(article.creationDate).toLocaleDateString('pt-BR') %>
+                </span>
+            </div>
+        </article>
+        
+        <!-- Seção de Interações -->
+        <div class="interactions-section">
+            <div class="interactions-container">
+                <div class="like-section">
+                    <button class="like-button <% if (user && user.likedArticles && user.likedArticles.includes(article.id)) { %>filled<% } %>" 
+                            id="like-btn" 
+                            title="curtir o artigo"
+                            data-article-id="<%= article.id %>"
+                            data-is-liked="<%= user && user.likedArticles && user.likedArticles.includes(article.id) ? 'true' : 'false' %>">
+                        <% if (user && user.likedArticles && user.likedArticles.includes(article.id)) { %>
+                            ♥
+                        <% } else { %>
+                            ♡
+                        <% } %>
+                    </button>
+                    <span class="like-text" id="like-text"><%= article.likeCount %> curtidas</span>
+                </div>
+                <div class="comment-section">
+                    <a href="#comment-form" class="comment-button">Comentar</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Seção de Comentários -->
+        <div class="comments-section">
+            <h3 class="comments-header">Comentários</h3>
+            
+            <!-- Formulário de Comentário -->
+            <% if (user) { %>
+                <form class="comment-form" id="comment-form">
+                    <textarea class="comment-input" 
+                              id="comment-content" 
+                              placeholder="Digite seu comentário..." 
+                              required></textarea>
+                    <button type="submit" class="comment-submit">Postar</button>
+                </form>
+            <% } else { %>
+                <p style="color: #d0c5b8; margin-bottom: 1rem;">
+                    <a href="/app/auth/register" style="color: #fff; text-decoration: none; font-weight: 600;">Faça login</a> para comentar.
+                </p>
+            <% } %>
+            
+            <!-- Lista de Comentários -->
+            <div class="comments-list" id="comments-list">
+                <% if (comments && comments.length > 0) { %>
+                    <% comments.forEach(comment => { %>
+                        <div class="comment-item" data-comment-id="<%= comment.id %>">
+                            <div class="comment-header">
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <span class="comment-author"><%= comment.author %></span>
+                                    <span class="comment-date"><%= new Date(comment.creationDate).toLocaleDateString('pt-BR') %></span>
+                                </div>
+                                <% if (user && user.id === comment.userId) { %>
+                                    <div class="comment-actions">
+                                        <a class="comment-action-btn edit-comment-btn" 
+                                           data-comment-id="<%= comment.id %>">
+                                            Editar
+                                        </a>
+                                        <a class="comment-action-btn delete-comment-btn" 
+                                           data-comment-id="<%= comment.id %>">
+                                            Excluir
+                                        </a>
+                                    </div>
+                                <% } %>
+                            </div>
+                            <div class="comment-text"><%= comment.content %></div>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <p class="no-comments">Nenhum comentário ainda. Seja o primeiro a comentar!</p>
+                <% } %>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <%- include('partials/_footer') %>
+        </div>
+    </footer>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const likeBtn = document.getElementById('like-btn');
+            const likeCount = document.getElementById('like-count');
+            const likeText = document.getElementById('like-text');
+            const commentForm = document.getElementById('comment-form');
+            const commentsList = document.getElementById('comments-list');
+            const articleId = '<%= article.id %>';
+            const isAuthenticated = <%= user ? 'true' : 'false' %>;
+            
+            // Função para formatar data
+            function formatDate(dateString) {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            }
+            
+            // Like Button Logic
+            if (likeBtn) {
+                likeBtn.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    
+                    if (!isAuthenticated) {
+                        window.location.href = '/app/auth/register';
+                        return;
+                    }
+                    
+                    const isLiked = likeBtn.dataset.isLiked === 'true';
+                    const newIsLiked = !isLiked;
+                    
+                    try {
+                        const response = await fetch('/api/articles/like', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                articleId: articleId,
+                                action: newIsLiked ? 'like' : 'unlike'
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (response.ok) {
+                            // Atualizar UI
+                            likeBtn.dataset.isLiked = newIsLiked;
+                            if (newIsLiked) {
+                                likeBtn.classList.add('filled');
+                                likeBtn.innerHTML = '♥';
+                            } else {
+                                likeBtn.classList.remove('filled');
+                                likeBtn.innerHTML = '♡';
+                            }
+                            
+                            // Atualizar contadores
+                            const newCount = newIsLiked ? 
+                                parseInt(likeCount.textContent) + 1 : 
+                                parseInt(likeCount.textContent) - 1;
+                            likeCount.textContent = newCount + ' curtidas';
+                            likeText.textContent = newCount + ' curtidas';
+                            
+                            // Atualizar no DOM
+                            document.getElementById('like-count').textContent = newCount + ' curtidas';
+                        }
+                    } catch (error) {
+                        console.error('Erro ao processar like:', error);
+                        alert('Erro ao processar curtida. Tente novamente.');
+                    }
+                });
+            }
+            
+            // Comment Form Logic
+            if (commentForm) {
+                commentForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const content = document.getElementById('comment-content').value;
+                    
+                    if (!content.trim()) {
+                        alert('Digite um comentário válido.');
+                        return;
+                    }
+                    
+                    try {
+                        const response = await fetch('/api/comments/create', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                articleId: articleId,
+                                content: content
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (response.ok && data.comment) {
+                            // Adicionar comentário na lista
+                            const commentItem = document.createElement('div');
+                            commentItem.className = 'comment-item';
+                            commentItem.dataset.commentId = data.comment.id;
+                            commentItem.innerHTML = `
+                                <div class="comment-header">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <span class="comment-author">${data.comment.author}</span>
+                                        <span class="comment-date">${formatDate(data.comment.creationDate)}</span>
+                                    </div>
+                                    <div class="comment-actions">
+                                        <a class="comment-action-btn edit-comment-btn" data-comment-id="${data.comment.id}">Editar</a>
+                                        <a class="comment-action-btn delete-comment-btn" data-comment-id="${data.comment.id}">Excluir</a>
+                                    </div>
+                                </div>
+                                <div class="comment-text">${data.comment.content}</div>
+                            `;
+                            
+                            // Inserir no início da lista
+                            if (commentsList.querySelector('.no-comments')) {
+                                commentsList.innerHTML = '';
+                            }
+                            commentsList.insertBefore(commentItem, commentsList.firstChild);
+                            
+                            // Limpar formulário
+                            document.getElementById('comment-content').value = '';
+                            
+                            // Atualizar contador de comentários
+                            const currentCount = parseInt(document.getElementById('comment-count').textContent);
+                            document.getElementById('comment-count').textContent = (currentCount + 1) + ' comentários';
+                            
+                            // Adicionar event listeners para os novos botões
+                            setupCommentButtons(commentItem);
+                        }
+                    } catch (error) {
+                        console.error('Erro ao postar comentário:', error);
+                        alert('Erro ao postar comentário. Tente novamente.');
+                    }
+                });
+            }
+            
+            // Setup event listeners para botões de editar/excluir
+            function setupCommentButtons(commentItem) {
+                const editBtn = commentItem.querySelector('.edit-comment-btn');
+                const deleteBtn = commentItem.querySelector('.delete-comment-btn');
+                
+                if (editBtn) {
+                    editBtn.addEventListener('click', function() {
+                        const commentId = this.dataset.commentId;
+                        const commentText = commentItem.querySelector('.comment-text');
+                        const originalContent = commentText.textContent;
+                        
+                        // Criar textarea para edição
+                        const textarea = document.createElement('textarea');
+                        textarea.value = originalContent;
+                        textarea.className = 'comment-input';
+                        textarea.style.minHeight = '60px';
+                        
+                        // Criar botões de salvar e cancelar
+                        const saveBtn = document.createElement('button');
+                        saveBtn.textContent = 'Salvar';
+                        saveBtn.className = 'comment-submit';
+                        
+                        const cancelBtn = document.createElement('button');
+                        cancelBtn.textContent = 'Cancelar';
+                        cancelBtn.className = 'comment-action-btn';
+                        cancelBtn.style.marginLeft = '0.5rem';
+                        
+                        // Substituir conteúdo pelo textarea
+                        const tempDiv = document.createElement('div');
+                        tempDiv.style.display = 'flex';
+                        tempDiv.style.flexDirection = 'column';
+                        tempDiv.style.gap = '0.5rem';
+                        tempDiv.style.marginTop = '0.5rem';
+                        tempDiv.appendChild(textarea);
+                        
+                        const buttonsDiv = document.createElement('div');
+                        buttonsDiv.style.display = 'flex';
+                        buttonsDiv.style.justifyContent = 'flex-end';
+                        buttonsDiv.style.gap = '0.5rem';
+                        buttonsDiv.appendChild(saveBtn);
+                        buttonsDiv.appendChild(cancelBtn);
+                        tempDiv.appendChild(buttonsDiv);
+                        
+                        commentText.innerHTML = '';
+                        commentText.appendChild(tempDiv);
+                        
+                        // Focus no textarea
+                        textarea.focus();
+                        
+                        // Função para restaurar conteúdo original
+                        function restore() {
+                            commentText.textContent = originalContent;
+                        }
+                        
+                        // Cancelar
+                        cancelBtn.addEventListener('click', restore);
+                        
+                        // Salvar
+                        saveBtn.addEventListener('click', async function() {
+                            const newContent = textarea.value.trim();
+                            if (!newContent) {
+                                alert('Digite um comentário válido.');
+                                return;
+                            }
+                            
+                            try {
+                                const response = await fetch('/api/comments/update', {
+                                    method: 'PUT',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        commentId: commentId,
+                                        content: newContent
+                                    })
+                                });
+                                
+                                if (response.ok) {
+                                    commentText.textContent = newContent;
+                                } else {
+                                    alert('Erro ao atualizar comentário.');
+                                    restore();
+                                }
+                            } catch (error) {
+                                console.error('Erro ao atualizar comentário:', error);
+                                alert('Erro ao atualizar comentário.');
+                                restore();
+                            }
+                        });
+                    });
+                }
+                
+                if (deleteBtn) {
+                    deleteBtn.addEventListener('click', async function() {
+                        const commentId = this.dataset.commentId;
+                        
+                        if (!confirm('Tem certeza que deseja excluir este comentário?')) {
+                            return;
+                        }
+                        
+                        try {
+                            const response = await fetch('/api/comments/delete', {
+                                method: 'DELETE',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    commentId: commentId
+                                })
+                            });
+                            
+                            if (response.ok) {
+                                // Remover comentário da UI
+                                commentItem.remove();
+                                
+                                // Atualizar contador
+                                const currentCount = parseInt(document.getElementById('comment-count').textContent);
+                                document.getElementById('comment-count').textContent = (currentCount - 1) + ' comentários';
+                                
+                                // Se não tiver mais comentários
+                                if (commentsList.children.length === 0) {
+                                    const noComments = document.createElement('p');
+                                    noComments.className = 'no-comments';
+                                    noComments.textContent = 'Nenhum comentário ainda. Seja o primeiro a comentar!';
+                                    commentsList.appendChild(noComments);
+                                }
+                            } else {
+                                alert('Erro ao excluir comentário.');
+                            }
+                        } catch (error) {
+                            console.error('Erro ao excluir comentário:', error);
+                            alert('Erro ao excluir comentário.');
+                        }
+                    });
+                }
+            }
+            
+            // Adicionar event listeners para comentários existentes
+            document.querySelectorAll('.comment-item').forEach(commentItem => {
+                setupCommentButtons(commentItem);
+            });
+            
+            // Sincronizar com modo claro/escuro do header
+            const themeToggle = document.getElementById('theme-toggle');
+            const themeIcon = document.getElementById('theme-icon');
+            const body = document.body;
+            
+            function updateThemeForArticle(isDarkMode) {
+                if (isDarkMode) {
+                    // Modo escuro já é o padrão
+                    document.querySelectorAll('.like-button, .comment-button, .comment-action-btn, .comment-submit, .comment-input').forEach(el => {
+                        el.style.color = '#fff';
+                    });
+                    document.querySelectorAll('.comment-input').forEach(el => {
+                        el.style.background = '#1a1a1a';
+                        el.style.borderColor = '#706450';
+                    });
+                } else {
+                    // Modo claro
+                    document.querySelectorAll('.like-button, .comment-button, .comment-action-btn, .comment-submit').forEach(el => {
+                        el.style.color = '#333';
+                    });
+                    document.querySelectorAll('.comment-input').forEach(el => {
+                        el.style.background = '#fff';
+                        el.style.borderColor = '#ccc';
+                        el.style.color = '#333';
+                    });
+                }
+            }
+            
+            // Observar cliques no botão de tema do header
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.attributeName === "style") {
+                        const computedStyle = window.getComputedStyle(body);
+                        const isDark = computedStyle.backgroundColor === 'rgb(0, 0, 0)' || computedStyle.backgroundColor === '';
+                        updateThemeForArticle(isDark);
+                    }
+                });
+            });
+            
+            observer.observe(body, { attributes: true });
+            
+            // Inicializar com tema atual
+            const computedStyle = window.getComputedStyle(body);
+            const isDark = computedStyle.backgroundColor === 'rgb(0, 0, 0)' || computedStyle.backgroundColor === '';
+            updateThemeForArticle(isDark);
+        });
+    </script>
+</body>
+</html>
