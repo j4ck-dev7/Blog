@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blog - Artigos</title>
+    <title>Blog - Resultados da Pesquisa</title>
     <style>
         * {
             margin: 0;
@@ -175,12 +175,21 @@
         .link a:hover{
             text-decoration: underline;
         }
+        
+        .search-info {
+            margin-bottom: 1rem;
+            color: #ffffff;
+        }
     </style>
 </head>
 <body>
     <%- include('partials/_header', { user: user }) %>
     
-    <main>        
+    <main>
+        <% if (query) { %>
+            <p class="search-info">Resultados para: "<%= query %>"</p>
+        <% } %>
+        
         <% if (articles && articles.length > 0) { %>
             <div class="articles-section">
                 <% articles.forEach(article => { %>
@@ -210,20 +219,20 @@
             <% if (pagination) { %>
                 <div class="pagination">
                     <% if (pagination.hasPrev) { %>
-                        <a href="?page=<%= pagination.currentPage - 1 %>&limit=<%= pagination.limit %>"> &lt; Anterior</a>
+                        <a href="/search?q=<%= query %>&page=<%= pagination.currentPage - 1 %>&limit=<%= pagination.limit %>"> &lt; Anterior</a>
                     <% } else { %>
                         <span>&lt; Anterior</span>
                     <% } %>
                     
                     <% if (pagination.hasNext) { %>
-                        <a href="?page=<%= pagination.currentPage + 1 %>&limit=<%= pagination.limit %>">Próximo &gt;</a>
+                        <a href="/search?q=<%= query %>&page=<%= pagination.currentPage + 1 %>&limit=<%= pagination.limit %>">Próximo &gt;</a>
                     <% } else { %>
                         <span>Próximo &gt;</span>
                     <% } %>
                 </div>
             <% } %>
         <% } else { %>
-            <p>Nenhum artigo encontrado.</p>
+            <p class="search-info">Nenhum artigo encontrado para "<%= query %>".</p>
         <% } %>
     </main>
     
