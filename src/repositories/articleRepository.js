@@ -4,17 +4,15 @@ import { logger } from '../config/logger.js';
 const normalizeArticle = (a) => {
     if (!a) return null;
     return {
-        id: a._id ? a._id.toString() : undefined,
         title: a.title,
-        summary: a.summary,
         slug: a.slug,
         creationDate: a.creationDate,
         tags: a.tags,
         author: a.author,
         content: a.content,
-        viewsCount: a.viewsCount,
-        likeCount: a.likeCount,
-        commentCount: a.commentCount,
+        viewsCount: a.viewsCount || 0,
+        likeCount: a.likeCount || 0,
+        commentCount: a.commentCount || 0,
         planRole: a.planRole
     };
 };
@@ -22,13 +20,13 @@ const normalizeArticle = (a) => {
 const normalizeArticleListItem = (a) => {
     if (!a) return null;
     return {
-        id: a._id ? a._id.toString() : undefined,
         title: a.title,
-        summary: a.summary,
         slug: a.slug,
         creationDate: a.creationDate,
-        tags: a.tags,
-        author: a.author
+        author: a.author,
+        viewsCount: a.viewsCount || 0,
+        likeCount: a.likeCount || 0,
+        commentCount: a.commentCount || 0,
     };
 };
 
@@ -39,7 +37,7 @@ export const allArticles = async (skip, limit) => {
             .sort({ creationDate: -1 })
             .skip(skip)
             .limit(limit)
-            .select('title summary slug creationDate tags author')
+            .select('title slug creationDate author likeCount commentCount viewsCount')
             .lean();
         const mapped = (articles || []).map(normalizeArticleListItem);
         return { success: true, data: { articles: mapped } };

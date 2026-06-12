@@ -101,7 +101,7 @@ export const searchArticles = async (req, res) => {
 
 export const renderMainPage = async (req, res) => {
   try {
-    const pageNum = req.query.page;
+    const pageNum = req.query.page || 1;
     const limitNum = req.query.limit;
 
     const data = await GetAllArticles(pageNum, limitNum);
