@@ -3,7 +3,7 @@ import express from 'express';
 import { signIn, signUp, signUpWithOauth, signInWithOauth, getSignInGoogleUrl, getSignUpGoogleUrl, verifyUser, renderLoginPage, renderRegisterPage } from '../controllers/userController.js';
 import { like, DeleteLike, allLikes } from '../controllers/likeController.js';
 import { comment, removeComment, EditComment } from '../controllers/commentController.js';
-import { allArticles, loadArticle, findArticleByTag, searchArticles, renderMainPage } from '../controllers/articleController.js';
+import { allArticles, loadArticle, findArticleByTag, searchArticles, renderMainPage, renderArticlePage, renderSearchPage } from '../controllers/articleController.js';
 import { subscribe } from '../controllers/subscription.js';
 import { signInSchema, signInErrorMap } from '../validators/signIn.validation.js';
 import { signUpSchema, signUpErrorMap } from '../validators/signUp.validation.js';
@@ -1262,6 +1262,97 @@ router.delete('/article/:slug/comment/:commentId', heavySlowDown('deleteComment'
  *               type: string
  */
 router.get('/main', lightSlowDown('main'), lightRateLimit('main'), auth, renderMainPage);
+
+/**
+ * @swagger
+ * /article/{slug}:
+ *   get:
+ *     summary: Renderiza a página de um artigo
+ *     description: 
+ *       Renderiza a página completa de um artigo com conteúdo, comentários e interações.
+ *       Esta rota não retorna JSON, mas sim HTML renderizado.
+ *     tags:
+ *       - SSR
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: "meu-artigo"
+ *           description: Slug do artigo
+ *     responses:
+ *       200:
+ *         description: Página HTML do artigo renderizada com sucesso
+ *         content:
+ *           text/html:
+ *             schema:
+ *               type: string
+ *       404:
+ *         description: Artigo não encontrado
+ *         content:
+ *           text/html:
+ *             schema:
+ *               type: string
+ *       500:
+ *         description: Erro interno do servidor
+ *         content:
+ *           text/html:
+ *             schema:
+ *               type: string
+ */
+router.get('/article/:slug', lightSlowDown('article'), lightRateLimit('article'), auth, renderArticlePage);
+
+/**
+ * @swagger
+ * /search:
+ *   get:
+ *     summary: Renderiza a página de resultados de busca
+ *     description: 
+ *       Renderiza a página com resultados de busca de artigos.
+ *       Esta rota não retorna JSON, mas sim HTML renderizado.
+ *     tags:
+ *       - SSR
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *           example: "javascript"
+ *           description: Termo de busca
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *           description: Número da página
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           example: 20
+ *           description: Quantidade de itens por página
+ *     responses:
+ *       200:
+ *         description: Página HTML de busca renderizada com sucesso
+ *         content:
+ *           text/html:
+ *             schema:
+ *               type: string
+ *       404:
+ *         description: Nenhum artigo encontrado
+ *         content:
+ *           text/html:
+ *             schema:
+ *               type: string
+ *       500:
+ *         description: Erro interno do servidor
+ *         content:
+ *           text/html:
+ *             schema:
+ *               type: string
+ */
+router.get('/search', lightSlowDown('search'), lightRateLimit('search'), auth, renderSearchPage);
 
 /**
  * @swagger

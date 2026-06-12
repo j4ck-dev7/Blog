@@ -134,3 +134,80 @@ export const renderMainPage = async (req, res) => {
     });
   }
 };
+
+export const renderArticlePage = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const user = req.user || null;
+    const userId = user ? user.id : null;
+
+    const data = await LoadArticleBySlug(slug, userId);
+    
+    if (!data || !data.article) {
+      logger.warn('Artigo não encontrado para renderizar página', getRequestMeta(req, { slug }));
+      return res.status(404).render('main', {
+        articles: [],
+        pagination: null,
+        user: user,
+        error: 'Article not found'
+      });
+    }
+
+    // LoadArticleBySlug já retorna os comentários
+    const comments = data.comment || [];
+    
+    res.render('article', {
+      article: data.article,
+      comments: comments,
+      user: user
+    });
+    logger.info('Página de artigo renderizada', getRequestMeta(req));
+  } catch (error) {
+    logger.error('Erro ao renderizar página de artigo', { ...getRequestMeta(req), error: error.message, stack: error.stack });
+    return res.status(500).render('article', {
+      article: null,
+      comments: [],
+      user: null,
+      error: 'Internal server error'
+    });
+  }
+};
+
+export const renderSearchPage = async (req, res) => {
+  try {
+    const query = req.query.q || '';
+    const pageNum = req.query.page || 1;
+    const limitNum = req.query.limit;
+    const user = req.user || null;
+
+    const data = await SearchForArticles(query, pageNum, limitNum);
+
+    res.render('search', {
+      articles: data.articles,
+      pagination: data.pagination,
+      query: query,
+      user: user
+    });
+    logger.info('Página de busca renderizada', getRequestMeta(req));
+  } catch (error) {
+    if(error.message === 'Articles not found'){
+      logger.warn('Nenhum artigo encontrado para a busca', getRequestMeta(req, { query: req.query.q, error: error.message }));
+      return res.status(404).render('search', {
+        articles: [],
+        pagination: null,
+        query: req.query.q || '',
+        user: null,
+        error: 'Articles not found'
+      });
+    }
+
+    logger.error('Erro ao renderizar página de busca', { ...getRequestMeta(req), error: error.message, stack: error.stack });
+    return res.status(500).render('search', {
+      articles: [],
+      pagination: null,
+      query: req.query.q || '',
+      user: null,
+      error: 'Internal server error'
+    });
+  }
+};
