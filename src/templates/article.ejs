@@ -342,7 +342,7 @@
 <body>
     <%- include('partials/_header', { user: user }) %>
     
-    <main>
+    <main data-article-id="<%= article.id %>" data-is-authenticated="<%= user ? 'true' : 'false' %>">
         <article class="article-detail">
             <h1 class="article-title-detail"><%= article.title %></h1>
             <div class="article-content"><%= article.content %></div>
@@ -445,8 +445,9 @@
             const likeText = document.getElementById('like-text');
             const commentForm = document.getElementById('comment-form');
             const commentsList = document.getElementById('comments-list');
-            const articleId = '<%= article.id %>';
-            const isAuthenticated = <%= user ? 'true' : 'false' %>;
+            const mainElement = document.querySelector('main');
+            const articleId = mainElement.dataset.articleId;
+            const isAuthenticated = mainElement.dataset.isAuthenticated === 'true';
             
             // Função para formatar data
             function formatDate(dateString) {
