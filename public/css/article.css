@@ -169,7 +169,7 @@ main {
 
 .article-content code {
   color: var(--main-color-dark);
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
 }
 
 .light .article-content code {
@@ -206,7 +206,6 @@ main {
   font-size: 0.85rem;
   font-style: italic;
   margin-top: 0.5rem;
-  text-align: center;
 }
 
 .light .image-caption {

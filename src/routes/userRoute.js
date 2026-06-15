@@ -20,7 +20,6 @@ import {
 import {
   allArticles,
   loadArticle,
-  findArticleByTag,
   searchArticles,
   renderMainPage,
   renderArticlePage,
@@ -191,93 +190,6 @@ router.get(
   lightRateLimit("articles"),
   auth,
   allArticles,
-);
-
-/**
- * @swagger
- * /articles/tag:
- *   get:
- *     summary: Retorna artigos filtrados por tag
- *     description:
- *       Recupera artigos que possuem a tag especificada, com paginação.
- *       Esta rota está protegida por autenticação via Cookie, mas está disponível para usuários com qualquer nível de assinatura,
- *       incluindo usuários sem assinaturas (free) e sem autenticação.possui limitação de taxa e delay de requisição.
- *     tags:
- *       - Articles
- *     security:
- *      - cookieAuth: []
- *     parameters:
- *       - in: query
- *         name: tag
- *         required: true
- *         schema:
- *           type: string
- *           example: "javascript"
- *           description: Tag para filtrar os artigos
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           example: 1
- *           description: Número da página
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           example: 20
- *           description: Quantidade de itens por página
- *     responses:
- *       200:
- *         description: Lista de artigos filtrados por tag retornada com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ArticlesResponse'
- *       401:
- *         description: Não autorizado. Cookie de autenticação inválido ou ausente.
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       403:
- *         description: Acesso proibido.
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       404:
- *         description: Artigos não encontrados
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Articles not found"
- *       429:
- *         description: Muitas solicitações (Rate Limit excedido).
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       500:
- *         description: Erro interno do servidor
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *     x-rate-limit:
- *       max_requests: 30
- *       window: 60s
- *       note: "Limites aplicados pelos middlewares lightSlowDown e lightRateLimit"
- */
-router.get(
-  "/articles/tag",
-  lightSlowDown("articlesFindByTag"),
-  lightRateLimit("articlesFindByTag"),
-  auth,
-  findArticleByTag,
 );
 
 /**

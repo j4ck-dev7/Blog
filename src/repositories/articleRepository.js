@@ -45,23 +45,6 @@ export const allArticles = async (skip, limit) => {
   }
 };
 
-export const findArticlesByTag = async (tag, skip, limit) => {
-  logger.debug("findArticlesByTag called", { tag, skip, limit });
-  try {
-    const articles = await Article.find({ tags: tag })
-      .sort({ creationDate: -1 })
-      .skip(skip)
-      .limit(limit)
-      .select("title slug creationDate author")
-      .lean();
-    const mapped = (articles || []).map(normalizeArticleListItem);
-    return { success: true, data: { articles: mapped } };
-  } catch (err) {
-    logger.error("findArticlesByTag error", { err, tag, skip, limit });
-    throw err;
-  }
-};
-
 export const searchArticles = async (query, skip, limit) => {
   logger.debug("searchArticles called", { query, skip, limit });
   try {
@@ -72,8 +55,11 @@ export const searchArticles = async (query, skip, limit) => {
       .sort({ score: { $meta: "textScore" } })
       .skip(skip)
       .limit(limit)
-      .select("title summary slug creationDate")
+      .select(
+        "title slug creationDate author likeCount commentCount viewsCount",
+      )
       .lean();
+
     const mapped = (articles || []).map(normalizeArticleListItem);
     return { success: true, data: { articles: mapped } };
   } catch (err) {
@@ -239,17 +225,6 @@ export const countArticles = async () => {
     return { success: true, data: { count } };
   } catch (err) {
     logger.error("countArticles error", { err });
-    throw err;
-  }
-};
-
-export const countArticlesByTag = async (tag) => {
-  logger.debug("countArticlesByTag called", { tag });
-  try {
-    const count = await Article.countDocuments({ tags: tag });
-    return { success: true, data: { count } };
-  } catch (err) {
-    logger.error("countArticlesByTag error", { err, tag });
     throw err;
   }
 };
