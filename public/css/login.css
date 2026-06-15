@@ -1,0 +1,353 @@
+:root {
+  --main-bg-dark: #000000;
+  --main-bg-ligth: #ffffff;
+  --main-title-color-dark: #fff;
+  --main-title-color-light: #060505;
+  --main-color-dark: #d0c5b8;
+  --main-color-ligth: #1f2328;
+  --main-color-link: #31bcff;
+  --main-bg-button: #00640a;
+  --main-color-button: #ffffff;
+  --main-text-dark: #333;
+  --main-text-light: #555;
+  --main-border-dark: #706450;
+  --main-input-bg: #1a1a1a;
+  --main-input-border: #333;
+  --main-input-color: #888;
+  --main-button-hover: #005709;
+  --main-error: #ff4444;
+  --main-success: #4caf50;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  color: var(--main-color-dark);
+  background-color: var(--main-bg-dark);
+}
+
+.light {
+  background-color: var(--main-bg-ligth);
+  color: var(--main-color-ligth);
+}
+
+header {
+  color: var(--main-title-color-dark);
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.light header {
+  color: var(--main-title-color-light);
+  background-color: var(--main-bg-ligth);
+}
+
+.logo {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.search-container {
+  max-width: 300px;
+  height: 32px;
+  padding-inline: 13px;
+}
+
+.search-container form {
+  display: flex;
+  height: 100%;
+}
+
+.search-container input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: var(--main-title-color-dark);
+  outline: none;
+}
+
+.light .search-container input {
+  color: var(--main-title-color-light);
+  background-color: var(--main-bg-ligth);
+}
+
+#theme-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--main-title-color-dark);
+  font-size: 1.2rem;
+  padding: 0 8px;
+}
+
+.light #theme-toggle {
+  color: var(--main-color-ligth);
+}
+
+.user-section {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.user-section a {
+  color: var(--main-title-color-dark);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.light .user-section a {
+  color: var(--main-color-ligth);
+}
+
+.user-section a:hover {
+  color: var(--main-text-light);
+}
+
+.auth-container {
+  max-width: 544px;
+  width: 100%;
+  margin: 2.7rem auto;
+  padding: 24px;
+  background-color: var(--main-bg-dark);
+}
+
+.light .auth-container {
+  background-color: var(--main-bg-ligth);
+  border: 1px solid var(--main-color-ligth);
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.auth-header h1 {
+  color: var(--main-title-color-dark);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.light .auth-header h1 {
+  color: var(--main-title-color-light);
+}
+
+.auth-header p {
+  color: var(--main-color-dark);
+  font-size: 0.9rem;
+}
+
+.light .auth-header p {
+  color: var(--main-color-ligth);
+}
+
+.auth-header p a {
+  color: var(--main-color-link);
+  text-decoration: none;
+}
+
+.auth-header p a:hover {
+  text-decoration: underline;
+}
+
+.form-group {
+  margin-bottom: 1.2rem;
+}
+
+.form-group label {
+  display: block;
+  color: var(--main-title-color-dark);
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.light .form-group label {
+  color: var(--main-color-ligth);
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: var(--main-input-bg);
+  border: 1px solid var(--main-input-border);
+  border-radius: 4px;
+  color: var(--main-title-color-dark);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.light .form-group input {
+  background-color: var(--main-bg-ligth);
+  border: 1px solid var(--main-color-ligth);
+  color: var(--main-color-ligth);
+}
+
+.form-group input::placeholder {
+  color: var(--main-input-color);
+}
+
+.light .form-group input::placeholder {
+  color: var(--main-color-ligth);
+}
+
+.form-group input:focus {
+  border-color: var(--main-color-link);
+}
+
+.auth-button {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  background-color: var(--main-bg-button);
+  border: none;
+  border-radius: 4px;
+  color: var(--main-color-button);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-top: 0.5rem;
+}
+
+.light .auth-button {
+  background-color: var(--main-bg-button);
+  color: var(--main-color-button);
+  border: 1px solid var(--main-color-ligth);
+}
+
+.auth-button:hover {
+  background-color: var(--main-button-hover);
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 1.5rem 0;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background-color: var(--main-input-border);
+}
+
+.light .divider::before,
+.light .divider::after {
+  background-color: var(--main-color-ligth);
+}
+
+.divider span {
+  color: var(--main-color-dark);
+  font-size: 0.85rem;
+  padding: 0 1rem;
+}
+
+.light .divider span {
+  color: var(--main-color-ligth);
+}
+
+.google-button {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  background-color: var(--main-bg-button);
+  border: none;
+  border-radius: 4px;
+  color: var(--main-color-button);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.light .google-button {
+  background-color: var(--main-bg-button);
+  color: var(--main-color-button);
+  border: 1px solid var(--main-color-ligth);
+}
+
+.google-button:hover {
+  background-color: var(--main-button-hover);
+}
+
+.google-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.error-message {
+  color: var(--main-error);
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.success-message {
+  color: var(--main-success);
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+footer {
+  width: 100%;
+}
+
+.container {
+  max-width: 544px;
+  margin: auto;
+  padding-inline: 24px;
+  padding-top: 16px;
+}
+
+.footer-div {
+  text-align: center;
+  padding: 24px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid var(--main-border-dark);
+}
+
+.light .footer-div {
+  border-top: 1px solid var(--main-color-ligth);
+}
+
+.footer-logo p {
+  color: var(--main-title-color-dark);
+}
+
+.light .footer-logo p {
+  color: var(--main-color-ligth);
+}
+
+.link a {
+  color: var(--main-color-link);
+  text-decoration: none;
+}
+
+.link a:hover {
+  text-decoration: underline;
+}

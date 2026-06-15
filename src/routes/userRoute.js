@@ -1,19 +1,58 @@
-import express from 'express';
+import express from "express";
 
-import { signIn, signUp, signUpWithOauth, signInWithOauth, getSignInGoogleUrl, getSignUpGoogleUrl, verifyUser, renderLoginPage, renderRegisterPage } from '../controllers/userController.js';
-import { like, DeleteLike, allLikes } from '../controllers/likeController.js';
-import { comment, removeComment, EditComment } from '../controllers/commentController.js';
-import { allArticles, loadArticle, findArticleByTag, searchArticles, renderMainPage, renderArticlePage, renderSearchPage } from '../controllers/articleController.js';
-import { subscribe } from '../controllers/subscription.js';
-import { signInSchema, signInErrorMap } from '../validators/signIn.validation.js';
-import { signUpSchema, signUpErrorMap } from '../validators/signUp.validation.js';
-import { commentSchema, commentErrorMap } from '../validators/comment.validation.js';
+import {
+  signIn,
+  signUp,
+  signUpWithOauth,
+  signInWithOauth,
+  getSignInGoogleUrl,
+  getSignUpGoogleUrl,
+  verifyUser,
+  renderLoginPage,
+  renderRegisterPage,
+} from "../controllers/userController.js";
+import { like, DeleteLike, allLikes } from "../controllers/likeController.js";
+import {
+  comment,
+  removeComment,
+  EditComment,
+} from "../controllers/commentController.js";
+import {
+  allArticles,
+  loadArticle,
+  findArticleByTag,
+  searchArticles,
+  renderMainPage,
+  renderArticlePage,
+  renderSearchPage,
+} from "../controllers/articleController.js";
+import { subscribe } from "../controllers/subscription.js";
+import {
+  signInSchema,
+  signInErrorMap,
+} from "../validators/signIn.validation.js";
+import {
+  signUpSchema,
+  signUpErrorMap,
+} from "../validators/signUp.validation.js";
+import {
+  commentSchema,
+  commentErrorMap,
+} from "../validators/comment.validation.js";
 
-import { lightRateLimit, heavyRateLimit, sensitiveRateLimit } from '../middlewares/rateLimit.js';
-import { lightSlowDown, heavySlowDown, sensitiveSlowDown } from '../middlewares/slowDown.js';
-import { validate } from '../middlewares/validation.js';
-import { auth } from '../middlewares/authorization.js';
-import { authInteractions } from '../middlewares/authorizationInteractions.js';
+import {
+  lightRateLimit,
+  heavyRateLimit,
+  sensitiveRateLimit,
+} from "../middlewares/rateLimit.js";
+import {
+  lightSlowDown,
+  heavySlowDown,
+  sensitiveSlowDown,
+} from "../middlewares/slowDown.js";
+import { validate } from "../middlewares/validation.js";
+import { auth } from "../middlewares/authorization.js";
+import { authInteractions } from "../middlewares/authorizationInteractions.js";
 
 const router = express.Router();
 
@@ -22,12 +61,12 @@ const router = express.Router();
  * /likes:
  *   get:
  *     summary: Retorna uma lista de todos os likes do usuário autenticado
- *     description: 
+ *     description:
  *       Recupera os registros de likes realizados pelo usuário.
  *       Esta rota está protegida por autenticação via Cookie, possui limitação de taxa (rate limiting) e delay de requisição exponencial (slow down).
  *     tags:
  *       - Likes
- *     security: 
+ *     security:
  *      - cookieAuth: []
  *     responses:
  *       200:
@@ -65,20 +104,27 @@ const router = express.Router();
  *       window: 60s
  *       note: "Limites aplicados pelos middlewares lightSlowDown e lightRateLimit"
  */
-router.get('/likes', lightSlowDown('likes'), lightRateLimit('likes'), auth, authInteractions, allLikes);
+router.get(
+  "/likes",
+  lightSlowDown("likes"),
+  lightRateLimit("likes"),
+  auth,
+  authInteractions,
+  allLikes,
+);
 
 /**
  * @swagger
  * /articles:
  *   get:
  *     summary: Retorna uma lista paginada de todos os artigos
- *     description: 
- *       Recupera todos os artigos com paginação. Esta rota está protegida por autenticação via Cookie, mas está disponível para usuários com qualquer nível de assinatura, 
+ *     description:
+ *       Recupera todos os artigos com paginação. Esta rota está protegida por autenticação via Cookie, mas está disponível para usuários com qualquer nível de assinatura,
  *       incluindo usuários sem assinaturas (free) e sem autenticação.
  *       possui limitação de taxa (rate limiting) e delay de requisição exponencial (slow down).
  *     tags:
  *       - Articles
- *     security: 
+ *     security:
  *      - cookieAuth: []
  *     parameters:
  *       - in: query
@@ -139,20 +185,26 @@ router.get('/likes', lightSlowDown('likes'), lightRateLimit('likes'), auth, auth
  *       window: 60s
  *       note: "Limites aplicados pelos middlewares lightSlowDown e lightRateLimit"
  */
-router.get('/articles', lightSlowDown('articles'), lightRateLimit('articles'), auth, allArticles);
+router.get(
+  "/articles",
+  lightSlowDown("articles"),
+  lightRateLimit("articles"),
+  auth,
+  allArticles,
+);
 
 /**
  * @swagger
  * /articles/tag:
  *   get:
  *     summary: Retorna artigos filtrados por tag
- *     description: 
+ *     description:
  *       Recupera artigos que possuem a tag especificada, com paginação.
- *       Esta rota está protegida por autenticação via Cookie, mas está disponível para usuários com qualquer nível de assinatura, 
+ *       Esta rota está protegida por autenticação via Cookie, mas está disponível para usuários com qualquer nível de assinatura,
  *       incluindo usuários sem assinaturas (free) e sem autenticação.possui limitação de taxa e delay de requisição.
  *     tags:
  *       - Articles
- *     security: 
+ *     security:
  *      - cookieAuth: []
  *     parameters:
  *       - in: query
@@ -220,89 +272,26 @@ router.get('/articles', lightSlowDown('articles'), lightRateLimit('articles'), a
  *       window: 60s
  *       note: "Limites aplicados pelos middlewares lightSlowDown e lightRateLimit"
  */
-router.get('/articles/tag', lightSlowDown('articlesFindByTag'), lightRateLimit('articlesFindByTag'), auth, findArticleByTag);
-
-/**
- * @swagger
- * /article/{slug}:
- *   get:
- *     summary: Carrega um artigo pelo slug
- *     description: 
- *       Recupera um artigo específico pelo seu slug, junto com seus comentários.
- *       Esta rota está protegida por autenticação via Cookie, mas está disponível para usuários com qualquer nível de assinatura, 
- *       incluindo usuários sem assinaturas (free) e sem autenticação, desde que tenha a assinatura necessária. possui limitação de taxa e delay de requisição.
- *     tags:
- *       - Articles
- *     security: 
- *      - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: slug
- *         required: true
- *         schema:
- *           type: string
- *           example: "titulo-do-artigo"
- *           description: Slug do artigo a ser carregado
- *     responses:
- *       200:
- *         description: Artigo carregado com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ArticleWithCommentsResponse'
- *       401:
- *         description: Não autorizado. Cookie de autenticação inválido ou ausente.
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       403:
- *         description: Acesso proibido.
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       404:
- *         description: Artigo não encontrado
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Article not found"
- *       429:
- *         description: Muitas solicitações (Rate Limit excedido).
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       500:
- *         description: Erro interno do servidor
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *     x-rate-limit:
- *       max_requests: 30
- *       window: 60s
- *       note: "Limites aplicados pelos middlewares lightSlowDown e lightRateLimit"
- */
-router.get('/article/:slug', lightSlowDown('articleBySlug'), lightRateLimit('articleBySlug'), auth, loadArticle);
+router.get(
+  "/articles/tag",
+  lightSlowDown("articlesFindByTag"),
+  lightRateLimit("articlesFindByTag"),
+  auth,
+  findArticleByTag,
+);
 
 /**
  * @swagger
  * /articles/search:
  *   get:
  *     summary: Busca artigos por termo
- *     description: 
+ *     description:
  *       Realiza busca textual em artigos com paginação.
- *       Esta rota está protegida por autenticação via Cookie, mas está disponível para usuários com qualquer nível de assinatura, 
+ *       Esta rota está protegida por autenticação via Cookie, mas está disponível para usuários com qualquer nível de assinatura,
  *       incluindo usuários sem assinaturas (free) e sem autenticação. possui limitação de taxa e delay de requisição.
  *     tags:
  *       - Articles
- *     security: 
+ *     security:
  *      - cookieAuth: []
  *     parameters:
  *       - in: query
@@ -380,13 +369,19 @@ router.get('/article/:slug', lightSlowDown('articleBySlug'), lightRateLimit('art
  *       window: 60s
  *       note: "Limites aplicados pelos middlewares lightSlowDown e lightRateLimit"
  */
-router.get('/articles/search', lightSlowDown('articlesFindBySearch'), lightRateLimit('articlesFindBySearch'), auth, searchArticles);
+router.get(
+  "/articles/search",
+  lightSlowDown("articlesFindBySearch"),
+  lightRateLimit("articlesFindBySearch"),
+  auth,
+  searchArticles,
+);
 /**
  * @swagger
  * /get/url/Oauth/signIn:
  *   get:
  *     summary: Obtém URL para login via Google OAuth
- *     description: 
+ *     description:
  *       Retorna a URL de autenticação do Google para login via OAuth 2.0.
  *       Possui limitação de taxa e delay de requisição sensíveis.
  *     tags:
@@ -415,14 +410,19 @@ router.get('/articles/search', lightSlowDown('articlesFindBySearch'), lightRateL
  *       window: 60s
  *       note: "Limites aplicados pelos middlewares sensitiveSlowDown e sensitiveRateLimit"
  */
-router.get('/get/url/Oauth/signIn', sensitiveSlowDown('oauth2Url'), sensitiveRateLimit('oauth2Url'), getSignInGoogleUrl);
+router.get(
+  "/get/url/Oauth/signIn",
+  sensitiveSlowDown("oauth2Url"),
+  sensitiveRateLimit("oauth2Url"),
+  getSignInGoogleUrl,
+);
 
 /**
  * @swagger
  * /get/url/Oauth/signUp:
  *   get:
  *     summary: Obtém URL para cadastro via Google OAuth
- *     description: 
+ *     description:
  *       Retorna a URL de autenticação do Google para cadastro via OAuth 2.0.
  *       Possui limitação de taxa e delay de requisição sensíveis.
  *     tags:
@@ -451,14 +451,19 @@ router.get('/get/url/Oauth/signIn', sensitiveSlowDown('oauth2Url'), sensitiveRat
  *       window: 60s
  *       note: "Limites aplicados pelos middlewares sensitiveSlowDown e sensitiveRateLimit"
  */
-router.get('/get/url/Oauth/signUp', sensitiveSlowDown('oauth2Url'), sensitiveRateLimit('oauth2Url'), getSignUpGoogleUrl);
+router.get(
+  "/get/url/Oauth/signUp",
+  sensitiveSlowDown("oauth2Url"),
+  sensitiveRateLimit("oauth2Url"),
+  getSignUpGoogleUrl,
+);
 
 /**
  * @swagger
  * /Oauth/signIn:
  *   get:
  *     summary: Realiza login via Google OAuth
- *     description: 
+ *     description:
  *       Realiza o login do usuário utilizando o código de autorização do Google OAuth 2.0.
  *       Possui limitação de taxa e delay de requisição sensíveis.
  *     tags:
@@ -506,14 +511,19 @@ router.get('/get/url/Oauth/signUp', sensitiveSlowDown('oauth2Url'), sensitiveRat
  *       window: 60s
  *       note: "Limites aplicados pelos middlewares sensitiveSlowDown e sensitiveRateLimit"
  */
-router.get('/Oauth/signIn', sensitiveSlowDown('oauth2'), sensitiveRateLimit('oauth2'), signInWithOauth);
+router.get(
+  "/Oauth/signIn",
+  sensitiveSlowDown("oauth2"),
+  sensitiveRateLimit("oauth2"),
+  signInWithOauth,
+);
 
 /**
  * @swagger
  * /Oauth/signUp:
  *   get:
  *     summary: Realiza cadastro via Google OAuth
- *     description: 
+ *     description:
  *       Realiza o cadastro do usuário utilizando o código de autorização do Google OAuth 2.0.
  *       Possui limitação de taxa e delay de requisição sensíveis.
  *     tags:
@@ -561,14 +571,19 @@ router.get('/Oauth/signIn', sensitiveSlowDown('oauth2'), sensitiveRateLimit('oau
  *       window: 60s
  *       note: "Limites aplicados pelos middlewares sensitiveSlowDown e sensitiveRateLimit"
  */
-router.get('/Oauth/signUp', sensitiveSlowDown('oauth2'), sensitiveRateLimit('oauth2'), signUpWithOauth);
+router.get(
+  "/Oauth/signUp",
+  sensitiveSlowDown("oauth2"),
+  sensitiveRateLimit("oauth2"),
+  signUpWithOauth,
+);
 
 /**
  * @swagger
  * /verify-email:
  *   get:
  *     summary: Verifica email do usuário
- *     description: 
+ *     description:
  *       Verifica o email do usuário utilizando o token de verificação enviado por email.
  *       Possui limitação de taxa e delay de requisição sensíveis.
  *     tags:
@@ -616,19 +631,24 @@ router.get('/Oauth/signUp', sensitiveSlowDown('oauth2'), sensitiveRateLimit('oau
  *       window: 60s
  *       note: "Limites aplicados pelos middlewares sensitiveSlowDown e sensitiveRateLimit"
  */
-router.get('/verify-email', sensitiveSlowDown('verifyEmail'), sensitiveRateLimit('verifyEmail'), verifyUser);
+router.get(
+  "/verify-email",
+  sensitiveSlowDown("verifyEmail"),
+  sensitiveRateLimit("verifyEmail"),
+  verifyUser,
+);
 
 /**
  * @swagger
  * /subscribe:
  *   get:
  *     summary: Gera URL para assinatura
- *     description: 
+ *     description:
  *       Gera uma URL de checkout do Stripe para assinatura de plano premium.
  *       Esta rota está protegida por autenticação via Cookie, possui limitação de taxa e delay de requisição sensíveis.
  *     tags:
  *       - Subscription
- *     security: 
+ *     security:
  *      - cookieAuth: []
  *     parameters:
  *       - in: query
@@ -681,14 +701,20 @@ router.get('/verify-email', sensitiveSlowDown('verifyEmail'), sensitiveRateLimit
  *       window: 60s
  *       note: "Limites aplicados pelos middlewares sensitiveSlowDown e sensitiveRateLimit"
  */
-router.get('/subscribe', sensitiveSlowDown('subscribe'), sensitiveRateLimit('subscribe'), auth, subscribe);
+router.get(
+  "/subscribe",
+  sensitiveSlowDown("subscribe"),
+  sensitiveRateLimit("subscribe"),
+  auth,
+  subscribe,
+);
 
 /**
  * @swagger
  * /signIn:
  *   post:
  *     summary: Realiza login do usuário
- *     description: 
+ *     description:
  *       Autentica o usuário com email e senha, gerando um cookie de autenticação.
  *       Possui validação de entrada, limitação de taxa e delay de requisição pesados.
  *     tags:
@@ -762,14 +788,20 @@ router.get('/subscribe', sensitiveSlowDown('subscribe'), sensitiveRateLimit('sub
  *       window: 60s
  *       note: "Limites aplicados pelos middlewares heavySlowDown e heavyRateLimit"
  */
-router.post('/signIn', heavySlowDown('authentication'), heavyRateLimit('authentication'), validate(signInSchema, signInErrorMap), signIn);
+router.post(
+  "/signIn",
+  heavySlowDown("authentication"),
+  heavyRateLimit("authentication"),
+  validate(signInSchema, signInErrorMap),
+  signIn,
+);
 
 /**
  * @swagger
  * /signUp:
  *   post:
  *     summary: Realiza cadastro do usuário
- *     description: 
+ *     description:
  *       Registra um novo usuário com nome, email e senha.
  *       Possui validação de entrada, limitação de taxa e delay de requisição pesados.
  *     tags:
@@ -835,19 +867,25 @@ router.post('/signIn', heavySlowDown('authentication'), heavyRateLimit('authenti
  *       window: 60s
  *       note: "Limites aplicados pelos middlewares heavySlowDown e heavyRateLimit"
  */
-router.post('/signUp', heavySlowDown('authentication'), heavyRateLimit('authentication'), validate(signUpSchema, signUpErrorMap), signUp);
+router.post(
+  "/signUp",
+  heavySlowDown("authentication"),
+  heavyRateLimit("authentication"),
+  validate(signUpSchema, signUpErrorMap),
+  signUp,
+);
 
 /**
  * @swagger
  * /article/{slug}/like:
  *   post:
  *     summary: Adiciona uma curtida a um artigo
- *     description: 
+ *     description:
  *       Adiciona uma curtida do usuário autenticado a um artigo.
  *       Esta rota está protegida por autenticação via Cookie, possui limitação de taxa e delay de requisição pesados.
  *     tags:
  *       - Likes
- *     security: 
+ *     security:
  *      - cookieAuth: []
  *     parameters:
  *       - in: path
@@ -899,20 +937,27 @@ router.post('/signUp', heavySlowDown('authentication'), heavyRateLimit('authenti
  *       window: 60s
  *       note: "Limites aplicados pelos middlewares heavySlowDown e heavyRateLimit"
  */
-router.post('/article/:slug/like', heavySlowDown('addLike'), heavyRateLimit('addLike'), auth, authInteractions, like);
+router.post(
+  "/article/:slug/like",
+  heavySlowDown("addLike"),
+  heavyRateLimit("addLike"),
+  auth,
+  authInteractions,
+  like,
+);
 
 /**
  * @swagger
  * /article/{slug}/comment:
  *   post:
  *     summary: Adiciona um comentário a um artigo
- *     description: 
+ *     description:
  *       Adiciona um comentário do usuário autenticado a um artigo.
  *       Esta rota está protegida por autenticação via Cookie, possui validação de entrada,
  *       limitação de taxa e delay de requisição pesados.
  *     tags:
  *       - Comments
- *     security: 
+ *     security:
  *      - cookieAuth: []
  *     parameters:
  *       - in: path
@@ -983,20 +1028,28 @@ router.post('/article/:slug/like', heavySlowDown('addLike'), heavyRateLimit('add
  *       window: 60s
  *       note: "Limites aplicados pelos middlewares heavySlowDown e heavyRateLimit"
  */
-router.post('/article/:slug/comment', heavySlowDown('addComment'), heavyRateLimit('addComment'), auth, authInteractions, validate(commentSchema, commentErrorMap), comment);
+router.post(
+  "/article/:slug/comment",
+  heavySlowDown("addComment"),
+  heavyRateLimit("addComment"),
+  auth,
+  authInteractions,
+  validate(commentSchema, commentErrorMap),
+  comment,
+);
 
 /**
  * @swagger
  * /article/{slug}/comment/{commentId}:
  *   put:
  *     summary: Edita um comentário
- *     description: 
+ *     description:
  *       Edita um comentário existente do usuário autenticado.
  *       Esta rota está protegida por autenticação via Cookie, possui validação de entrada,
  *       limitação de taxa e delay de requisição pesados.
  *     tags:
  *       - Comments
- *     security: 
+ *     security:
  *      - cookieAuth: []
  *     parameters:
  *       - in: path
@@ -1074,19 +1127,27 @@ router.post('/article/:slug/comment', heavySlowDown('addComment'), heavyRateLimi
  *       window: 60s
  *       note: "Limites aplicados pelos middlewares heavySlowDown e heavyRateLimit"
  */
-router.put('/article/:slug/comment/:commentId', heavySlowDown('editComment'), heavyRateLimit('editComment'), auth, authInteractions, validate(commentSchema, commentErrorMap), EditComment);
+router.put(
+  "/article/:slug/comment/:commentId",
+  heavySlowDown("editComment"),
+  heavyRateLimit("editComment"),
+  auth,
+  authInteractions,
+  validate(commentSchema, commentErrorMap),
+  EditComment,
+);
 
 /**
  * @swagger
  * /article/{slug}/like/{likeId}:
  *   delete:
  *     summary: Remove uma curtida de um artigo
- *     description: 
+ *     description:
  *       Remove uma curtida do usuário autenticado de um artigo.
  *       Esta rota está protegida por autenticação via Cookie, possui limitação de taxa e delay de requisição pesados.
  *     tags:
  *       - Likes
- *     security: 
+ *     security:
  *      - cookieAuth: []
  *     parameters:
  *       - in: path
@@ -1145,19 +1206,26 @@ router.put('/article/:slug/comment/:commentId', heavySlowDown('editComment'), he
  *       window: 60s
  *       note: "Limites aplicados pelos middlewares heavySlowDown e heavyRateLimit"
  */
-router.delete('/article/:slug/like/:likeId', heavySlowDown('deleteLike'), heavyRateLimit('deleteLike'), auth, authInteractions, DeleteLike);
+router.delete(
+  "/article/:slug/like/:likeId",
+  heavySlowDown("deleteLike"),
+  heavyRateLimit("deleteLike"),
+  auth,
+  authInteractions,
+  DeleteLike,
+);
 
 /**
  * @swagger
  * /article/{slug}/comment/{commentId}:
  *   delete:
  *     summary: Remove um comentário
- *     description: 
+ *     description:
  *       Remove um comentário do usuário autenticado de um artigo.
  *       Esta rota está protegida por autenticação via Cookie, possui limitação de taxa e delay de requisição pesados.
  *     tags:
  *       - Comments
- *     security: 
+ *     security:
  *      - cookieAuth: []
  *     parameters:
  *       - in: path
@@ -1222,14 +1290,21 @@ router.delete('/article/:slug/like/:likeId', heavySlowDown('deleteLike'), heavyR
  *       window: 60s
  *       note: "Limites aplicados pelos middlewares heavySlowDown e heavyRateLimit"
  */
-router.delete('/article/:slug/comment/:commentId', heavySlowDown('deleteComment'), heavyRateLimit('deleteComment'), auth, authInteractions, removeComment);
+router.delete(
+  "/article/:slug/comment/:commentId",
+  heavySlowDown("deleteComment"),
+  heavyRateLimit("deleteComment"),
+  auth,
+  authInteractions,
+  removeComment,
+);
 
 /**
  * @swagger
  * /main:
  *   get:
  *     summary: Renderiza a página principal com artigos
- *     description: 
+ *     description:
  *       Renderiza a página principal usando EJS com a lista de artigos.
  *       Esta rota não retorna JSON, mas sim HTML renderizado.
  *     tags:
@@ -1261,14 +1336,20 @@ router.delete('/article/:slug/comment/:commentId', heavySlowDown('deleteComment'
  *             schema:
  *               type: string
  */
-router.get('/main', lightSlowDown('main'), lightRateLimit('main'), auth, renderMainPage);
+router.get(
+  "/main",
+  lightSlowDown("main"),
+  lightRateLimit("main"),
+  auth,
+  renderMainPage,
+);
 
 /**
  * @swagger
  * /article/{slug}:
  *   get:
  *     summary: Renderiza a página de um artigo
- *     description: 
+ *     description:
  *       Renderiza a página completa de um artigo com conteúdo, comentários e interações.
  *       Esta rota não retorna JSON, mas sim HTML renderizado.
  *     tags:
@@ -1301,14 +1382,20 @@ router.get('/main', lightSlowDown('main'), lightRateLimit('main'), auth, renderM
  *             schema:
  *               type: string
  */
-router.get('/article/:slug', lightSlowDown('article'), lightRateLimit('article'), auth, renderArticlePage);
+router.get(
+  "/article/:slug",
+  lightSlowDown("article"),
+  lightRateLimit("article"),
+  auth,
+  renderArticlePage,
+);
 
 /**
  * @swagger
  * /search:
  *   get:
  *     summary: Renderiza a página de resultados de busca
- *     description: 
+ *     description:
  *       Renderiza a página com resultados de busca de artigos.
  *       Esta rota não retorna JSON, mas sim HTML renderizado.
  *     tags:
@@ -1352,14 +1439,20 @@ router.get('/article/:slug', lightSlowDown('article'), lightRateLimit('article')
  *             schema:
  *               type: string
  */
-router.get('/search', lightSlowDown('search'), lightRateLimit('search'), auth, renderSearchPage);
+router.get(
+  "/search",
+  lightSlowDown("search"),
+  lightRateLimit("search"),
+  auth,
+  renderSearchPage,
+);
 
 /**
  * @swagger
  * /auth/login:
  *   get:
  *     summary: Renderiza a página de login
- *     description: 
+ *     description:
  *       Exibe o formulário de login com opção de autenticação via Google OAuth.
  *       Esta rota é acessível sem autenticação.
  *     tags:
@@ -1378,14 +1471,20 @@ router.get('/search', lightSlowDown('search'), lightRateLimit('search'), auth, r
  *             schema:
  *               type: string
  */
-router.get('/auth/login', lightSlowDown('login'), lightRateLimit('login'), renderLoginPage);
+router.get(
+  "/auth/login",
+  lightSlowDown("login"),
+  lightRateLimit("login"),
+  auth,
+  renderLoginPage,
+);
 
 /**
  * @swagger
  * /auth/register:
  *   get:
  *     summary: Renderiza a página de registro
- *     description: 
+ *     description:
  *       Exibe o formulário de registro com opção de autenticação via Google OAuth.
  *       Esta rota é acessível sem autenticação.
  *     tags:
@@ -1404,6 +1503,12 @@ router.get('/auth/login', lightSlowDown('login'), lightRateLimit('login'), rende
  *             schema:
  *               type: string
  */
-router.get('/auth/register', lightSlowDown('register'), lightRateLimit('register'), renderRegisterPage);
+router.get(
+  "/auth/register",
+  lightSlowDown("register"),
+  lightRateLimit("register"),
+  auth,
+  renderRegisterPage,
+);
 
 export default router;

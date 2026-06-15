@@ -125,6 +125,7 @@ export const LoadArticleBySlug = async (slug, id) => {
         const commentResult = await getCommentsBySlug(sanitizedSlug);
         const comment = commentResult?.data?.comments ?? [];
 
+        console.log(article.planRole)
         if (article.planRole === 'free') {
             logger.info('LoadArticleBySlug - free article accessed', { slug: sanitizedSlug });
             return {
