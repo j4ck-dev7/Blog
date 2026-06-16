@@ -203,11 +203,6 @@ Content-Type: application/json
 GET /app/articles?page=1&limit=5
 ```
 
-### Busca por Tag
-```http
-GET /app/articles/tag?tag=nodejs&page=1&limit=5
-```
-
 ### Busca por Texto
 ```http
 GET /app/articles/search?search=typescript&page=1&limit=5
