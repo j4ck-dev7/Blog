@@ -1,35 +1,50 @@
 const mode = document.getElementById("icon-dark-light");
 const body = document.body;
+const commentInput = document.querySelectorAll(".comment-input");
 
 // Carregar preferência salva ou usar preferência do sistema
 function loadThemePreference() {
-  const savedTheme = localStorage.getItem('theme');
-  if (savedTheme === 'light') {
-    body.classList.add('light');
-    mode.classList.remove('fa-sun');
-    mode.classList.add('fa-moon');
-  } else if (savedTheme === 'dark') {
-    body.classList.remove('light');
-    mode.classList.remove('fa-moon');
-    mode.classList.add('fa-sun');
+  const savedTheme = localStorage.getItem("theme");
+  if (savedTheme === "light") {
+    body.classList.add("light");
+    commentInput.forEach((c) => {
+      c.classList.add("light");
+    });
+    mode.classList.remove("fa-sun");
+    mode.classList.add("fa-moon");
+  } else if (savedTheme === "dark") {
+    body.classList.remove("light");
+    commentInput.forEach((c) => {
+      c.classList.remove("light");
+    });
+    mode.classList.remove("fa-moon");
+    mode.classList.add("fa-sun");
   } else {
     // Verificar preferência do sistema
-    const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+    const prefersLight = window.matchMedia(
+      "(prefers-color-scheme: light)",
+    ).matches;
     if (prefersLight) {
-      body.classList.add('light');
-      mode.classList.remove('fa-sun');
-      mode.classList.add('fa-moon');
+      body.classList.add("light");
+      commentInput.forEach((c) => {
+        c.classList.add("light");
+      });
+      mode.classList.remove("fa-sun");
+      mode.classList.add("fa-moon");
     } else {
-      body.classList.remove('light');
-      mode.classList.remove('fa-moon');
-      mode.classList.add('fa-sun');
+      body.classList.remove("light");
+      commentInput.forEach((c) => {
+        c.classList.remove("light");
+      });
+      mode.classList.remove("fa-moon");
+      mode.classList.add("fa-sun");
     }
   }
 }
 
 // Salvar preferência
 function saveThemePreference(theme) {
-  localStorage.setItem('theme', theme);
+  localStorage.setItem("theme", theme);
 }
 
 // Alternar entre modos
@@ -38,12 +53,12 @@ mode.addEventListener("click", () => {
     body.classList.remove("light");
     mode.classList.remove("fa-moon");
     mode.classList.add("fa-sun");
-    saveThemePreference('dark');
+    saveThemePreference("dark");
   } else {
     body.classList.add("light");
     mode.classList.remove("fa-sun");
     mode.classList.add("fa-moon");
-    saveThemePreference('light');
+    saveThemePreference("light");
   }
 });
 

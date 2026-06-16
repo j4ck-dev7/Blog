@@ -8,6 +8,94 @@ document.addEventListener("DOMContentLoaded", function () {
   const articleSlug = mainElement.dataset.articleslug;
   const isAuthenticated = mainElement.dataset.isAuthenticated === "true";
 
+  // Container de erros para comentários
+  let commentErrorContainer = null;
+
+  // Criar container de erros se não existir
+  function createErrorContainer() {
+    if (commentErrorContainer) return;
+
+    commentErrorContainer = document.createElement("div");
+    commentErrorContainer.id = "comment-errors";
+    commentErrorContainer.className = "error-container";
+
+    // Estilos para o container de erros
+    const style = document.createElement("style");
+    style.textContent = `
+          #comment-errors {
+              color: #d32f2f;
+              background-color: #ffebee;
+              border: 1px solid #ef9a9a;
+              border-radius: 4px;
+              padding: 15px;
+              margin-bottom: 20px;
+              display: none;
+          }
+          #comment-errors ul {
+              margin: 0;
+              padding-left: 20px;
+              list-style-type: disc;
+          }
+          #comment-errors li {
+              margin: 5px 0;
+          }
+          #comment-errors.show {
+              display: block;
+          }
+          .comment-input.error {
+              border: 1px solid #d32f2f !important;
+          }
+      `;
+    document.head.appendChild(style);
+
+    // Insere antes do formulário de comentários
+    if (commentForm && commentForm.parentNode) {
+      commentForm.parentNode.insertBefore(commentErrorContainer, commentForm);
+    }
+  }
+
+  // Função para exibir erros
+  function displayCommentErrors(errors) {
+    if (!commentErrorContainer) createErrorContainer();
+
+    commentErrorContainer.innerHTML = "";
+
+    if (!errors || errors.length === 0) {
+      commentErrorContainer.classList.remove("show");
+      return;
+    }
+
+    const ul = document.createElement("ul");
+    errors.forEach((error) => {
+      const li = document.createElement("li");
+      li.textContent = error;
+      ul.appendChild(li);
+    });
+
+    commentErrorContainer.appendChild(ul);
+    commentErrorContainer.classList.add("show");
+
+    // Scroll para os erros
+    commentErrorContainer.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+  }
+
+  // Função para limpar erros
+  function clearCommentErrors() {
+    if (!commentErrorContainer) return;
+
+    commentErrorContainer.classList.remove("show");
+    commentErrorContainer.innerHTML = "";
+
+    // Remove classe error do textarea
+    const textarea = document.getElementById("comment-content");
+    if (textarea) {
+      textarea.classList.remove("error");
+    }
+  }
+
   // Função para formatar data
   function formatDate(dateString) {
     const date = new Date(dateString);
@@ -81,11 +169,29 @@ document.addEventListener("DOMContentLoaded", function () {
   if (commentForm) {
     commentForm.addEventListener("submit", async function (e) {
       e.preventDefault();
+      clearCommentErrors();
 
       const content = document.getElementById("comment-content").value;
+      const textarea = document.getElementById("comment-content");
 
+      // Validação cliente-side
       if (!content.trim()) {
-        alert("Digite um comentário válido.");
+        displayCommentErrors(["O comentário não pode ficar em branco"]);
+        textarea.classList.add("error");
+        return;
+      }
+
+      if (content.length > 2000) {
+        displayCommentErrors([
+          "O comentário deve ter no máximo 2000 caracteres",
+        ]);
+        textarea.classList.add("error");
+        return;
+      }
+
+      if (content.length < 1) {
+        displayCommentErrors(["O comentário deve ter pelo menos 1 caractere"]);
+        textarea.classList.add("error");
         return;
       }
 
@@ -98,12 +204,42 @@ document.addEventListener("DOMContentLoaded", function () {
           body: JSON.stringify({
             post: content,
           }),
+          credentials: "include",
         });
 
         const data = await response.json();
 
         if (response.status === 401) {
           window.location.href = "/app/auth/login";
+          return;
+        }
+
+        if (!response.ok) {
+          // Trata erros do backend
+          let errorMessage = "Erro ao postar comentário";
+
+          if (data.message) {
+            const errorMessages = {
+              "Invalid comment": "Digite um comentário válido.",
+              "Slug inválido": "Artigo não encontrado.",
+              "User not found": "Usuário não encontrado.",
+              "Article not found": "Artigo não encontrado.",
+              "Internal server error":
+                "Erro interno do servidor. Tente novamente.",
+              "Preencha o campo de comentário": "Digite um comentário válido.",
+              "O comentário não pode ficar em branco":
+                "O comentário não pode ficar em branco.",
+              "O comentário deve ter pelo menos 1 caractere":
+                "O comentário deve ter pelo menos 1 caractere.",
+              "O comentário deve ter no máximo 2000 caracteres":
+                "O comentário deve ter no máximo 2000 caracteres.",
+            };
+
+            errorMessage = errorMessages[data.message] || data.message;
+          }
+
+          displayCommentErrors([errorMessage]);
+          textarea.classList.add("error");
           return;
         }
 
@@ -134,6 +270,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
           // Limpar formulário
           document.getElementById("comment-content").value = "";
+          textarea.classList.remove("error");
 
           // Atualizar contador de comentários
           const currentCount = parseInt(
@@ -147,7 +284,24 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       } catch (error) {
         console.error("Erro ao postar comentário:", error);
-        alert("Erro ao postar comentário. Tente novamente.");
+        displayCommentErrors(["Erro ao postar comentário. Tente novamente."]);
+        textarea.classList.add("error");
+      }
+    });
+  }
+
+  // Limpa erros ao digitar no textarea
+  const commentTextarea = document.getElementById("comment-content");
+  if (commentTextarea) {
+    commentTextarea.addEventListener("input", function () {
+      this.classList.remove("error");
+
+      // Se não houver erros, esconde o container
+      if (
+        this.classList.contains("error") === false &&
+        (!commentErrorContainer || commentErrorContainer.innerHTML === "")
+      ) {
+        clearCommentErrors();
       }
     });
   }
@@ -213,7 +367,8 @@ document.addEventListener("DOMContentLoaded", function () {
         saveBtn.addEventListener("click", async function () {
           const newContent = textarea.value.trim();
           if (!newContent) {
-            alert("Digite um comentário válido.");
+            displayCommentErrors(["Digite um comentário válido."]);
+            textarea.classList.add("error");
             return;
           }
 
@@ -227,17 +382,43 @@ document.addEventListener("DOMContentLoaded", function () {
                 commentId: commentId,
                 content: newContent,
               }),
+              credentials: "include",
             });
+
+            if (!response.ok) {
+              const errorData = await response.json();
+              let errorMessage = "Erro ao atualizar comentário";
+
+              if (errorData.message) {
+                const errorMessages = {
+                  "Invalid comment": "Digite um comentário válido.",
+                  "Comment not found": "Comentário não encontrado.",
+                  Unauthorized:
+                    "Você não tem permissão para editar este comentário.",
+                  "Internal server error":
+                    "Erro interno do servidor. Tente novamente.",
+                };
+                errorMessage =
+                  errorMessages[errorData.message] || errorData.message;
+              }
+
+              displayCommentErrors([errorMessage]);
+              textarea.classList.add("error");
+              return;
+            }
 
             if (response.ok) {
               commentText.textContent = newContent;
+              clearCommentErrors();
             } else {
-              alert("Erro ao atualizar comentário.");
+              displayCommentErrors(["Erro ao atualizar comentário."]);
+              textarea.classList.add("error");
               restore();
             }
           } catch (error) {
             console.error("Erro ao atualizar comentário:", error);
-            alert("Erro ao atualizar comentário.");
+            displayCommentErrors(["Erro ao atualizar comentário."]);
+            textarea.classList.add("error");
             restore();
           }
         });
@@ -261,7 +442,29 @@ document.addEventListener("DOMContentLoaded", function () {
             body: JSON.stringify({
               commentId: commentId,
             }),
+            credentials: "include",
           });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            let errorMessage = "Erro ao excluir comentário";
+
+            if (errorData.message) {
+              const errorMessages = {
+                "Comment or user not found": "Comentário não encontrado.",
+                "Invalid id": "ID inválido.",
+                Unauthorized:
+                  "Você não tem permissão para excluir este comentário.",
+                "Internal server error":
+                  "Erro interno do servidor. Tente novamente.",
+              };
+              errorMessage =
+                errorMessages[errorData.message] || errorData.message;
+            }
+
+            displayCommentErrors([errorMessage]);
+            return;
+          }
 
           if (response.ok) {
             // Remover comentário da UI
@@ -283,11 +486,11 @@ document.addEventListener("DOMContentLoaded", function () {
               commentsList.appendChild(noComments);
             }
           } else {
-            alert("Erro ao excluir comentário.");
+            displayCommentErrors(["Erro ao excluir comentário."]);
           }
         } catch (error) {
           console.error("Erro ao excluir comentário:", error);
-          alert("Erro ao excluir comentário.");
+          displayCommentErrors(["Erro ao excluir comentário."]);
         }
       });
     }
@@ -297,62 +500,4 @@ document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll(".comment-item").forEach((commentItem) => {
     setupCommentButtons(commentItem);
   });
-
-  // Sincronizar com modo claro/escuro do header
-  const themeToggle = document.getElementById("theme-toggle");
-  const themeIcon = document.getElementById("theme-icon");
-  const body = document.body;
-
-  function updateThemeForArticle(isDarkMode) {
-    if (isDarkMode) {
-      // Modo escuro já é o padrão
-      document
-        .querySelectorAll(
-          ".like-button, .comment-button, .comment-action-btn, .comment-submit, .comment-input",
-        )
-        .forEach((el) => {
-          el.style.color = "#fff";
-        });
-      document.querySelectorAll(".comment-input").forEach((el) => {
-        el.style.background = "#1a1a1a";
-        el.style.borderColor = "#706450";
-      });
-    } else {
-      // Modo claro
-      document
-        .querySelectorAll(
-          ".like-button, .comment-button, .comment-action-btn, .comment-submit",
-        )
-        .forEach((el) => {
-          el.style.color = "#333";
-        });
-      document.querySelectorAll(".comment-input").forEach((el) => {
-        el.style.background = "#fff";
-        el.style.borderColor = "#ccc";
-        el.style.color = "#333";
-      });
-    }
-  }
-
-  // Observar cliques no botão de tema do header
-  const observer = new MutationObserver(function (mutations) {
-    mutations.forEach(function (mutation) {
-      if (mutation.attributeName === "style") {
-        const computedStyle = window.getComputedStyle(body);
-        const isDark =
-          computedStyle.backgroundColor === "rgb(0, 0, 0)" ||
-          computedStyle.backgroundColor === "";
-        updateThemeForArticle(isDark);
-      }
-    });
-  });
-
-  observer.observe(body, { attributes: true });
-
-  // Inicializar com tema atual
-  const computedStyle = window.getComputedStyle(body);
-  const isDark =
-    computedStyle.backgroundColor === "rgb(0, 0, 0)" ||
-    computedStyle.backgroundColor === "";
-  updateThemeForArticle(isDark);
 });
