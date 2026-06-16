@@ -1,272 +1,272 @@
-# blog
+# Blog API - Backend com SSR
 
 [![Node.js](https://img.shields.io/badge/Node.js-v22.x-green)](https://nodejs.org/)
 [![Express](https://img.shields.io/badge/Express-5.1-blue)](https://expressjs.com/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-8.x-brightgreen)](https://www.mongodb.com/)
+[![EJS](https://img.shields.io/badge/EJS-6.0-orange)](https://ejs.co/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-6.x-brightgreen)](https://www.mongodb.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16.x-blue)](https://www.postgresql.org/)
+[![Prisma](https://img.shields.io/badge/Prisma-7.2-lightgrey)](https://www.prisma.io/)
+[![Mongoose](https://img.shields.io/badge/Mongoose-8.16-green)](https://mongoosejs.com/)
 [![Redis](https://img.shields.io/badge/Redis-5.x-red)](https://redis.io/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Stripe](https://img.shields.io/badge/Stripe-20.0-purple)](https://stripe.com/)
+[![Jest](https://img.shields.io/badge/Jest-30.2-red)](https://jestjs.io/)
+[![Swagger](https://img.shields.io/badge/Swagger-6.3-green)](https://swagger.io/)
+[![License](https://img.shields.io/badge/License-ISC-yellow.svg)](https://opensource.org/licenses/ISC)
 
-Um projeto backend de um blog, com autenticação JWT, cache com Redis (cache-aside), sistema de artigos, assinaturas com Stripe, comentários, curtidas, pesquisa por tags e paginação.  
-Desenvolvida com **Node.js + Express + Mongoose + MongoDB + Prisma + PostgreSQL** e testada com **Insomnia/Postman** e **Testes unitários com Jest**.
+API backend de blog com **Server-Side Rendering (SSR)** utilizando **Node.js + Express + TypeScript + EJS**, suporte a dois bancos de dados (**MongoDB** e **PostgreSQL**), autenticação JWT, cache com Redis, sistema de artigos, assinaturas com Stripe, comentários, curtidas, pesquisa por tags, paginação e documentação Swagger.
 
 ## 🚀 Funcionalidades
 
-### Usuário
-- `POST   /signUp` → Registro
-- `GET    /get/url/Oauth/signUp` → Obter URL de registro com OAuth2 (Google)
-- `GET    /Oauth/signUp` → Callback de registro via OAuth2 (Google)
-- `POST   /signIn` → Login (retorna cookie HttpOnly `userAuth` com JWT)
-- `GET    /get/url/Oauth/signIn` → Obter URL de login com OAuth2 (Google)
-- `GET    /Oauth/signIn` → Callback de login via OAuth2 (Google)
-- `GET    /verify-email?token=...` → Verificar email (token de verificação)
-- `GET    /articles?page=1&limit=5` → Listar artigos com paginação
-- `GET    /articles/tag?tag=tag&page=1&limit=5` → Buscar artigos por tag
-- `GET    /articles/search?search=busca&page=1&limit=5` → Buscar artigos por texto
-- `GET    /article/:slug` → Carregar artigo por slug
-- `GET    /likes` → Listar artigos curtidos pelo usuário
-- `GET    /subscribe` → Iniciar fluxo de assinatura (Stripe)
-- `POST   /article/:slug/like` → Curtir artigo
-- `DELETE /article/:slug/like/:likeId` → Remover curtida
-- `POST   /article/:slug/comment` → Comentar artigo
-- `PUT    /article/:slug/comment/:commentId` → Editar comentário
-- `DELETE /article/:slug/comment/:commentId` → Deletar comentário
+### Autenticação & Usuários
+- `POST /app/signUp` → Registro de usuário
+- `POST /app/signIn` → Login (retorna cookie HttpOnly `userAuth` com JWT)
+- `GET /app/get/url/Oauth/signUp` → Obter URL de registro com OAuth2 (Google)
+- `GET /app/Oauth/signUp` → Callback de registro via OAuth2 (Google)
+- `GET /app/get/url/Oauth/signIn` → Obter URL de login com OAuth2 (Google)
+- `GET /app/Oauth/signIn` → Callback de login via OAuth2 (Google)
+- `GET /app/verify-email?token=...` → Verificar email
 
-### Recursos técnicos
-- Autenticação via **JWT + cookie HttpOnly**  
-- **Cache-aside** com Redis (artigos e buscas)  
-- Validação com **express-validator**  
-- Proteção de rotas (middlewares `auth`, `credentialsAuth`, `planValidation`, `authInteractions`)
-- Limitação de taxa (rate limiting) com **express-rate-limit** e armazenamento das chaves no Redis via **rate-limit-redis**
-- Paginação   
-- Invalidação automática de cache após alterações
-- Planos de assinaturas usando Stripe
-- Testes unitários com Jest
-- Oauth2 com o Google (login/registro)
-- Envio de emails com **Nodemailer** via OAuth2 (Gmail)
+### Artigos
+- `GET /app/articles?page=1&limit=5` → Listar artigos públicos (paginação)
+- `GET /app/articles/tag?tag=nome&page=1&limit=5` → Buscar artigos por tag
+- `GET /app/articles/search?search=termo&page=1&limit=5` → Buscar artigos por texto
+- `GET /app/article/:slug` → Carregar artigo público por slug
+- `GET /app/user/articles?page=1&limit=5` → Listar artigos do usuário (autenticado)
+- `GET /app/user/article/:slug` → Carregar artigo do usuário
+
+### Interações
+- `GET /app/likes` → Listar artigos curtidos pelo usuário
+- `POST /app/article/:slug/like` → Curtir artigo
+- `DELETE /app/article/:slug/like/:likeId` → Remover curtida
+- `POST /app/article/:slug/comment` → Comentar artigo
+- `PUT /app/article/:slug/comment/:commentId` → Editar comentário
+- `DELETE /app/article/:slug/comment/:commentId` → Deletar comentário
+
+### Assinaturas (Stripe)
+- `POST /app/user/subscribe` → Iniciar fluxo de assinatura
+
+### SSR - Páginas Renderizadas
+- `GET /app/login` → Página de login (EJS)
+- `GET /app/register` → Página de registro (EJS)
+- `GET /app/` → Página principal (EJS)
+- `GET /app/article/:slug` → Página de artigo (EJS)
+- `GET /app/search?search=termo` → Página de busca (EJS)
+
+### Webhooks
+- `POST /api/webhooks` → Webhook do Stripe
+
+## ⚡ Recursos Técnicos
+
+- **Autenticação**: JWT + cookie HttpOnly + OAuth2 (Google)
+- **Cache**: Cache-aside com Redis (artigos e buscas)
+- **Validação**: express-validator + Zod + Joi
+- **Segurança**: Helmet (CSP, HSTS, XSS, Clickjacking) + express-rate-limit + express-slow-down
+- **Logs**: Winston (logs estruturados com metadados de request)
+- **Bancos de Dados**: MongoDB (Mongoose) + PostgreSQL (Prisma)
+- **SSR**: EJS templates com renderização server-side
+- **Pagamentos**: Integração completa com Stripe (assinaturas)
+- **Emails**: Nodemailer + OAuth2 (Gmail)
+- **API Documentation**: Swagger UI auto-gerado
+- **Invalidação de Cache**: Automática após alterações em artigos
 
 ## 📦 Tecnologias
 
-| Tecnologia         | Versão  | Uso                          |
-|--------------------|---------|------------------------------|
-| Node.js            | 22.21.1 | Runtime                      |
-| Express            | 5.1.0   | Framework web                |
-| Mongoose           | 8.16.4  | ODM MongoDB                  |
-| MongoDB            | 6.18.0  | Banco de dados NoSQL         |
-| Prisma             | 5.9.0   | ORM PostgreSQL               |
-| PostgreSQL         | 16.11   | Banco de dados SQL           |
-| Redis              | 5.9.0   | Cache (cache-aside)          |
-| Jsonwebtoken       | 9.0.2   | JWT                          |
-| Cookie-parser      | 1.4.7   | Leitura de cookies           |
-| Express-validator  | 7.2.1   | Validação de entrada         |
-| Bcryptjs           | 3.0.4   | Hash de senhas               |
-| Slugify            | 1.6.6   | Geração de slugs             |
-| Stripe             | 20.0.0  | Gateway de pagamentos        |
-| Jest               | 30.2.0  | Testes unitários             |
-| Google-auth-library| 10.5.0  | Oauth2                       |
-| Nodemailer         | 8.0.7   | Envio de emails (OAuth2/Gmail)|
-| express-rate-limit | 8.5.0   | Rate limiting (middleware)   |
-| rate-limit-redis   | 4.3.1   | Redis store para rate limiter|
+| Tecnologia | Versão | Uso |
+|------------|--------|-----|
+| Node.js | 22.x | Runtime |
+| Express | 5.1.0 | Framework web |
+| EJS | 6.0.1 | Template Engine (SSR) |
+| MongoDB | 6.18.0 | Banco de dados NoSQL |
+| Mongoose | 8.16.4 | ODM MongoDB |
+| PostgreSQL | 16.x | Banco de dados SQL |
+| Prisma | 7.2.0 | ORM PostgreSQL |
+| Redis | 5.9.0 | Cache (cache-aside) |
+| Jsonwebtoken | 9.0.2 | JWT |
+| Cookie-parser | 1.4.7 | Leitura de cookies |
+| Express-validator | 7.2.1 | Validação de entrada |
+| Zod | 4.4.3 | Validação de schemas |
+| Joi | 18.2.1 | Validação de dados |
+| Bcryptjs | 3.0.2 | Hash de senhas |
+| Stripe | 20.0.0 | Gateway de pagamentos |
+| Helmet | 8.1.0 | Segurança HTTP |
+| Winston | 3.19.0 | Logging |
+| Swagger-jsdoc | 6.3.0 | Documentação API |
+| Swagger-ui-express | 5.0.1 | Interface Swagger |
+| Express-rate-limit | 8.5.0 | Rate limiting |
+| Express-slow-down | 3.1.0 | Slow down middleware |
+| Rate-limit-redis | 4.3.1 | Redis store para rate limiter |
+| Nodemailer | 8.0.7 | Envio de emails |
+| Google-auth-library | 10.5.0 | OAuth2 Google |
+| Slugify | 1.6.6 | Geração de slugs |
+| Crypto-js | 4.2.0 | Criptografia |
+| @paralleldrive/cuid2 | 3.3.0 | Geração de IDs |
+| Dotenv | 17.2.1 | Variáveis de ambiente |
+| Jest | 30.2.0 | Testes unitários |
 
 ## ⚙️ Instalação
 
 ```bash
 # Clone o repositório
-git clone https://github.com/j4ck-dev7/blog-API.git
-cd blog-API
+git clone https://github.com/j4ck-dev7/Blog-API.git
+cd Blog-API
 
 # Instale as dependências
 npm install
 ```
 
-## Variáveis de ambiente (.env)
+## Variáveis de Ambiente (.env)
+
 ```env
+# Server
 PORT=5000
-MONGO_CONNECT=mongodb+srv://username:password@cluster1.78fk80s.mongodb.net/blogapi?retryWrites=true&w=majority&appName=Cluster1
-SECRET=SuaChaveSuperSecretaAqui!
+NODE_ENV=development
+
+# MongoDB (Mongoose)
+MONGO_CONNECT=mongodb+srv://username:password@cluster1.78fk80s.mongodb.net/blogapi?retryWrites=true&w=majority
+
+# PostgreSQL (Prisma)
+DATABASE_URL=postgresql://user:password@localhost:5432/blogapi?schema=public
+
+# Redis
 REDIS_URL=redis://localhost:6379
+
+# JWT & Security
+SECRET=SuaChaveSuperSecretaAqui
+
+# Stripe
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+
+# Google OAuth2
+GOOGLE_CLIENT_ID=SEU_CLIENT_ID
+GOOGLE_CLIENT_SECRET=SEU_CLIENT_SECRET
+
+# Nodemailer (Gmail OAuth2)
+SMTP_USER=seu-email@gmail.com
+GOOGLE_REFRESH_TOKEN=SEU_REFRESH_TOKEN
 ```
-Use Redis Cloud (gratuito) e MongoDB Atlas (free tier)
- 
- ### Variáveis adicionais para envio de emails (Nodemailer + OAuth2 Gmail)
- ```env
- SMTP_USER=seu-email@gmail.com
- GOOGLE_CLIENT_ID=SEU_CLIENT_ID_GOOGLE
- GOOGLE_CLIENT_SECRET=SEU_CLIENT_SECRET_GOOGLE
- GOOGLE_REFRESH_TOKEN=SEU_REFRESH_TOKEN_GOOGLE
- ```
- O arquivo `src/config/nodemailer.js` utiliza essas variáveis (`SMTP_USER`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN`).
 
-## 🏃‍♂️ Executando 
+> **Nota**: Para produção, utilize Redis Cloud e MongoDB Atlas (free tier disponível).
+
+## 🏃‍♂️ Executando
+
 ```bash
-# Inicie o servidor
-node server.js
+# Inicie o servidor (modo desenvolvimento)
+npm run start
 
-#A API estará disponível em http://localhost:5000/api/
+# A API estará disponível em http://localhost:5000/
+# Swagger UI: http://localhost:5000/api-docs
+# Página SSR: http://localhost:5000/app/
 ```
 
 ## 🔐 Autenticação
-1. Registro (cria usuário)
-	```http
-	POST http://localhost:5000/signUp
-	Content-Type: application/json
-   
-	{
-	  "name": "Seu Nome",
-	  "email": "usuario@exemplo.com",
-	  "password": "senha123",
-	}
-	```
 
-2. Login
-	```http
-	POST http://localhost:5000/signIn
-	Content-Type: application/json
-
-	{
-	  "email": "usuario@exemplo.com",
-	  "password": "senha123"
-	}
-	```
-	Em caso de sucesso a API retorna um cookie HttpOnly chamado `userAuth` contendo o JWT.
-
-3. Verificação de email
-	- A API expõe `GET /verify-email?token=...` para confirmar o email após registro.
-
-4. Rotas protegidas
-	- Todas as rotas que exigem autenticação retornam `401` quando não há o cookie `userAuth`.
-
-## 📋 Exemplos de Requisições
-Listar artigos (público/autenticado)
+### 1. Registro
 ```http
-GET /articles?page=1&limit=5
-```
-Resposta:
-```json
+POST http://localhost:5000/app/signUp
+Content-Type: application/json
+
 {
-  "message": "Articles obtained",
-  "articles": [ /* ... */ ],
-  "pagination": { /* ... */ }
+  "name": "Seu Nome",
+  "email": "usuario@exemplo.com",
+  "password": "senha123"
 }
 ```
 
-Curtir artigo
+### 2. Login
 ```http
-POST /article/:slug/like
+POST http://localhost:5000/app/signIn
+Content-Type: application/json
+
+{
+  "email": "usuario@exemplo.com",
+  "password": "senha123"
+}
+```
+> Em caso de sucesso, retorna cookie HttpOnly `userAuth` com JWT.
+
+### 3. Verificação de Email
+- A API expõe `GET /app/verify-email?token=...` para confirmar email.
+
+### 4. OAuth2 (Google)
+- Registro: `GET /app/get/url/Oauth/signUp` → `GET /app/Oauth/signUp`
+- Login: `GET /app/get/url/Oauth/signIn` → `GET /app/Oauth/signIn`
+
+### 5. Rotas Protegidas
+- Todas as rotas autenticadas retornam `401` sem cookie `userAuth`.
+- Middlewares: `auth`, `authInteractions` para validação de plano.
+
+## 📄 Endpoints Principais
+
+### Artigos Públicos
+```http
+GET /app/articles?page=1&limit=5
+```
+
+### Busca por Tag
+```http
+GET /app/articles/tag?tag=nodejs&page=1&limit=5
+```
+
+### Busca por Texto
+```http
+GET /app/articles/search?search=typescript&page=1&limit=5
+```
+
+### Curtir Artigo (Autenticado)
+```http
+POST /app/article/nodejs-com-redis-cache/like
 Cookie: userAuth=...
 ```
 
-Comentar artigo
+### Comentar Artigo (Autenticado)
 ```http
-POST /article/:slug/comment
+POST /app/article/nodejs-com-redis-cache/comment
 Cookie: userAuth=...
 Content-Type: application/json
+
 {
   "content": "Ótimo artigo!"
 }
 ```
 
-Listar artigos (user)
-```http
-GET /user/articles?page=1&limit=5
-```
-Resposta:
-```json
-	"message": "Articles obtained",
-	"data": {
-		"articles": [
-			{
-				"title": "PHP, Laravel, Orthogonality",
-				"author": "admin",
-				"plan": "intermediate",
-				"createdIn": "18/11/2025, 16:12"
-			},
-			{
-				"title": "PHP, Laravel, Jwt",
-				"author": "admin",
-				"plan": "premium",
-				"createdIn": "18/11/2025, 16:09"
-			},
-			{
-				"title": "Node.js e TypeScript com Fastify",
-				"author": "admin",
-				"plan": "premium",
-				"createdIn": "18/11/2025, 09:38"
-			},
-			{
-				"title": "Node.js e TypeScript com Redis Cache",
-				"author": "admin",
-				"plan": "basic",
-				"createdIn": "18/11/2025, 09:12"
-			},
-			{
-				"title": "Node.js com Redis Cache",
-				"author": "admin",
-				"plan": "free",
-				"createdIn": "18/11/2025, 09:10"
-			}
-		],
-		"pagination": {
-			"total": 5,
-			"pages": 1,
-			"currentPage": 1,
-			"limit": 5,
-			"hasNext": false,
-			"hasPrev": false
-		}
-	}
-```
-
-Buscar por tag (user)
-```http
-GET /user/articles?page=1&limit=5&tag=nodejs
-```
-
-Curtir artigo (user)
-```http
-GET /user/article/673f2e1c9d5a2c1f8e9d4a2b/like
-```
-O id é do artigo
-
-Carregar artigo (user)
-```http
-GET /user/article/nodejs-com-redis-cache
-```
-Alguns artigos são inacessíveis por causa dos planos de assinatura
-
-## ⚡ Cache Redis
+## ⚡ Cache Redis (Cache-Aside)
 - Primeira request → MongoDB → salva no Redis
 - Próximas → direto do Redis
 - Cache invalidado automaticamente ao criar/editar/excluir artigo
-  
-## 📝 Assinatura com Stripe
-Assinar um plano:
-```http
-POST http://localhost:5000/api/user/subscribe
-   Content-Type: application/json
-   
-   {
-     "subscription": "plano"
-   }
-```
 
-Resposta:
-```json
+## 💳 Assinatura com Stripe
+
+### Assinar Plano
+```http
+POST http://localhost:5000/app/user/subscribe
+Content-Type: application/json
+
 {
-	"url": "https://checkout.stripe.com/c/pay/cs_test_"
+  "subscription": "premium"
 }
 ```
-Ao clicar na url retornada, uma página da stripe será carregada, use 4242 4242 4242 4242 no número do cartão enquanto os outros campos pode pôr qualquer coisa.
-Quando o pagamento for efetuado basta logar novamente na api para que o plano funcione.
 
-## 📋 Testes Unitários
-Os testes unitários foram aplicados nas seguintes camadas e módulos:
-| Módulo                 | Service | Controller | Tipos de Teste                 |
-|------------------------|---------|------------|--------------------------------|  
-| **Usuário (Login)**    | ✅      | ✅         | Sucesso, Erro, Autenticação    |
-| **Usuário (Register)** | ✅      | ✅         | Sucesso, Erro, Validação       |
-| **Artigos**            | ✅      | ✅         | Sucesso, Erro, Validação       |
-| **Comentários**        | ✅      | ✅         | Sucesso, Erro, Validação       |
-| **Likes**              | ✅      | ✅         | Sucesso, Erro, Validação       |
+**Resposta**:
+```json
+{
+  "url": "https://checkout.stripe.com/c/pay/cs_test_..."
+}
+```
+
+> Use o cartão de teste: `4242 4242 4242 4242` (qualquer data, CVV e CEP).
+> Após pagamento, faça login novamente para ativação do plano.
+
+## 🧪 Testes Unitários (Jest)
+
+Testes aplicados em:
+| Módulo | Service | Controller | Tipos de Teste |
+|--------|---------|------------|----------------|
+| Usuário (Login) | ✅ | ✅ | Sucesso, Erro, Autenticação |
+| Usuário (Register) | ✅ | ✅ | Sucesso, Erro, Validação |
+| Artigos | ✅ | ✅ | Sucesso, Erro, Validação |
+| Comentários | ✅ | ✅ | Sucesso, Erro, Validação |
+| Likes | ✅ | ✅ | Sucesso, Erro, Validação |
 
 ### Como rodar os testes
 
@@ -280,57 +280,58 @@ npm install
 npm test
 ```
 
-Observação: o script `test` do `package.json` já invoca o Node com a flag necessária para suportar módulos ESM no Jest.
+> **Nota**: OAuth2 é mockado nos testes. Não é necessário configurar credenciais do Google.
 
-Observação sobre OAuth2:
-- Os fluxos OAuth2 utilizados pelo projeto (Google) são mockados nos testes unitários, portanto não é necessário configurar credenciais do Google para executar a suíte de testes.
+## 📧 Nodemailer + OAuth2 (Gmail)
 
-## 📧 Nodemailer + OAuth2 (Gmail) — obtenção do Refresh Token
+O projeto usa Nodemailer com OAuth2 para envio de emails (verificação de conta).
 
-O projeto usa `nodemailer` com OAuth2 para envio de e-mails (ex.: verificação de conta). As credenciais esperadas estão listadas acima (`SMTP_USER`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN`).
+**Como obter GOOGLE_REFRESH_TOKEN**:
+1. Acesse [Google Cloud Console](https://console.cloud.google.com/)
+2. Habilite a API "Gmail API"
+3. Configure a tela de consentimento OAuth
+4. Crie credenciais "OAuth 2.0 Client ID" (tipo Desktop App)
+5. Use [OAuth 2.0 Playground](https://developers.google.com/oauthplayground/):
+   - Cole o Client ID e Client Secret
+   - Autorize com o escopo `https://mail.google.com/`
+   - Troque o código por tokens
+   - Copie o Refresh Token
 
-Passo a passo para obter o `GOOGLE_REFRESH_TOKEN` (resumido):
+> **Nota**: Adicione `https://developers.google.com/oauthplayground` como Redirect URI se usar "Web application".
 
-1. Acesse o Google Cloud Console (https://console.cloud.google.com/) e crie um novo projeto (ou use um existente).
-2. Habilite a API "Gmail API" no projeto.
-3. Configure a tela de consentimento OAuth (OAuth consent screen): preencha nome do aplicativo, e-mails de suporte e adicione os escopos necessários, por exemplo: `https://mail.google.com/` (escopo completo de envio de e-mail) ou `https://www.googleapis.com/auth/gmail.send`.
-4. Crie credenciais do tipo "OAuth 2.0 Client ID". Para simplicidade, escolha o tipo "Desktop app" (ou "Web application" se preferir). Copie o `Client ID` e `Client Secret`.
-5. Abra o OAuth 2.0 Playground (https://developers.google.com/oauthplayground/).
-	- Clique no ícone de engrenagem no canto superior direito e marque "Use your own OAuth credentials". Cole o `Client ID` e `Client Secret` e salve.
-	- Na coluna "Step 1" cole o escopo `https://mail.google.com/` (ou `https://www.googleapis.com/auth/gmail.send`) e clique em "Authorize APIs".
-	- Faça login com a conta Gmail que será usada como `SMTP_USER` e conceda as permissões.
-	- Em "Step 2" clique em "Exchange authorization code for tokens". O Playground retornará um `Access token` e um `Refresh token`.
-6. Copie o valor do `Refresh token` e adicione ao seu arquivo `.env` como `GOOGLE_REFRESH_TOKEN`.
+A configuração do transporte está em `src/config/nodemailer.js`.
 
-Observação: se optar por criar credenciais do tipo "Web application", adicione `https://developers.google.com/oauthplayground` como Redirect URI nas credenciais.
+## 📁 Estrutura do Projeto
 
-Exemplo `.env` completo (trecho relevante):
-```env
-PORT=5000
-SMTP_USER=seu-email@gmail.com
-GOOGLE_CLIENT_ID=SEU_CLIENT_ID_GOOGLE
-GOOGLE_CLIENT_SECRET=SEU_CLIENT_SECRET_GOOGLE
-GOOGLE_REFRESH_TOKEN=SEU_REFRESH_TOKEN_GOOGLE
 ```
-
-No código a configuração do transporte está em `src/config/nodemailer.js` e já faz uso dessas variáveis.
-
-## 🏗️ Estrutura de Testes
-
-### Camada de Service
-A camada de Service contém a lógica de negócio da aplicação. Os testes irão validar:
-
-- **Casos de Sucesso**: Operações executadas corretamente
-- **Casos de Erro**: Tratamento de exceções e erros esperados
-- **Validações**: Regras de negócio e constraints
-
-### Camada de Controller
-A camada de Controller gerencia as requisições HTTP. Os testes irão validar:
-
-- **Respostas Bem-Sucedidas**: Status 200, 201, etc.
-- **Erros HTTP**: Status 400, 401, 403, 404, 500, etc.
-- **Autenticação e Autorização**: Validação de tokens e permissões
-- **Validação de Entrada**: Dados malformados ou inválidos
+Blog-API/
+├── src/
+│   ├── config/           # Configurações (db, redis, stripe, nodemailer, swagger, logger)
+│   ├── controllers/      # Controladores de rota
+│   ├── middlewares/      # Middlewares (auth, rateLimit, slowDown, logger)
+│   ├── models/           # Modelos Mongoose
+│   ├── repositories/     # Repositórios de dados
+│   ├── routes/           # Rotas Express
+│   ├── services/         # Lógica de negócio
+│   ├── templates/        # Templates EJS (SSR)
+│   │   ├── partials/     # Componentes reutilizáveis
+│   │   ├── article.ejs
+│   │   ├── login.ejs
+│   │   ├── main.ejs
+│   │   ├── register.ejs
+│   │   └── search.ejs
+│   ├── utils/            # Utilitários
+│   └── validators/       # Validação de dados
+├── public/              # Arquivos estáticos
+│   ├── css/
+│   ├── images/
+│   └── js/
+├── prisma/              # Configuração Prisma
+├── tests/               # Testes unitários
+├── package.json
+├── server.js            # Entry point
+└── README.md
+```
 
 ## 🤝 Contribuindo
 - Fork
@@ -339,10 +340,11 @@ A camada de Controller gerencia as requisições HTTP. Os testes irão validar:
 - Push e abra um PR
 
 ## 📄 Licença
-Este projeto está licenciado sob a MIT License - veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+Este projeto está licenciado sob a **ISC License** - veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
 ## ✉️ Contato
 - **Nome**: Jackson
 - **Email**: j4ckson7dev@gmail.com
 - **LinkedIn**: [Jackson](https://www.linkedin.com/in/jackson-de-ara%C3%BAjo-568b6b398/)
 - **GitHub**: [j4ck-dev7](https://github.com/j4ck-dev7)
+- **Projeto**: [Blog-API](https://github.com/j4ck-dev7/Blog-API)
