@@ -49,6 +49,7 @@ export const signIn = async (req, res) => {
     const token = jwt.sign(
       {
         _id: user.id,
+        email: user.email,
       },
       process.env.SECRET,
     );
@@ -215,6 +216,7 @@ export const signUpWithOauth = async (req, res) => {
     const token = jwt.sign(
       {
         _id: user.id,
+        email: user.email,
       },
       process.env.SECRET,
     );

@@ -11,12 +11,15 @@
             <% if (user && user.authenticationType) { %>
                 <% if (user.authenticationType === 'local') { %>
                     <a href="/user/menu">Menu do Usuário</a>
+                    <a href="/app/subscription">Assinatura</a>
                 <% } else if (user.authenticationType === 'google' || user.authenticationType === 'Oauth2') { %>
                     <a href="/auth/oauth">Login com OAuth</a>
+                    <a href="/app/subscription">Assinatura</a>
                 <% } %>
             <% } else { %>
                 <a href="/app/auth/login">Login</a>
                 <a href="/app/auth/register">Cadastrar</a>
+                <a href="/app/subscription">Assinatura</a>
             <% } %>
         </div>
     </div>

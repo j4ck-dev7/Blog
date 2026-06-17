@@ -254,9 +254,9 @@ export const findUserById = async (id) => {
     try {
         const user = await prisma.user.findUnique({
             where: { id },
-            select: { name: true }
+            select: { name: true, subscriptionPlan: true }
         });
-        return { success: true, data: { user: user ? { name: user.name } : null } };
+        return { success: true, data: { user: user ? { name: user.name, subscriptionPlan: user.subscriptionPlan } : null } };
     } catch (err) {
         logger.error('findUserById error', { err, id });
         throw err;

@@ -250,7 +250,7 @@ export const loginUserByOauth = async (code) => {
     return user;
 }
 
-export const generateUrlForSubscription = async (userId, plan) => {
+export const generateUrlForSubscription = async (userId, plan, userEmail) => {
     if(!userId || userId === 'freeAccess'){
         logger.warn('generateUrlForSubscription - user not authenticated', { userId });
         throw new Error('User not authenticated, please login or register');
@@ -261,18 +261,18 @@ export const generateUrlForSubscription = async (userId, plan) => {
         case 'basic': amount = 500; break;
         case 'intermediate': amount = 700; break;
         case 'premium': amount = 1000; break;
-        default: throw new Error('Invalid plan');
+        default: throw new Error('Invalid subscription plan');
     };
 
     if(!isValidCuid(userId)){
-        logger.warn('changeUserSubscription - invalid userId format', { userId });
+        logger.warn('generateUrlForSubscription - invalid userId format', { userId });
         throw new Error('Invalid userId format');
     }
         
     const session = await stripe.checkout.sessions.create({ // Cria a sessão de checkout na stripe com os dados necessários para o pagamento
         mode: 'subscription',
         payment_method_types: ['card'],
-        customer_email: req.user.email,
+        customer_email: userEmail,
         line_items: [{
             price_data: {
                 currency: 'brl',

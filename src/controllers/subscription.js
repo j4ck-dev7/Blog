@@ -4,11 +4,12 @@ import { getRequestMeta } from '../config/requestMeta.js';
 import { generateUrlForSubscription } from '../services/userService.js'; 
 
 export const subscribe = async (req, res) => {
-    const plan = req.body.subscription;
+    const plan = req.query.subscription;
     const userId = req.user._id;
+    const userEmail = req.user.email;
 
     try {
-        const generateUrl = await generateUrlForSubscription(userId, plan);   
+        const generateUrl = await generateUrlForSubscription(userId, plan, userEmail);   
 
         logger.info('Sessão de inscrição criada', getRequestMeta(req, { userId, plan }));
         res.status(200).json({ url: generateUrl });

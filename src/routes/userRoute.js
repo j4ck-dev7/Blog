@@ -26,6 +26,7 @@ import {
   renderSearchPage,
 } from "../controllers/articleController.js";
 import { subscribe } from "../controllers/subscription.js";
+import { renderSubscriptionPage } from "../controllers/subscriptionController.js";
 import {
   signInSchema,
   signInErrorMap,
@@ -1421,6 +1422,38 @@ router.get(
   lightRateLimit("register"),
   auth,
   renderRegisterPage,
+);
+
+/**
+ * @swagger
+ * /subscription:
+ *   get:
+ *     summary: Renderiza a página de assinaturas
+ *     description:
+ *       Exibe os planos de assinatura disponíveis (Basic, Intermediate, Premium) com o plano atual do usuário destacado.
+ *       Esta rota é acessível sem autenticação.
+ *     tags:
+ *       - Subscription
+ *     responses:
+ *       200:
+ *         description: Página de assinaturas renderizada com sucesso
+ *         content:
+ *           text/html:
+ *             schema:
+ *               type: string
+ *       500:
+ *         description: Erro interno do servidor
+ *         content:
+ *           text/html:
+ *             schema:
+ *               type: string
+ */
+router.get(
+  "/subscription",
+  lightSlowDown("subscription"),
+  lightRateLimit("subscription"),
+  auth,
+  renderSubscriptionPage,
 );
 
 export default router;
