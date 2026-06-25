@@ -4,10 +4,10 @@ import { RedisStore } from 'rate-limit-redis';
 import client from '../config/redis.js';
 import { getRequestMeta } from '../config/requestMeta.js';
 
+// [SECURITY FIX - V12] Chave de rate limit usa IP para anônimos, evita compartilhamento de chave
 const getRateLimitKey = (req) => {
-  if (req.user?.state === 'freeAccess') return `freeAccess:${ipKeyGenerator(req.ip)}`;
-  if (req.user?._id) return req.user._id;
-  return ipKeyGenerator(req.ip);
+  if (req.user?._id && req.user._id !== 'freeAccess') return req.user._id;
+  return `ip:${ipKeyGenerator(req.ip)}`;
 };
 
 const createLimit = ({ windowMs, limit, prefix, message }) =>

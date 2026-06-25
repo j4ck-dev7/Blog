@@ -13,7 +13,8 @@
     <div class="auth-container">
         <div class="auth-header">
             <h1>Bem-vindo de volta</h1>
-            <p>Não tem uma conta? <a href="/auth/register">Cadastre-se</a></p>
+            <!-- [SECURITY FIX - V29] Corrigido link para /app/auth/register -->
+            <p>Não tem uma conta? <a href="/app/auth/register">Cadastre-se</a></p>
         </div>
         
         <% if (error) { %>

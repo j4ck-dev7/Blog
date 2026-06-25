@@ -20,7 +20,8 @@
                 <% articles.forEach(article => { %>
                     <article class="article-card">
                         <h2 class="article-title">
-                            <a href="/article/<%= article.slug %>"><%= article.title %></a>
+                            <!-- [SECURITY FIX - V28] Corrigido link para /app/article/ -->
+                            <a href="/app/article/<%= article.slug %>"><%= article.title %></a>
                         </h2>
                         <div class="article-meta">
                             <span class="article-likes">
@@ -44,13 +45,15 @@
             <% if (pagination) { %>
                 <div class="pagination">
                     <% if (pagination.hasPrev) { %>
-                        <a href="/search?q=<%= query %>&page=<%= pagination.currentPage - 1 %>&limit=<%= pagination.limit %>"> &lt; Anterior</a>
+                        <!-- [SECURITY FIX] Corrigido link de paginação para /app/search -->
+                        <a href="/app/search?q=<%= query %>&page=<%= pagination.currentPage - 1 %>&limit=<%= pagination.limit %>"> &lt; Anterior</a>
                     <% } else { %>
                         <span>&lt; Anterior</span>
                     <% } %>
                     
                     <% if (pagination.hasNext) { %>
-                        <a href="/search?q=<%= query %>&page=<%= pagination.currentPage + 1 %>&limit=<%= pagination.limit %>">Próximo &gt;</a>
+                        <!-- [SECURITY FIX] Corrigido link de paginação para /app/search -->
+                        <a href="/app/search?q=<%= query %>&page=<%= pagination.currentPage + 1 %>&limit=<%= pagination.limit %>">Próximo &gt;</a>
                     <% } else { %>
                         <span>Próximo &gt;</span>
                     <% } %>

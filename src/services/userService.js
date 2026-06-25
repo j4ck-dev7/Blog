@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import stripe from "../config/stripe.js";
 import { 
     findUserByEmail, 
@@ -12,14 +13,14 @@ import {
     changeUserStatusActive,
     findUserById,
 } from "../repositories/userRepository.js";
-import CryptoJS from "crypto-js";
 import { OAuth2Client } from 'google-auth-library'
 import { logger } from '../config/logger.js';
 import { transporter } from '../config/nodemailer.js';
 import { incrementLoginAttempts, resetLoginAttempts, isLockedOut } from "../utils/redisLoginAttempts.js";
 
+// [SECURITY FIX - V9] OAuth state deve ser aleatório por sessão (removido CryptoJS hardcoded)
 export const getUrlForOauthSignUp = async () => {
-    const state =  CryptoJS.SHA256('testGoogle').toString(CryptoJS.enc.Hex);
+    const state = crypto.randomBytes(32).toString('hex');
 
     logger.info('getUrlForOauthSignUp called');
 
@@ -42,8 +43,9 @@ export const getUrlForOauthSignUp = async () => {
     return authorizationUrl
 }
 
+// [SECURITY FIX - V9] OAuth state deve ser aleatório por sessão
 export const getUrlForOauthSignIn = async () => {
-    const state =  CryptoJS.SHA256('testGoogle').toString(CryptoJS.enc.Hex);
+    const state = crypto.randomBytes(32).toString('hex');
 
     logger.info('getUrlForOauthSignIn called');
 
@@ -79,7 +81,9 @@ export const registerUser = async (name, email, password) => {
     logger.info('registerUser - success', { id: newUser?.id, email: newUser?.email });
 
     const token = jwt.sign({ id: newUser.id, email: email }, process.env.EMAIL_VERIFICATION_SECRET, { expiresIn: 1000 * 60 * 10 });
-    const verificationLink = `http://localhost:5000/verify-email?token=${token}`;
+    // [SECURITY FIX - V5] URL de verificação deve usar variável de ambiente
+    const baseUrl = process.env.BASE_URL || 'http://localhost:5000';
+    const verificationLink = `${baseUrl}/verify-email?token=${token}`;
     await transporter.sendMail({
         from: process.env.SMTP_USER,
         to: email,
@@ -189,10 +193,26 @@ export const loginUser = async (email, password) => {
 
     const userResult = await findUserByEmail(email);
     const user = userResult?.data?.user;
-    const passwordHash = user?.password || '$2b$10$invalidpasswordhash00000000000000000000000000000000000000';
-    const isValidPassword = await bcrypt.compare(password, passwordHash);
 
-    if (!user || !isValidPassword) {
+    // [SECURITY FIX - V4] Não executar bcrypt.compare se usuário não existe (evita timing attack e waste CPU)
+    if (!user) {
+        const loginAttemps = await incrementLoginAttempts(email);
+        
+        logger.warn('Tentativa de login com credenciais incorretas', {
+            usuarioId: 'Desconecido',
+            email,
+            tentativas: loginAttemps.attempts
+        });
+
+        const error = new Error('Email ou senha incorretos');
+        error.attempts = loginAttemps.attempts;
+        error.remainingAttempts = 5 - loginAttemps.attempts;
+        throw error;
+    }
+
+    const isValidPassword = await bcrypt.compare(password, user.password);
+
+    if (!isValidPassword) {
         const loginAttemps = await incrementLoginAttempts(email);
         
         logger.warn('Tentativa de login com credenciais incorretas', {

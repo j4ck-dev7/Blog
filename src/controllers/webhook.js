@@ -9,8 +9,11 @@ export const webhook = async (req, res) => {
     const body = req.body;
     
     try {
-        await changeUserSubscription(sig, body);
+        const result = await changeUserSubscription(sig, body);
 
+        // [SECURITY FIX - V13] Extrair dados do resultado para evitar ReferenceError
+        const userId = result?.data?.id || 'unknown';
+        const plan = result?.data?.plan || 'unknown';
         logger.info('Webhook recebido - assinatura atualizada', getRequestMeta(req, { userId, plan }));
         return res.status(200).json({ received: true }) // Importante, diz ao stripe que o webhook foi recebido
     } catch (error) {

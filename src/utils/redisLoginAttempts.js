@@ -4,6 +4,13 @@ import { logger } from "../config/logger.js";
 const MAX_ATTEMPTS = 5;
 const ATTEMPT_WINDOW_SECONDS = 15 * 60; // 15 minutos
 
+// [SECURITY FIX - V34] Mascarar email para LGPD/GDPR
+const maskEmail = (email) => {
+    if (!email || !email.includes('@')) return '***';
+    const [local, domain] = email.split('@');
+    return `${local[0]}***@${domain}`;
+};
+
 export const getLoginAttempts = async (email) => {
     try {
         const key = `login_attempts:${email}`;
@@ -17,7 +24,7 @@ export const getLoginAttempts = async (email) => {
     } catch (error) {
         logger.error('Erro ao recuperar tentativas de login do Redis', error, {
             usuarioId: 'Desconecido',
-            email
+            email: maskEmail(email)
         });
         return { attempts: 0, lastAttempt: null };
     }
@@ -38,7 +45,7 @@ export const incrementLoginAttempts = async (email) => {
         
         logger.debug('Tentativa de login registrada no Redis', {
             usuarioId: 'Desconecido',
-            email,
+            email: maskEmail(email),
             tentativas: newData.attempts
         });
         
@@ -46,7 +53,7 @@ export const incrementLoginAttempts = async (email) => {
     } catch (error) {
         logger.error('Erro ao incrementar tentativas de login no Redis', error, {
             usuarioId: 'Desconecido',
-            email
+            email: maskEmail(email)
         });
         throw error;
     }
@@ -59,12 +66,12 @@ export const resetLoginAttempts = async (email) => {
         
         logger.debug('Tentativas de login resetadas no Redis', {
             usuarioId: 'Desconecido',
-            email
+            email: maskEmail(email)
         });
     } catch (error) {
         logger.error('Erro ao resetar tentativas de login no Redis', error, {
             usuarioId: 'Desconecido',
-            email
+            email: maskEmail(email)
         });
         throw error;
     }

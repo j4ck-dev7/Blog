@@ -20,7 +20,7 @@ export const findUserByEmail = async (email) => {
             id: user.id,
             name: user.name,
             email: user.email,
-            password: user.password,
+            password: user.password, // Necessário para bcrypt.compare no login
             subscriptionExpiresAt: user.subscriptionExpiresAt,
             subscriptionPlan: user.subscriptionPlan,
             isEmailVerified: user.isEmailVerified
@@ -39,7 +39,7 @@ export const findUserBySub = async (sub) => {
             select: {
                 name: true,
                 email: true,
-                password: true,
+                // [SECURITY FIX - V4] password removido - não é necessário para OAuth login
                 id: true,
                 subscriptionExpiresAt: true,
                 subscriptionPlan: true
@@ -49,7 +49,6 @@ export const findUserBySub = async (sub) => {
             id: user.id,
             name: user.name,
             email: user.email,
-            password: user.password,
             subscriptionExpiresAt: user.subscriptionExpiresAt,
             subscriptionPlan: user.subscriptionPlan
         } : null } };
@@ -216,7 +215,8 @@ export const updateUserSubscription = async (userId, plan) => {
                 where: { id: userId },
                 data: {
                     subscriptionPlan: plan,
-                    subscriptionExpiresAt: new Date(Date.now() + 120_000)
+                    // [SECURITY FIX - V6] Corrigido: assinatura expira em 30 dias (antes eram 2 minutos)
+                    subscriptionExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
                 },
                 select: { id: true }
             });

@@ -23,7 +23,8 @@ app.set("view engine", "ejs");
 
 app.use(express.static(path.join(process.cwd(), "public")));
 
-app.use(express.urlencoded({ extended: true }));
+// [SECURITY FIX - V20] Limite de tamanho para urlencoded
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(cookieParser());
 app.use(helmet()); // Ativa o helmet com suas configurações padrão.
 app.use(helmet.frameguard({ action: "deny" })); // Evita clickjacking, isso imped o uso de <iframe> em outro site
@@ -36,13 +37,14 @@ app.use(
     directives: {
       defaultSrc: ["'self'"], // Carrega recursos apenas do mesmo domínio
       scriptSrc: ["'self'"], // Scripts apenas do mesmo domínio
-      styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"], // CSS da mesma orign, e estilos inline (útil para frameworks como React)
+      styleSrc: ["'self'", "https://cdnjs.cloudflare.com"], // [SECURITY FIX - V22] Removido 'unsafe-inline'
       imgSrc: ["'self'", "data:", "https:"], // Imagens da mesma origem
       connectSrc: ["'self'"], // Requisições (fetch, WebSockets) apenas para a mesma origem
     },
   }),
 );
-app.use(express.json());
+// [SECURITY FIX - V21] Limite de tamanho para JSON
+app.use(express.json({ limit: '10kb' }));
 app.use(loggerMiddleware);
 app.use((err, req, res, next) => {
   logger.error("Erro na aplicação", err, getRequestMeta(req));

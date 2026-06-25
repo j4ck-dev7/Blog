@@ -116,7 +116,8 @@
                         <div class="comment-item" data-comment-id="<%= comment.id %>">
                             <div class="comment-header">
                                 <div class="comment-author-date">
-                                    <span class="comment-author"><%= comment.author %></span>
+                                    <!-- [SECURITY FIX - V27] Corrigido: userName ao invés de author -->
+                                    <span class="comment-author"><%= comment.userName %></span>
                                     <span class="comment-date"><%= new Date(comment.creationDate).toLocaleDateString('pt-BR') %></span>
                                 </div>
                                 <% if (user && user.id === comment.userId) { %>
@@ -132,7 +133,8 @@
                                     </div>
                                 <% } %>
                             </div>
-                            <div class="comment-text"><%= comment.content %></div>
+                            <!-- [SECURITY FIX - V27] Corrigido: post ao invés de content -->
+                            <div class="comment-text"><%= comment.post %></div>
                         </div>
                     <% }); %>
                 <% } else { %>

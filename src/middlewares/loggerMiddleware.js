@@ -16,9 +16,9 @@ export const loggerMiddleware = (req, res, next) => {
         if(res.statusCode >= 400) {
             const d = Date.now() - inicio;
 
+            // [SECURITY FIX - V23] Removido log do corpo da resposta para evitar sensitive data exposure
             logger.warn('Erro na requisição', getRequestMeta(req, {
                 statusCode: res.statusCode,
-                corpo: data,
                 duracao: `${d}ms`
             }));
         }

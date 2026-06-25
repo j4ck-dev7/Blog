@@ -46,18 +46,22 @@ export const signIn = async (req, res) => {
     const { email, password } = req.body;
     const user = await loginUser(email, password);
 
+    // [SECURITY FIX - V2] JWT com expiração de 2 horas
     const token = jwt.sign(
       {
         _id: user.id,
         email: user.email,
       },
       process.env.SECRET,
+      { expiresIn: "2h" }
     );
 
+    // [SECURITY FIX - V1/V14] Cookie com sameSite strict e maxAge
     res.cookie("userAuth", token, {
       secure: true,
       httpOnly: true,
-      expires: new Date(Date.now() + 2 * 3600000),
+      sameSite: "strict",
+      maxAge: 2 * 60 * 60 * 1000,
     });
     res.status(200).json({ message: "User logged in successfully" });
     logger.info(
@@ -106,6 +110,7 @@ export const signInWithOauth = async (req, res) => {
     const { code } = req.query;
     const user = await loginUserByOauth(code);
 
+    // [SECURITY FIX - V2] JWT com expiração de 2 horas
     const token = jwt.sign(
       {
         name: user.name,
@@ -115,12 +120,15 @@ export const signInWithOauth = async (req, res) => {
         email: user.email,
       },
       process.env.SECRET,
+      { expiresIn: "2h" }
     );
 
+    // [SECURITY FIX - V1/V14] Cookie com sameSite strict e maxAge
     res.cookie("userAuth", token, {
       secure: true,
       httpOnly: true,
-      expires: new Date(Date.now() + 2 * 3600000),
+      sameSite: "strict",
+      maxAge: 2 * 60 * 60 * 1000,
     });
     res.status(200).json({ message: "User logged in successfully" });
     logger.info(
@@ -159,12 +167,12 @@ export const signUp = async (req, res) => {
       message: "User registered successfully, please verify your email",
     });
   } catch (error) {
+    // [SECURITY FIX - V11] Mensagem genérica para evitar user enumeration
     if (error.message === "User already exists") {
       logger.warn("Tentativa de registro com email existente", {
         ...getRequestMeta(req),
-        error: error.message,
       });
-      return res.status(401).json({ message: "User already exists" });
+      return res.status(201).json({ message: "If this email is not registered, a verification link has been sent" });
     }
 
     logger.error("Erro ao tentar registrar usuário", {
@@ -213,18 +221,22 @@ export const signUpWithOauth = async (req, res) => {
     const { code } = req.query;
     const user = await registerUserByOauth(code);
 
+    // [SECURITY FIX - V2] JWT com expiração de 2 horas
     const token = jwt.sign(
       {
         _id: user.id,
         email: user.email,
       },
       process.env.SECRET,
+      { expiresIn: "2h" }
     );
 
+    // [SECURITY FIX - V1/V14] Cookie com sameSite strict e maxAge
     res.cookie("userAuth", token, {
       secure: true,
       httpOnly: true,
-      expires: new Date(Date.now() + 2 * 3600000),
+      sameSite: "strict",
+      maxAge: 2 * 60 * 60 * 1000,
     });
     res.status(201).json({ message: "User registered successfully" });
     logger.info(
@@ -249,8 +261,9 @@ export const signUpWithOauth = async (req, res) => {
   }
 };
 
+// [SECURITY FIX - V8] Render pages não devem depender de req.user._id
 export const renderLoginPage = async (req, res) => {
-  const user = req.user._id;
+  const user = req.user?._id !== "freeAccess" ? req.user : null;
   try {
     res.render("login", { user: user, error: null, success: null });
     logger.info("Página de login renderizada", getRequestMeta(req));
@@ -268,8 +281,9 @@ export const renderLoginPage = async (req, res) => {
   }
 };
 
+// [SECURITY FIX - V8] Render pages não devem depender de req.user._id
 export const renderRegisterPage = async (req, res) => {
-  const user = req.user._id;
+  const user = req.user?._id !== "freeAccess" ? req.user : null;
   try {
     res.render("register", { user: user, error: null, success: null });
     logger.info("Página de registro renderizada", getRequestMeta(req));
