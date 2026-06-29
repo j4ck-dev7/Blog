@@ -25,8 +25,6 @@ import {
   renderArticlePage,
   renderSearchPage,
 } from "../controllers/articleController.js";
-import { subscribe } from "../controllers/subscription.js";
-import { renderSubscriptionPage } from "../controllers/subscriptionController.js";
 import {
   signInSchema,
   signInErrorMap,
@@ -549,77 +547,6 @@ router.get(
   sensitiveSlowDown("verifyEmail"),
   sensitiveRateLimit("verifyEmail"),
   verifyUser,
-);
-
-/**
- * @swagger
- * /subscribe:
- *   get:
- *     summary: Gera URL para assinatura
- *     description:
- *       Gera uma URL de checkout do Stripe para assinatura de plano premium.
- *       Esta rota está protegida por autenticação via Cookie, possui limitação de taxa e delay de requisição sensíveis.
- *     tags:
- *       - Subscription
- *     security:
- *      - cookieAuth: []
- *     parameters:
- *       - in: query
- *         name: subscription
- *         required: true
- *         schema:
- *           type: string
- *           enum: [basic, intermediate, premium]
- *           example: "premium"
- *           description: Plano de assinatura desejado
- *     responses:
- *       200:
- *         description: URL de assinatura gerada com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/UrlResponse'
- *       400:
- *         description: Plano de assinatura inválido
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       401:
- *         description: Não autorizado. Usuário não autenticado.
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       403:
- *         description: Acesso proibido.
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       429:
- *         description: Muitas solicitações (Rate Limit excedido).
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       500:
- *         description: Erro interno do servidor
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *     x-rate-limit:
- *       max_requests: 10
- *       window: 60s
- *       note: "Limites aplicados pelos middlewares sensitiveSlowDown e sensitiveRateLimit"
- */
-router.get(
-  "/subscribe",
-  sensitiveSlowDown("subscribe"),
-  sensitiveRateLimit("subscribe"),
-  auth,
-  subscribe,
 );
 
 /**
@@ -1422,38 +1349,6 @@ router.get(
   lightRateLimit("register"),
   auth,
   renderRegisterPage,
-);
-
-/**
- * @swagger
- * /subscription:
- *   get:
- *     summary: Renderiza a página de assinaturas
- *     description:
- *       Exibe os planos de assinatura disponíveis (Basic, Intermediate, Premium) com o plano atual do usuário destacado.
- *       Esta rota é acessível sem autenticação.
- *     tags:
- *       - Subscription
- *     responses:
- *       200:
- *         description: Página de assinaturas renderizada com sucesso
- *         content:
- *           text/html:
- *             schema:
- *               type: string
- *       500:
- *         description: Erro interno do servidor
- *         content:
- *           text/html:
- *             schema:
- *               type: string
- */
-router.get(
-  "/subscription",
-  lightSlowDown("subscription"),
-  lightRateLimit("subscription"),
-  auth,
-  renderSubscriptionPage,
 );
 
 export default router;

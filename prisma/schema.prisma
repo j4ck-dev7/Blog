@@ -36,8 +36,6 @@ model User {
   comment Comment[]
   role Role @default(user)
   createdAt DateTime @default(now())
-  subscriptionPlan SubscriptionPlan @default(free)
-  subscriptionExpiresAt DateTime?
   sub String? @db.VarChar(50) @unique
   authenticationType AuthenticationType @default(local)
   status Status @default(pending)
@@ -62,11 +60,4 @@ enum AuthenticationType {
 enum Role {
   admin
   user
-}
-
-enum SubscriptionPlan {
-  free
-  basic 
-  intermediate
-  premium
 }

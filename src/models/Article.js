@@ -7,12 +7,6 @@ const articleSchema = new mongoose.Schema({
   author: { type: String, required: true },
   content: [],
   banner: { type: String, required: true },
-  planRole: {
-    index: true,
-    type: String,
-    enum: ["free", "basic", "intermediate", "premium"],
-    default: "free",
-  },
   viewsCount: { type: Number, default: 0 },
   likeCount: { type: Number, default: 0 },
   commentCount: { type: Number, default: 0 },

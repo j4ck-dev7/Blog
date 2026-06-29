@@ -9,7 +9,6 @@ const normalizeArticle = (a) => {
     creationDate: a.creationDate,
     author: a.author,
     content: a.content,
-    planRole: a.planRole,
   };
 };
 
@@ -72,7 +71,7 @@ export const findArticleBySlug = async (slug) => {
   logger.debug("findArticleBySlug called", { slug });
   try {
     const article = await Article.findOne({ slug })
-      .select("title planRole author creationDate content slug")
+      .select("title author creationDate content slug")
       .lean();
 
     return { success: true, data: { article: normalizeArticle(article) } };
@@ -96,20 +95,6 @@ export const articleExistsBySlug = async (slug) => {
     };
   } catch (err) {
     logger.error("articleExistsBySlug error", { err, slug });
-    throw err;
-  }
-};
-
-export const findArticleBySlugWithPlanRole = async (slug) => {
-  logger.debug("findArticleBySlugWithPlanRole called", { slug });
-  try {
-    const article = await Article.findOne({ slug }).select("planRole").lean();
-    return {
-      success: true,
-      data: { article: article ? { planRole: article.planRole } : null },
-    };
-  } catch (err) {
-    logger.error("findArticleBySlugWithPlanRole error", { err, slug });
     throw err;
   }
 };

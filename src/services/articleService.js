@@ -11,7 +11,6 @@ import client from "../config/redis.js";
 import { logger } from "../config/logger.js";
 import { updateCounterService } from "../utils/updateConterService.js";
 import { isValidCuid } from "../utils/isValidCuid.js";
-import { findUserByIdForAccessArticles } from "../repositories/userRepository.js";
 
 const MAX_LIMIT = 100;
 
@@ -160,54 +159,9 @@ export const LoadArticleBySlug = async (slug, id) => {
     const commentResult = await getCommentsBySlug(sanitizedSlug);
     const comment = commentResult?.data?.comments ?? [];
 
-    if (article.planRole === "free") {
-      logger.info("LoadArticleBySlug - free article accessed", {
-        slug: sanitizedSlug,
-      });
-
-      await updateCounterService(sanitizedSlug, (s) =>
-        incrementArticleViews(s),
-      );
-      logger.info("LoadArticleBySlug - views incremented", {
-        slug: sanitizedSlug,
-      });
-      return {
-        article,
-        comment,
-      };
-    }
-
     if (!id || !isValidCuid(id)) {
       logger.warn("LoadArticleBySlug - Invalid user ID format", { id });
       throw new Error("Invalid Id");
-    }
-
-    logger.info("LoadArticleBySlug called, content premium", {
-      slug: sanitizedSlug,
-      id,
-      plan: article.planRole,
-    });
-
-    const userResult = await findUserByIdForAccessArticles(
-      id,
-      article.planRole,
-    );
-    const user = userResult?.data;
-    if (!user?.hasAccess) {
-      if (user?.reason === "expired") {
-        logger.warn(
-          "LoadArticleBySlug - Access denied due to expired subscription",
-          { id, slug: sanitizedSlug },
-        );
-        throw new Error("Access denied: Please renew your subscription");
-      }
-      if (user?.reason === "upgrade_needed") {
-        logger.warn(
-          "LoadArticleBySlug - Access denied due to insufficient subscription plan",
-          { id, slug: sanitizedSlug },
-        );
-        throw new Error("Access denied: Upgrade your subscription");
-      }
     }
 
     await updateCounterService(sanitizedSlug, (s) => incrementArticleViews(s));
@@ -218,7 +172,6 @@ export const LoadArticleBySlug = async (slug, id) => {
     logger.info("LoadArticleBySlug - success", {
       slug: sanitizedSlug,
       id,
-      plan: article.planRole,
     });
     return {
       article,
