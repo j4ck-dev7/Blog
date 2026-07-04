@@ -101,8 +101,6 @@ export const UserScalarFieldEnum = {
   password: 'password',
   role: 'role',
   createdAt: 'createdAt',
-  subscriptionPlan: 'subscriptionPlan',
-  subscriptionExpiresAt: 'subscriptionExpiresAt',
   sub: 'sub',
   authenticationType: 'authenticationType',
   status: 'status',
