@@ -33,7 +33,7 @@ app.use(
     directives: {
       defaultSrc: ["'self'"], // Carrega recursos apenas do mesmo domínio
       scriptSrc: ["'self'"], // Scripts apenas do mesmo domínio
-      styleSrc: ["'self'", "https://cdnjs.cloudflare.com"], // [SECURITY FIX - V22] Removido 'unsafe-inline'
+      styleSrc: ["'self'"], // [SECURITY FIX - V22] Removido 'unsafe-inline'
       imgSrc: ["'self'", "data:", "https:"], // Imagens da mesma origem
       connectSrc: ["'self'"], // Requisições (fetch, WebSockets) apenas para a mesma origem
     },

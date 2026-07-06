@@ -33,6 +33,16 @@ export const logger = winston.createLogger({
         })
     ),
     transports: [
+        new winston.transports.Console({
+            format: winston.format.combine(
+                winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+                winston.format.errors({ stack: true }),
+                winston.format.printf(({ timestamp, level, message, ...meta }) => {
+                    return `${timestamp} [${level.toUpperCase()}]: ${message} ${Object.keys(meta).length ? JSON.stringify(meta) : ''}`;
+                })
+            ),
+        }),
+
         // Todos os logs do projeto
         new winston.transports.File({
             filename: 'logs/app.log',
@@ -76,7 +86,16 @@ export const logger = winston.createLogger({
             maxFiles: 5,
         })
     ],
-    exceptionHandlers: [ // Exceções não tratadas, como erros de programação ou falhas inesperadas
+    exceptionHandlers: [
+        new winston.transports.Console({
+            format: winston.format.combine(
+                winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+                winston.format.errors({ stack: true }),
+                winston.format.printf(({ timestamp, level, message, ...meta }) => {
+                    return `${timestamp} [${level.toUpperCase()}]: ${message} ${Object.keys(meta).length ? JSON.stringify(meta) : ''}`;
+                })
+            ),
+        }),
         new winston.transports.File({
             filename: 'logs/seguranca/exceptions.log',
             format: winston.format.combine(
@@ -90,7 +109,16 @@ export const logger = winston.createLogger({
             maxFiles: 5,
         })
     ],
-    rejectionHandlers: [ // Rejeições de promessas não tratadas, como falhas em operações assíncronas
+    rejectionHandlers: [
+        new winston.transports.Console({
+            format: winston.format.combine(
+                winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+                winston.format.errors({ stack: true }),
+                winston.format.printf(({ timestamp, level, message, ...meta }) => {
+                    return `${timestamp} [${level.toUpperCase()}]: ${message} ${Object.keys(meta).length ? JSON.stringify(meta) : ''}`;
+                })
+            ),
+        }),
         new winston.transports.File({
             filename: 'logs/tratadas/rejections.log',
             format: winston.format.combine(
