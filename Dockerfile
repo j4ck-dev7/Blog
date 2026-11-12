@@ -4,16 +4,15 @@ WORKDIR /app
 
 COPY package.json package-lock.json ./
 
-RUN npm install
+RUN npm install -g pm2
+RUN POSTGRES_URL="postgresql://user:pass@localhost:5432/db" npm ci
 
 COPY . .
 
 RUN mkdir -p logs/seguranca logs/tratadas
 
-ARG POSTGRES_URL
-ENV POSTGRES_URL=${POSTGRES_URL}
-RUN npx prisma generate
+RUN POSTGRES_URL="postgresql://user:pass@localhost:5432/db" npx prisma generate
 
 EXPOSE 5000
 
-CMD ["node", "./server.js"]
+CMD ["pm2-runtime", "start", "ecosystem.config.cjs"]
