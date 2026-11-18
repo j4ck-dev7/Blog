@@ -62,7 +62,7 @@ services:
     restart: unless-stopped
 
   pm2-log:
-    image: node:18-alpine
+    image: node:22-alpine
     command: pm2 logs --raw --format json blog-api
     volumes:
       - .:/app

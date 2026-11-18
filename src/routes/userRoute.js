@@ -1178,8 +1178,8 @@ router.delete(
  */
 router.get(
   "/main",
-  lightSlowDown("main"),
-  lightRateLimit("main"),
+  // lightSlowDown("main"),
+  // lightRateLimit("main"),
   auth,
   renderMainPage,
 );

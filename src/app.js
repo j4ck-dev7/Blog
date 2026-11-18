@@ -19,7 +19,6 @@ app.set("view engine", "ejs");
 
 app.use(express.static(path.join(process.cwd(), "public")));
 
-// [SECURITY FIX - V20] Limite de tamanho para urlencoded
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 app.use(cookieParser());
 app.use(helmet()); // Ativa o helmet com suas configurações padrão.

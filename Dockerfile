@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY package.json package-lock.json ./
 
-RUN npm install -g pm2
+RUN npm install pm2 -g
 RUN POSTGRES_URL="postgresql://user:pass@localhost:5432/db" npm ci
 
 COPY . .
