@@ -69,6 +69,14 @@ API backend de blog com **Server-Side Rendering (SSR)** utilizando **Node.js + E
 - **API Documentation**: Swagger UI auto-gerado
 - **Invalidação de Cache**: Automática após alterações em artigos
 
+## 🏗️ Design do Sistema
+
+A aplicação é executada em containers Docker, com o Docker Compose coordenando os serviços. O servidor Node.js roda em modo cluster com duas instâncias (workers) gerenciadas pelo PM2, e o container da aplicação tem limite de 1 GB de memória RAM.
+
+O Nginx atua como proxy reverso para a aplicação e serve os arquivos estáticos diretamente. Nos testes de carga realizados com k6, o sistema atingiu 187 requisições por segundo, com desempenho de 470 ms no percentil 90 (p90).
+
+O desenho da arquitetura está no arquivo [Blog-System-Design.excalidraw](Blog-System-Design.excalidraw). Para visualizar e analisar o desenho, abra o arquivo no [site do Excalidraw](https://excalidraw.com/).
+
 ## 📦 Tecnologias
 
 | Tecnologia | Versão | Uso |
